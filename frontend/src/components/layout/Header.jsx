@@ -42,7 +42,7 @@ import SearchBar from "../ui/SearchBar"
         <div className="flex" onClick={() => navigate("/")}>
           <img src={logo} alt="logo" className="w-auto h-15 hover:cursor-pointer" />
         </div>
-        <div className="flex justify-center">
+        <div className="w-xl flex justify-center">
           <SearchBar />
         </div>
         <div className="flex items-center gap-8">

@@ -4,7 +4,7 @@ function SearchBar() {
   return (
     <div className="relative w-full max-w-2xl">
       <div className="absolute inset-y-0 left-0 flex items-center pl-4 pointer-events-none">
-        <Search className="w-5 h-5 text-black"/>
+        <Search className="w-5 h-5 text-grey-400"/>
       </div>
       <input
         type="search"
