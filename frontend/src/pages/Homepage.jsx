@@ -1,15 +1,10 @@
-import SearchBar from "../components/ui/SearchBar"
 import CategoryPills from "../components/category/CategoryPills"
 import CategoryLinks from "../components/category/CategoryLinks"
 import ProductGrid from "../components/product/ProductGrid"
 
 function Homepage() {
     return(
-        <div>
-        <div className="flex justify-center mb-8">
-          <SearchBar />
-        </div>
-
+        <div className="mt-10">
         <div className="flex justify-center gap-4 mb-12">
           <CategoryPills />
         </div>

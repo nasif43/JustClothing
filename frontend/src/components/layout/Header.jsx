@@ -1,14 +1,17 @@
 import { ShoppingCart, LayoutGrid } from "lucide-react"
 import { useState, useRef, useEffect } from "react"
 import { useCartStore, useUserStore } from "../../store"
-
-function Header() {
+import { useNavigate } from "react-router-dom"
+import logo from "../../assets/logo.svg"
+import SearchBar from "../ui/SearchBar"
+  function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const menuRef = useRef(null)
   const buttonRef = useRef(null)
   const cartItems = useCartStore(state => state.items)
   const itemCount = cartItems.reduce((total, item) => total + item.quantity, 0)
   const { isAuthenticated, user, logout } = useUserStore()
+  const navigate = useNavigate()
 
   // Handle click outside to close menu
   useEffect(() => {
@@ -36,12 +39,12 @@ function Header() {
   return (
     <header className="bg-black text-white p-4 relative sticky top-0 z-50">
       <div className="max-w-7xl mx-auto flex items-center justify-between">
-        <div className="flex-1">
-          <a href="/" className="text-xl font-bold">
-            Just Clothing<span className="text-sm">.store</span>
-          </a>
+        <div className="flex" onClick={() => navigate("/")}>
+          <img src={logo} alt="logo" className="w-auto h-15 hover:cursor-pointer" />
         </div>
-
+        <div className="flex justify-center">
+          <SearchBar />
+        </div>
         <div className="flex items-center gap-8">
           {isAuthenticated ? (
             <span className="text-sm">Hello, {user?.name}</span>
@@ -76,7 +79,7 @@ function Header() {
                 ref={menuRef}
                 className="absolute right-0 mt-2 w-48 bg-black rounded-md shadow-lg py-1 z-10 text-white menu-font"
               >
-                <a href="/home" className="block px-4 py-2 text-sm hover:font-bold">
+                <a href="/" className="block px-4 py-2 text-sm hover:font-bold">
                   Home
                 </a>
                 <a href="/orders" className="block px-4 py-2 text-sm hover:font-bold">

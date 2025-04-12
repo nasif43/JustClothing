@@ -1,18 +1,24 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { useParams } from "react-router-dom"
+import { useParams, useNavigate } from "react-router-dom"
 import { useProductStore, useCartStore } from "../store"
-import { Star, ChevronUp, ChevronDown, User, ShoppingCart, CreditCard, CheckCircle } from "lucide-react"
+import { Star, ChevronUp, ChevronDown, User, ShoppingCart, CreditCard, CheckCircle, Check } from "lucide-react"
+import QuickCheckoutPage from "./QuickCheckoutPage"
 
 function ProductDetailPage() {
   const { id } = useParams()
   const { products, getStoreById, fetchProducts, loading, error } = useProductStore()
   const { addItem } = useCartStore()
   const product = products.find((p) => p.id === Number(id))
+  const navigate = useNavigate()
 
   const [selectedSize, setSelectedSize] = useState("")
+  const [selectedColor, setSelectedColor] = useState("")
   const [currentImageIndex, setCurrentImageIndex] = useState(0)
+  const [addedToCart, setAddedToCart] = useState(false)
+  const [lastAddedSize, setLastAddedSize] = useState("")
+  const [lastAddedColor, setLastAddedColor] = useState("")
 
   // Fetch products if not already loaded
   useEffect(() => {
@@ -20,6 +26,13 @@ function ProductDetailPage() {
       fetchProducts()
     }
   }, [products.length, fetchProducts])
+
+  // Reset the added to cart state if size or color changes
+  useEffect(() => {
+    if (addedToCart && (selectedSize !== lastAddedSize || selectedColor !== lastAddedColor)) {
+      setAddedToCart(false)
+    }
+  }, [selectedSize, selectedColor, addedToCart, lastAddedSize, lastAddedColor])
 
   if (loading) return <div className="text-center py-20">Loading product...</div>
   if (error) return <div className="text-center py-20 text-red-500">Error: {error}</div>
@@ -49,8 +62,17 @@ function ProductDetailPage() {
       alert("Please select a size")
       return
     }
-    // Add the product with size to cart using the cart store
-    addItem({ ...product, selectedSize }, 1)
+    if (!selectedColor) {
+      alert("Please select a color")
+      return
+    }
+    // Add the product with size and color to cart using the cart store
+    addItem({ ...product, selectedSize, selectedColor }, 1)
+    
+    // Set added to cart state and remember the selected options
+    setAddedToCart(true)
+    setLastAddedSize(selectedSize)
+    setLastAddedColor(selectedColor)
   }
 
   const handleQuickCheckout = () => {
@@ -58,8 +80,35 @@ function ProductDetailPage() {
       alert("Please select a size")
       return
     }
-    alert(`Quick checkout for ${product.name} (Size: ${selectedSize})`)
+    if (!selectedColor) {
+      alert("Please select a color")
+      return
+    }
+    
+    // Navigate to quick checkout with product details
+    navigate(`/quick-checkout`, {
+      state: {
+        product: {
+          id: product.id,
+          name: product.name,
+          price: product.price,
+          quantity: 1,
+          color: selectedColor,
+          size: selectedSize,
+          imageUrl: product.image
+        }
+      }
+    });
   }
+
+  // Available colors for the product (in a real app, this would come from the product data)
+  const availableColors = [
+    { name: "Black", value: "#000000" },
+    { name: "White", value: "#FFFFFF" },
+    { name: "Red", value: "#FF0000" },
+    { name: "Blue", value: "#0000FF" },
+    { name: "Green", value: "#00FF00" }
+  ]
 
   return (
     <div className="max-w-7xl mx-auto px-4 py-8">
@@ -124,13 +173,43 @@ function ProductDetailPage() {
             </div>
           </div>
 
+          <div className="mb-6">
+            <h2 className="text-lg font-medium mb-2">COLOR</h2>
+            <div className="flex flex-wrap gap-2">
+              {availableColors.map((color) => (
+                <button
+                  key={color.name}
+                  className={`w-10 h-10 border rounded-full ${
+                    selectedColor === color.name ? "border-black ring-2 ring-black ring-offset-2" : "border-gray-300 hover:border-gray-500"
+                  }`}
+                  style={{ backgroundColor: color.value }}
+                  onClick={() => setSelectedColor(color.name)}
+                  title={color.name}
+                />
+              ))}
+            </div>
+          </div>
+
           <div className="space-y-3 mb-6">
             <button
               onClick={handleAddToCart}
-              className="w-full py-3 bg-white border border-black rounded-full font-medium flex items-center justify-center gap-2 hover:bg-gray-100"
+              disabled={addedToCart}
+              className={`w-full py-3 border border-black rounded-full font-medium flex items-center justify-center gap-2 
+                ${addedToCart 
+                  ? 'bg-green-50 text-green-700 border-green-700' 
+                  : 'bg-white hover:bg-gray-100'}`}
             >
-              <ShoppingCart className="h-5 w-5" />
-              ADD TO CART
+              {addedToCart ? (
+                <>
+                  <Check className="h-5 w-5" />
+                  ADDED TO CART
+                </>
+              ) : (
+                <>
+                  <ShoppingCart className="h-5 w-5" />
+                  ADD TO CART
+                </>
+              )}
             </button>
 
             <button

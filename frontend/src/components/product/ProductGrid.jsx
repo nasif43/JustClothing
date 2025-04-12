@@ -11,7 +11,7 @@ function ProductGrid() {
   const getStoreNameandRating = (id) => {
     try {
       const store = useProductStore.getState().getStoreById(id)
-      return store ? `${store.name} • ${store.rating} ★` : 'Unknown Seller'
+      return store ? `${store.name} • ${store.rating}/5` : 'Unknown Seller'
     } catch (err) {
       return 'Unknown Seller'
     }
@@ -40,7 +40,7 @@ function ProductGrid() {
                 <div>
                   <p className="text-xs text-gray-500">{getStoreNameandRating(product.storeId)}</p>
                 </div>
-                <p className="text-base font-medium -mt-1">£{product.price}</p>
+                <p className="text-xl font-medium -mt-1 mb-5">£{product.price}</p>
               </div>
             </div>
           </div>
