@@ -5,6 +5,7 @@ import { useParams, useNavigate } from "react-router-dom"
 import { useProductStore, useCartStore } from "../store"
 import { Star, ChevronUp, ChevronDown, User, ShoppingCart, CreditCard, CheckCircle, Check } from "lucide-react"
 import QuickCheckoutPage from "./QuickCheckoutPage"
+import Alert from "../components/Alert"
 
 function ProductDetailPage() {
   const { id } = useParams()
@@ -19,6 +20,8 @@ function ProductDetailPage() {
   const [addedToCart, setAddedToCart] = useState(false)
   const [lastAddedSize, setLastAddedSize] = useState("")
   const [lastAddedColor, setLastAddedColor] = useState("")
+  const [alertMessage, setAlertMessage] = useState("")
+  const [isAlertOpen, setIsAlertOpen] = useState(false)
 
   // Fetch products if not already loaded
   useEffect(() => {
@@ -59,11 +62,13 @@ function ProductDetailPage() {
 
   const handleAddToCart = () => {
     if (!selectedSize) {
-      alert("Please select a size")
+      setAlertMessage("Please select a size")
+      setIsAlertOpen(true)
       return
     }
     if (!selectedColor) {
-      alert("Please select a color")
+      setAlertMessage("Please select a color")
+      setIsAlertOpen(true)
       return
     }
     // Add the product with size and color to cart using the cart store
@@ -77,11 +82,13 @@ function ProductDetailPage() {
 
   const handleQuickCheckout = () => {
     if (!selectedSize) {
-      alert("Please select a size")
+      setAlertMessage("Please select a size")
+      setIsAlertOpen(true)
       return
     }
     if (!selectedColor) {
-      alert("Please select a color")
+      setAlertMessage("Please select a color")
+      setIsAlertOpen(true)
       return
     }
     
@@ -112,6 +119,12 @@ function ProductDetailPage() {
 
   return (
     <div className="max-w-7xl mx-auto px-4 py-8">
+      <Alert 
+        message={alertMessage} 
+        isOpen={isAlertOpen} 
+        onClose={() => setIsAlertOpen(false)} 
+      />
+      
       <div className="grid grid-cols-12 gap-8">
         {/* Thumbnails and navigation - 2 columns */}
         <div className="col-span-1 flex flex-col items-center">
@@ -176,16 +189,26 @@ function ProductDetailPage() {
           <div className="mb-6">
             <h2 className="text-lg font-medium mb-2">COLOR</h2>
             <div className="flex flex-wrap gap-2">
-              {availableColors.map((color) => (
+              {product.availableColors?.map((color) => (
+                <button
+                  key={color}
+                  className={`px-3 py-2 border ${
+                    selectedColor === color ? "border-black bg-black text-white" : "border-gray-300 hover:border-gray-500"
+                  }`}
+                  onClick={() => setSelectedColor(color)}
+                >
+                  {color}
+                </button>
+              )) || availableColors.map((color) => (
                 <button
                   key={color.name}
-                  className={`w-10 h-10 border rounded-full ${
-                    selectedColor === color.name ? "border-black ring-2 ring-black ring-offset-2" : "border-gray-300 hover:border-gray-500"
+                  className={`px-3 py-2 border ${
+                    selectedColor === color.name ? "border-black bg-black text-white" : "border-gray-300 hover:border-gray-500"
                   }`}
-                  style={{ backgroundColor: color.value }}
                   onClick={() => setSelectedColor(color.name)}
-                  title={color.name}
-                />
+                >
+                  {color.name}
+                </button>
               ))}
             </div>
           </div>

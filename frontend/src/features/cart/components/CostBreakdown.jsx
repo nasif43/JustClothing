@@ -20,7 +20,10 @@ function CostBreakdown({
             key={`summary-${item.id}-${item.selectedSize}-${item.selectedColor}`} 
             className="flex justify-between"
           >
-            <span>{item.quantity}x {item.name}</span>
+            <div className="flex flex-col">
+              <span>{item.quantity}x {item.name}</span>
+              <span className="text-xs text-gray-500">Size: {item.selectedSize}, Color: {item.selectedColor}</span>
+            </div>
             <span className="font-medium">{(item.price * item.quantity).toFixed(2)}</span>
           </div>
         ))}

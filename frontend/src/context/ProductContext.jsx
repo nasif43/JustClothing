@@ -10,10 +10,21 @@ export function ProductProvider({ children }) {
   const [products] = useState(productsData)
   const [stores] = useState(storesData)
   const [cart, setCart] = useState([])
+  const [notification, setNotification] = useState({ message: "", isVisible: false })
 
   const addToCart = (product, size) => {
     setCart([...cart, { ...product, selectedSize: size }])
-    alert(`Added ${product.name} (Size: ${size}) to cart!`)
+    
+    // Set notification instead of alert
+    setNotification({
+      message: `Added ${product.name} (Size: ${size}) to cart!`,
+      isVisible: true
+    })
+    
+    // Hide notification after 3 seconds
+    setTimeout(() => {
+      setNotification({ message: "", isVisible: false })
+    }, 3000)
   }
 
   const getStoreById = (storeId) => {
@@ -21,7 +32,17 @@ export function ProductProvider({ children }) {
   }
 
   return (
-    <ProductContext.Provider value={{ products, stores, cart, addToCart, getStoreById }}>
+    <ProductContext.Provider 
+      value={{ 
+        products, 
+        stores, 
+        cart, 
+        addToCart, 
+        getStoreById, 
+        notification,
+        dismissNotification: () => setNotification({ message: "", isVisible: false })
+      }}
+    >
       {children}
     </ProductContext.Provider>
   )

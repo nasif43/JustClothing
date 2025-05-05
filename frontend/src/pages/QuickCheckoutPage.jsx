@@ -8,6 +8,7 @@ import {
   CheckoutPaymentMethod,
   ConfirmButton
 } from '../components/checkout';
+import Alert from '../components/Alert';
 
 function QuickCheckoutPage() {
   const navigate = useNavigate();
@@ -37,6 +38,8 @@ function QuickCheckoutPage() {
   const [paymentMethod, setPaymentMethod] = useState('cash');
   const [couponCode, setCouponCode] = useState('');
   const [discount, setDiscount] = useState(0);
+  const [alertMessage, setAlertMessage] = useState('');
+  const [isAlertOpen, setIsAlertOpen] = useState(false);
   const deliveryFee = 80;
   const grandTotal = product.price + deliveryFee - discount;
 
@@ -56,21 +59,27 @@ function QuickCheckoutPage() {
     if (couponCode.toLowerCase() === 'discount20') {
       const newDiscount = Math.round(product.price * 0.2);
       setDiscount(newDiscount);
-      alert('Coupon applied successfully!');
+      setAlertMessage('Coupon applied successfully!');
+      setIsAlertOpen(true);
     } else {
-      alert('Invalid coupon code');
+      setAlertMessage('Invalid coupon code');
+      setIsAlertOpen(true);
     }
   };
 
   const handleConfirmOrder = () => {
     if (!formValid) {
-      alert('Please fill all the required fields');
+      setAlertMessage('Please fill all the required fields');
+      setIsAlertOpen(true);
       return;
     }
 
     // Process order here
-    alert('Order confirmed! Thank you for your purchase.');
-    navigate('/order-confirmation');
+    setAlertMessage('Order confirmed! Thank you for your purchase.');
+    setIsAlertOpen(true);
+    setTimeout(() => {
+      navigate('/order-confirmation');
+    }, 2000);
   };
 
   const handleBackToProduct = () => {
@@ -84,6 +93,12 @@ function QuickCheckoutPage() {
 
   return (
     <div className="max-w-7xl mx-auto px-4 py-8 bg-white">
+      <Alert 
+        message={alertMessage}
+        isOpen={isAlertOpen}
+        onClose={() => setIsAlertOpen(false)}
+      />
+    
       <button
         onClick={handleBackToProduct}
         className="flex items-center text-sm hover:underline mb-6"

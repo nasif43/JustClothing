@@ -10,6 +10,7 @@ import {
   CouponApply,
   CheckoutButton
 } from "../features/cart/components"
+import Alert from "../components/Alert"
 
 function CartPage() {
   const navigate = useNavigate()
@@ -18,6 +19,8 @@ function CartPage() {
   const [paymentMethod, setPaymentMethod] = useState("cash")
   const [discount, setDiscount] = useState(0)
   const [selectedItems, setSelectedItems] = useState({})
+  const [alertMessage, setAlertMessage] = useState("")
+  const [isAlertOpen, setIsAlertOpen] = useState(false)
 
   // Calculate totals
   const subtotal = items.reduce((total, item) => {
@@ -33,28 +36,35 @@ function CartPage() {
     if (couponCode.toLowerCase() === "discount20") {
       const newDiscount = Math.round(subtotal * 0.2)
       setDiscount(newDiscount)
-      alert("Coupon applied successfully!")
+      setAlertMessage("Coupon applied successfully!")
+      setIsAlertOpen(true)
     } else {
-      alert("Invalid coupon code")
+      setAlertMessage("Invalid coupon code")
+      setIsAlertOpen(true)
     }
   }
 
   const handleConfirmOrder = () => {
     const selectedCount = Object.values(selectedItems).filter(Boolean).length
     if (selectedCount === 0) {
-      alert("Please select at least one item to proceed")
+      setAlertMessage("Please select at least one item to proceed")
+      setIsAlertOpen(true)
       return
     }
-    alert("Order confirmed! Thank you for your purchase.")
-    // Clear selected items from cart
-    const itemsToRemove = items.filter(item => 
-      selectedItems[`${item.id}-${item.selectedSize}-${item.selectedColor}`]
-    )
-    itemsToRemove.forEach(item => {
-      removeItem(item.id, item.selectedSize, item.selectedColor)
-    })
-    setSelectedItems({})
-    navigate("/order-confirmation")
+    setAlertMessage("Order confirmed! Thank you for your purchase.")
+    setIsAlertOpen(true)
+    
+    // Clear selected items from cart and navigate after alert is shown
+    setTimeout(() => {
+      const itemsToRemove = items.filter(item => 
+        selectedItems[`${item.id}-${item.selectedSize}-${item.selectedColor}`]
+      )
+      itemsToRemove.forEach(item => {
+        removeItem(item.id, item.selectedSize, item.selectedColor)
+      })
+      setSelectedItems({})
+      navigate("/order-confirmation")
+    }, 2000)
   }
 
   const toggleItemSelection = (itemId, selectedSize, selectedColor) => {
@@ -72,6 +82,12 @@ function CartPage() {
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+      <Alert 
+        message={alertMessage}
+        isOpen={isAlertOpen}
+        onClose={() => setIsAlertOpen(false)}
+      />
+      
       <button onClick={() => navigate("/")} className="mb-6 flex items-center text-sm hover:underline">
         ← Continue Shopping
       </button>
