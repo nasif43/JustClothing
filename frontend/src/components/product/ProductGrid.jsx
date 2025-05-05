@@ -1,50 +1,45 @@
-import { useEffect } from 'react'
+import { useState, useEffect } from 'react'
 import { useProductStore } from '../../store'
+import ProductCard from './ProductCard'
 
-function ProductGrid() {
+function ProductGrid({ storeId = null, showStoreInfo = true, className = "m-10" }) {
   const { products, loading, error, fetchProducts } = useProductStore()
+  const [displayProducts, setDisplayProducts] = useState([])
   
   useEffect(() => {
-    fetchProducts()
-  }, [fetchProducts])
-  
-  const getStoreNameandRating = (id) => {
-    try {
-      const store = useProductStore.getState().getStoreById(id)
-      return store ? `${store.name} • ${store.rating}/5` : 'Unknown Seller'
-    } catch (err) {
-      return 'Unknown Seller'
+    if (products.length === 0) {
+      fetchProducts()
+    } else if (storeId) {
+      // Filter products for specific store if storeId is provided
+      const storeProducts = products.filter(product => 
+        product.storeId === Number(storeId)
+      )
+      setDisplayProducts(storeProducts)
+    } else {
+      // Use all products if no storeId is provided
+      setDisplayProducts(products)
     }
-  }
+  }, [products, storeId, fetchProducts])
   
   if (loading) return <div className="text-center py-8">Loading products...</div>
-  if (error) return <div className="text-center py-8 text-red-500">Error: {error}</div>
-  if (!products.length) return <div className="text-center py-8">No products found</div>
+  if (error) return <div className="text-center py-8 text-gray-700">Error: {error}</div>
+  
+  if (!displayProducts.length) {
+    return (
+      <div className="text-center py-8">
+        {storeId ? "No products found for this store" : "No products found"}
+      </div>
+    )
+  }
   
   return (
-    <div className="m-10 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-      {products.map((product) => (
-        <a href={`/product/${product.id}`} key={product.id} className="group">
-          <div className="bg-white rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-shadow">
-            <div className="aspect-square relative">
-              <img
-                src={product.image}
-                alt={product.name}
-                className="w-full h-full object-cover"
-              />
-            </div>
-            <div className="p-3 text-center">
-              <h3 className="text-sm font-medium">{product.name}</h3>
-              <p className="text-xs text-gray-500">{product.category}</p>
-              <div className="flex justify-between items-center mt-1">
-                <div>
-                  <p className="text-xs text-gray-500">{getStoreNameandRating(product.storeId)}</p>
-                </div>
-                <p className="text-xl font-medium -mt-1 mb-5">£{product.price}</p>
-              </div>
-            </div>
-          </div>
-        </a>
+    <div className={`grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 ${className}`}>
+      {displayProducts.map((product) => (
+        <ProductCard 
+          key={product.id} 
+          product={product} 
+          showStoreInfo={showStoreInfo}
+        />
       ))}
     </div>
   )

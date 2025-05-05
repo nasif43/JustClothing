@@ -47,7 +47,7 @@ function CartItem({
 
       <button
         onClick={() => removeItem(item.id, item.selectedSize, item.selectedColor)}
-        className="ml-4 text-black hover:text-red-600 hover-effect hover:cursor-pointer"
+        className="ml-4 text-black hover:text-gray-700 hover-effect hover:cursor-pointer"
         aria-label="Remove item"
       >
         <Trash className="w-5 h-5" />

@@ -17,7 +17,7 @@ function CheckoutCostBreakdown({ productPrice, deliveryFee, discount, grandTotal
         {discount > 0 && (
           <div className="flex justify-between">
             <span>DISCOUNT</span>
-            <span className="font-medium text-red-600">-{discount.toFixed(2)}</span>
+            <span className="font-medium text-gray-600">-{discount.toFixed(2)}</span>
           </div>
         )}
         

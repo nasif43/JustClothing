@@ -38,7 +38,7 @@ function CostBreakdown({
         {discount > 0 && (
           <div className="flex justify-between mb-2">
             <span>DISCOUNT</span>
-            <span className="font-medium text-green-600">-{discount.toFixed(2)}</span>
+            <span className="font-medium text-gray-600">-{discount.toFixed(2)}</span>
           </div>
         )}
       </div>

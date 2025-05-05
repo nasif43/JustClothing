@@ -4,6 +4,7 @@ import Footer from "./components/layout/Footer"
 import marbleBg from '../src/assets/marble-bg.jpg'
 import Homepage from "../src/pages/Homepage"
 import ProductDetailPage from "./pages/ProductDetailPage"
+import StorePage from "./pages/StorePage"
 import CartPage from "./pages/CartPage"
 import OrdersPage from "./pages/OrdersPage"
 import QuickCheckoutPage from "./pages/QuickCheckoutPage"
@@ -65,6 +66,7 @@ function AppContent() {
         {/* Main routes with header/footer */}
         <Route path="/" element={<MainLayout><Homepage /></MainLayout>} />
         <Route path="/product/:id" element={<MainLayout><ProductDetailPage /></MainLayout>} />
+        <Route path="/store/:id" element={<MainLayout><StorePage /></MainLayout>} />
         <Route path="/cart" element={<MainLayout><CartPage /></MainLayout>} />
         <Route path="/orders" element={<MainLayout><OrdersPage /></MainLayout>} />
         <Route path="/quick-checkout" element={<MainLayout><QuickCheckoutPage /></MainLayout>} />

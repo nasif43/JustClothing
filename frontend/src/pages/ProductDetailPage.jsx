@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { useParams, useNavigate } from "react-router-dom"
+import { useParams, useNavigate, Link } from "react-router-dom"
 import { useProductStore, useCartStore } from "../store"
 import { Star, ChevronUp, ChevronDown, User, ShoppingCart, CreditCard, CheckCircle, Check } from "lucide-react"
 import QuickCheckoutPage from "./QuickCheckoutPage"
@@ -38,7 +38,7 @@ function ProductDetailPage() {
   }, [selectedSize, selectedColor, addedToCart, lastAddedSize, lastAddedColor])
 
   if (loading) return <div className="text-center py-20">Loading product...</div>
-  if (error) return <div className="text-center py-20 text-red-500">Error: {error}</div>
+  if (error) return <div className="text-center py-20 text-gray-700">Error: {error}</div>
   if (!product) return <div className="text-center py-20">Product not found</div>
 
   // Get store information
@@ -219,7 +219,7 @@ function ProductDetailPage() {
               disabled={addedToCart}
               className={`w-full py-3 border border-black rounded-full font-medium flex items-center justify-center gap-2 
                 ${addedToCart 
-                  ? 'bg-green-50 text-green-700 border-green-700' 
+                  ? 'bg-gray-200 text-black border-black' 
                   : 'bg-white hover:bg-gray-100'}`}
             >
               {addedToCart ? (
@@ -248,11 +248,15 @@ function ProductDetailPage() {
           <div className="bg-gray-50 p-4 rounded-lg mb-4">
             <div className="flex items-center gap-2 mb-2">
               <User className="h-6 w-6" />
-              <span className="font-medium">{store.name}</span>
-              {store.verified && <CheckCircle className="h-4 w-4 text-green-500" />}
+              <Link to={`/store/${store.id}`} className="font-medium hover:underline">
+                {store.name}
+              </Link>
+              {store.verified && <CheckCircle className="h-4 w-4 text-black" />}
             </div>
 
-            <p className="text-sm text-gray-600 mb-4">{store.bio}</p>
+            <Link to={`/store/${store.id}`} className="block hover:underline">
+              <p className="text-sm text-gray-600 mb-4">{store.bio}</p>
+            </Link>
 
             <div className="flex items-center gap-2">
               <span className="font-medium">RATING</span>
@@ -264,7 +268,7 @@ function ProductDetailPage() {
                     <Star
                       key={i}
                       className={`h-5 w-5 ${
-                        i < Math.floor(store.rating) ? "text-yellow-400 fill-yellow-400" : "text-gray-300"
+                        i < Math.floor(store.rating) ? "text-black fill-black" : "text-gray-300"
                       }`}
                     />
                   ))}
