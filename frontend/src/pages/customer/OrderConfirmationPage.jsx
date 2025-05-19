@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom';
 import { Check } from 'lucide-react';
-import marbleBg from '../assets/marble-bg.jpg';
+import marbleBg from '../../assets/marble-bg.jpg';
 
 const OrderConfirmationPage = () => {
   // Generate a random order number

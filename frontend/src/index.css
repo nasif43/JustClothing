@@ -29,3 +29,9 @@ body {
   transform: scale(1.05);
   font-weight: 800;
 }
+
+@layer components {
+  .input {
+    @apply appearance-none w-full px-4 py-2 rounded-full border-2 border-gray-500 focus:ring-2 focus:ring-black bg-white text-black placeholder-gray-500;
+  }
+}

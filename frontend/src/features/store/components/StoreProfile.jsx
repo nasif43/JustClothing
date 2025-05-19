@@ -1,6 +1,6 @@
-import { useProductStore } from '../../store'
+import { useProductStore } from '../../../store'
 import { Check } from 'lucide-react'
-import placeholderImg from '../../assets/marble-bg.jpg'
+import placeholderImg from '../../../assets/marble-bg.jpg'
 
 function StoreProfile({ storeId }) {
   const { getStoreById, loading, error } = useProductStore()

@@ -1,25 +1,27 @@
 import { useState, useEffect } from 'react'
 import { useParams } from 'react-router-dom'
-import { useProductStore } from '../store'
-import StoreProfile from '../components/store/StoreProfile'
-import StoreNavigation from '../components/store/StoreNavigation'
-import StoreReviews from '../components/store/StoreReviews'
-import ProductGrid from '../components/product/ProductGrid'
+import { useProductStore } from '../../store'
+import { StoreProfile, StoreNavigation, StoreReviews } from '../../features/store/components'
+import { ProductGrid } from '../../features/product/components'
 
 function StorePage() {
   const { id } = useParams()
   const [activeTab, setActiveTab] = useState('home')
-  const { getStoreById, loading, error } = useProductStore()
+  const { getStoreById, fetchStores, loading, error, stores } = useProductStore()
   const store = getStoreById(id)
 
   useEffect(() => {
-    // Could add additional data fetching logic here if needed
+    // If stores array is empty, fetch the stores data
+    if (!stores || stores.length === 0) {
+      fetchStores()
+    }
+    
     document.title = store ? `${store.name} | Just Clothing` : 'Store | Just Clothing'
     
     return () => {
       document.title = 'Just Clothing'
     }
-  }, [store])
+  }, [store, stores, fetchStores])
 
   if (loading) return <div className="text-center py-8">Loading store details...</div>
   if (error) return <div className="text-center py-8 text-gray-700">Error: {error}</div>

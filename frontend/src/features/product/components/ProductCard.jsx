@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom'
-import { useProductStore } from '../../store'
+import { useProductStore } from '../../../store'
 
 function ProductCard({ product, showStoreInfo = true }) {
   if (!product) return null

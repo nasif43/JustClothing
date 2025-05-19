@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { useProductStore } from '../../store'
+import { useProductStore } from '../../../store'
 import ProductCard from './ProductCard'
 
 function ProductGrid({ storeId = null, showStoreInfo = true, className = "m-10" }) {
@@ -45,5 +45,4 @@ function ProductGrid({ storeId = null, showStoreInfo = true, className = "m-10" 
   )
 }
 
-export default ProductGrid
-  
+export default ProductGrid 

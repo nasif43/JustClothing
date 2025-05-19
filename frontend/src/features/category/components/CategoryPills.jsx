@@ -19,5 +19,4 @@ function CategoryPills() {
     )
   }
   
-  export default CategoryPills
-  
+  export default CategoryPills 

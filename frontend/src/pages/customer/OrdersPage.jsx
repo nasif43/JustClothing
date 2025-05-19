@@ -1,8 +1,8 @@
 import React from 'react';
-import orders from '../data/orders';
-import marbleBg from '../assets/marble-bg.jpg';
+import orders from '../../data/orders';
+import marbleBg from '../../assets/marble-bg.jpg';
 import { useNavigate } from 'react-router-dom';
-import OrderItem from '../components/order/OrderItem';
+import { OrderItem } from '../../features/order/components';
 
 const OrdersPage = () => {
   const navigate = useNavigate();

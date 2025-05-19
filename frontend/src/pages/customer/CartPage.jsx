@@ -2,15 +2,15 @@
 
 import { useState } from "react"
 import { useNavigate } from "react-router-dom"
-import { useCartStore } from "../store/useCartStore"
+import { useCartStore } from "../../store/useCartStore"
 import {
   CartItemList,
   PaymentMethod,
   CostBreakdown,
   CouponApply,
   CheckoutButton
-} from "../features/cart/components"
-import Alert from "../components/Alert"
+} from "../../features/cart/components"
+import Alert from "../../components/Alert"
 
 function CartPage() {
   const navigate = useNavigate()

@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
-import { fetchStoreReviews } from '../../services/api'
-import { useProductStore } from '../../store'
+import { fetchStoreReviews } from '../../../services/api'
+import { useProductStore } from '../../../store'
 import { Star } from 'lucide-react'
 import RatingDistribution from './RatingDistribution'
 import ReviewSorter from './ReviewSorter'

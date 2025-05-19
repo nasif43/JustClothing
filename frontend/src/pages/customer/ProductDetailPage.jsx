@@ -2,10 +2,10 @@
 
 import { useState, useEffect } from "react"
 import { useParams, useNavigate, Link } from "react-router-dom"
-import { useProductStore, useCartStore } from "../store"
+import { useProductStore, useCartStore } from "../../store"
 import { Star, ChevronUp, ChevronDown, User, ShoppingCart, CreditCard, CheckCircle, Check } from "lucide-react"
 import QuickCheckoutPage from "./QuickCheckoutPage"
-import Alert from "../components/Alert"
+import Alert from "../../components/Alert"
 
 function ProductDetailPage() {
   const { id } = useParams()

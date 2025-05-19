@@ -1,19 +1,26 @@
 import { Routes, Route } from "react-router-dom"
 import Header from "./components/layout/Header"
 import Footer from "./components/layout/Footer"
-import marbleBg from '../src/assets/marble-bg.jpg'
-import Homepage from "../src/pages/Homepage"
-import ProductDetailPage from "./pages/ProductDetailPage"
-import StorePage from "./pages/StorePage"
-import CartPage from "./pages/CartPage"
-import OrdersPage from "./pages/OrdersPage"
-import QuickCheckoutPage from "./pages/QuickCheckoutPage"
-import OrderConfirmationPage from "./pages/OrderConfirmationPage"
-import WelcomePage from "./pages/WelcomePage"
+import marbleBg from './assets/marble-bg.jpg'
+// Customer pages
+import Homepage from "./pages/customer/Homepage"
+import ProductDetailPage from "./pages/customer/ProductDetailPage"
+import StorePage from "./pages/customer/StorePage"
+import CartPage from "./pages/customer/CartPage"
+import OrdersPage from "./pages/customer/OrdersPage"
+import QuickCheckoutPage from "./pages/customer/QuickCheckoutPage"
+import OrderConfirmationPage from "./pages/customer/OrderConfirmationPage"
+// Shared pages
+import WelcomePage from "./pages/shared/WelcomePage"
 import { ProductProvider, useProducts } from "./context/ProductContext"
 import Notification from "./components/Notification"
-import "./App.css"
+// Seller pages
+import SellerOnboardingPage from "./pages/seller/SellerOnboardingPage"
+import SellerSignupFormPage from "./pages/seller/SellerSignupFormPage"
+import SellerSignupConfirmationPage from "./pages/seller/SellerSignupConfirmationPage"
 
+import ScrollToTop from "./components/ScrollToTop"
+import "./App.css"
 // Layout component for pages that need header and footer
 const MainLayout = ({ children }) => {
   const { notification, dismissNotification } = useProducts();
@@ -38,6 +45,7 @@ function App() {
   return (
     <div className="min-h-screen flex flex-col">
       <ProductProvider>
+        <ScrollToTop />
         <AppContent />
       </ProductProvider>
     </div>
@@ -62,6 +70,10 @@ function AppContent() {
             />
           </>
         } />
+        {/* Seller onboarding - no header/footer */}
+        <Route path="/seller" element={<SellerOnboardingPage />} />
+        <Route path="/seller/signup" element={<SellerSignupFormPage />} />
+        <Route path="/seller/signup-confirmation" element={<MainLayout><SellerSignupConfirmationPage /></MainLayout>} />
         
         {/* Main routes with header/footer */}
         <Route path="/" element={<MainLayout><Homepage /></MainLayout>} />

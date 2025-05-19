@@ -17,5 +17,4 @@ function CategoryLinks() {
     )
   }
   
-  export default CategoryLinks
-  
+  export default CategoryLinks 

@@ -1,6 +1,5 @@
-import CategoryPills from "../components/category/CategoryPills"
-import CategoryLinks from "../components/category/CategoryLinks"
-import ProductGrid from "../components/product/ProductGrid"
+import { CategoryPills, CategoryLinks } from "../../features/category/components"
+import { ProductGrid } from "../../features/product/components"
 
 function Homepage() {
     return(

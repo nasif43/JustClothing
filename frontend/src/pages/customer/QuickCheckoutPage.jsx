@@ -7,8 +7,8 @@ import {
   CouponInput,
   CheckoutPaymentMethod,
   ConfirmButton
-} from '../components/checkout';
-import Alert from '../components/Alert';
+} from '../../features/checkout/components';
+import Alert from '../../components/Alert';
 
 function QuickCheckoutPage() {
   const navigate = useNavigate();
