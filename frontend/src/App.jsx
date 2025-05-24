@@ -18,6 +18,13 @@ import Notification from "./components/Notification"
 import SellerOnboardingPage from "./pages/seller/SellerOnboardingPage"
 import SellerSignupFormPage from "./pages/seller/SellerSignupFormPage"
 import SellerSignupConfirmationPage from "./pages/seller/SellerSignupConfirmationPage"
+import SellerDashboardPage from "./pages/seller/SellerDashboardPage"
+import SellerHomepage from "./pages/seller/SellerHomepage"
+import SellerOrdersPage from "./pages/seller/SellerOrdersPage"
+import OrderDetailsPage from "./pages/seller/OrderDetailsPage"
+import SellerOffersPage from "./pages/seller/SellerOffersPage"
+import SellerReviewsPage from "./pages/seller/SellerReviewsPage"
+import AddProductPage from "./pages/seller/AddProductPage"
 
 import ScrollToTop from "./components/ScrollToTop"
 import "./App.css"
@@ -74,6 +81,17 @@ function AppContent() {
         <Route path="/seller" element={<SellerOnboardingPage />} />
         <Route path="/seller/signup" element={<SellerSignupFormPage />} />
         <Route path="/seller/signup-confirmation" element={<MainLayout><SellerSignupConfirmationPage /></MainLayout>} />
+        
+        {/* Seller dashboard routes */}
+        <Route path="/seller/dashboard" element={<SellerDashboardPage />} />
+        <Route path="/seller/homepage" element={<SellerHomepage />} />
+        <Route path="/seller/customize" element={<SellerHomepage />} />
+        <Route path="/seller/customise" element={<SellerHomepage />} />
+        <Route path="/seller/orders" element={<SellerOrdersPage />} />
+        <Route path="/seller/orders/:orderId" element={<OrderDetailsPage />} />
+        <Route path="/seller/offers" element={<SellerOffersPage />} />
+        <Route path="/seller/reviews" element={<SellerReviewsPage />} />
+        <Route path="/seller/products/add" element={<AddProductPage />} />
         
         {/* Main routes with header/footer */}
         <Route path="/" element={<MainLayout><Homepage /></MainLayout>} />
