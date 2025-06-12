@@ -8,4 +8,12 @@ export default defineConfig({
     tailwindcss(),
     react()
   ],
+  server: {
+    port: 3000,
+    host: true,
+  },
+  define: {
+    // Make sure environment variables are available
+    'process.env': process.env
+  }
 })

@@ -1,8 +1,10 @@
-import React, { useRef, useState } from 'react';
+import React, { useRef, useState, useEffect } from 'react';
 import { Plus } from 'lucide-react';
 import marbleBg from '../../assets/marble-bg.jpg';
 import Header from '../../components/layout/Header';
 import { useNavigate } from 'react-router-dom';
+import { sellerSignup } from '../../services/api';
+import useUserStore from '../../store/useUserStore';
 
 const initialState = {
   firstName: '',
@@ -34,8 +36,37 @@ const paymentLabels = {
 const SellerSignupFormPage = () => {
   const [form, setForm] = useState(initialState);
   const [logoPreview, setLogoPreview] = useState(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState(null);
   const fileInputRef = useRef();
   const navigate = useNavigate();
+  const { user, isAuthenticated } = useUserStore();
+
+  // Check if user is authenticated
+  useEffect(() => {
+    if (!isAuthenticated) {
+      // Redirect to login page if not authenticated
+      navigate('/login', { 
+        state: { 
+          from: '/seller/signup',
+          message: 'Please log in to continue with seller registration.' 
+        } 
+      });
+    }
+  }, [isAuthenticated, navigate]);
+
+  // Auto-populate form with user data when component mounts
+  useEffect(() => {
+    if (user) {
+      setForm(prev => ({
+        ...prev,
+        firstName: user.first_name || '',
+        lastName: user.last_name || '',
+        email: user.email || '',
+        phone: user.phone || '',
+      }));
+    }
+  }, [user]);
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
@@ -57,10 +88,24 @@ const SellerSignupFormPage = () => {
     fileInputRef.current.click();
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    // TODO: Add validation and submission logic
-    navigate('/seller/signup-confirmation');
+    setIsLoading(true);
+    setError(null);
+    
+    try {
+      const response = await sellerSignup(form);
+      
+      if (response) {
+        // Navigate to confirmation page on success
+        navigate('/seller/signup-confirmation');
+      }
+    } catch (error) {
+      setError(error.message || 'An error occurred during seller registration');
+      console.error('Seller signup failed:', error);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const accountLabel = paymentLabels[form.paymentMethod] || 'Account Number';
@@ -80,27 +125,76 @@ const SellerSignupFormPage = () => {
         onSubmit={handleSubmit}
       >
         <div className="w-full max-w-4xl bg-white/90 rounded-xl shadow-lg p-6 md:p-12 flex flex-col md:flex-row gap-8 relative">
+          {error && (
+            <div className="w-full mb-4 rounded-md bg-red-50 p-4 border border-red-200">
+              <div className="text-sm text-red-700">{error}</div>
+            </div>
+          )}
           <div className="flex-1 space-y-10">
             {/* Owner's Information */}
             <div>
               <h2 className="text-2xl font-bold mb-4 border-b pb-2">Owner's Information</h2>
+              {user && (
+                <div className="mb-4 p-3 bg-green-50 border border-green-200 rounded-md">
+                  <div className="text-sm text-green-800">
+                    ✓ Your account information has been pre-filled. You can edit these fields if needed.
+                  </div>
+                </div>
+              )}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-4">
                 <div>
-                  <label className="block text-sm font-medium mb-1">First Name</label>
-                  <input name="firstName" value={form.firstName} onChange={handleChange} required className="input" />
+                  <label className="block text-sm font-medium mb-1">
+                    First Name 
+                    {user?.first_name && <span className="text-green-600 text-xs ml-1">(pre-filled)</span>}
+                  </label>
+                  <input 
+                    name="firstName" 
+                    value={form.firstName} 
+                    onChange={handleChange} 
+                    required 
+                    className={`input ${user?.first_name ? 'bg-green-50 border-green-200' : ''}`} 
+                  />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium mb-1">Last Name</label>
-                  <input name="lastName" value={form.lastName} onChange={handleChange} required className="input" />
+                  <label className="block text-sm font-medium mb-1">
+                    Last Name
+                    {user?.last_name && <span className="text-green-600 text-xs ml-1">(pre-filled)</span>}
+                  </label>
+                  <input 
+                    name="lastName" 
+                    value={form.lastName} 
+                    onChange={handleChange} 
+                    required 
+                    className={`input ${user?.last_name ? 'bg-green-50 border-green-200' : ''}`} 
+                  />
                 </div>
               </div>
               <div className="mb-4">
-                <label className="block text-sm font-medium mb-1">E-mail address</label>
-                <input name="email" value={form.email} onChange={handleChange} required type="email" className="input" />
+                <label className="block text-sm font-medium mb-1">
+                  E-mail address
+                  {user?.email && <span className="text-green-600 text-xs ml-1">(pre-filled)</span>}
+                </label>
+                <input 
+                  name="email" 
+                  value={form.email} 
+                  onChange={handleChange} 
+                  required 
+                  type="email" 
+                  className={`input ${user?.email ? 'bg-green-50 border-green-200' : ''}`} 
+                />
               </div>
               <div className="mb-4">
-                <label className="block text-sm font-medium mb-1">Phone number</label>
-                <input name="phone" value={form.phone} onChange={handleChange} required className="input" />
+                <label className="block text-sm font-medium mb-1">
+                  Phone number
+                  {user?.phone && <span className="text-green-600 text-xs ml-1">(pre-filled)</span>}
+                </label>
+                <input 
+                  name="phone" 
+                  value={form.phone} 
+                  onChange={handleChange} 
+                  required 
+                  className={`input ${user?.phone ? 'bg-green-50 border-green-200' : ''}`} 
+                />
               </div>
               <div>
                 <label className="block text-sm font-medium mb-1">NID/ PASSPORT/ BIRTH CERTIFICATE No.</label>
@@ -209,9 +303,9 @@ const SellerSignupFormPage = () => {
           <button
             type="submit"
             className="bg-black text-white px-8 py-3 rounded-full text-lg font-semibold shadow hover:bg-gray-900 transition-all disabled:opacity-50"
-            disabled={!form.agree}
+            disabled={!form.agree || isLoading}
           >
-            CONTINUE & SIGN UP
+            {isLoading ? 'SUBMITTING...' : 'CONTINUE & SIGN UP'}
           </button>
         </div>
       </form>

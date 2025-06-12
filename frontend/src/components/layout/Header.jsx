@@ -36,6 +36,22 @@ import SearchBar from "../ui/SearchBar"
     setIsMenuOpen(!isMenuOpen)
   }
 
+  const handleBecomeSellerClick = (e) => {
+    e.preventDefault()
+    if (!isAuthenticated) {
+      // Redirect to login with seller signup intent
+      navigate('/login', { 
+        state: { 
+          from: '/seller/signup',
+          message: 'Please log in to continue with seller registration.' 
+        } 
+      });
+    } else {
+      // User is logged in, go to seller onboarding
+      navigate('/seller');
+    }
+  }
+
   return (
     <header className="bg-black text-white p-4 relative sticky top-0 z-50">
       <div className="max-w-7xl mx-auto flex items-center justify-between">
@@ -47,13 +63,13 @@ import SearchBar from "../ui/SearchBar"
         </div>
         <div className="flex items-center gap-8">
           {isAuthenticated ? (
-            <span className="text-sm">Hello, {user?.name}</span>
+            <span className="text-sm">Hello, {user?.first_name || user?.username}</span>
           ) : (
             <a href="/login" className="text-sm hover:underline">
               Log in/ Sign up
             </a>
           )}
-          <a href="/seller" className="text-sm hover:underline">
+          <a href="/seller" onClick={handleBecomeSellerClick} className="text-sm hover:underline">
             Become a seller
           </a>
           <a href="/cart" className="flex items-center relative">

@@ -1,0 +1,35 @@
+version: '3.8'
+
+services:
+  backend:
+    environment:
+      - DEBUG=False
+      - SECRET_KEY=${SECRET_KEY}
+      - ALLOWED_HOSTS=${ALLOWED_HOSTS}
+    volumes:
+      - media_volume:/app/media
+      - static_volume:/app/staticfiles
+    restart: unless-stopped
+
+  celery:
+    environment:
+      - DEBUG=False
+      - SECRET_KEY=${SECRET_KEY}
+    restart: unless-stopped
+
+  celery-beat:
+    environment:
+      - DEBUG=False
+      - SECRET_KEY=${SECRET_KEY}
+    restart: unless-stopped
+
+  db:
+    restart: unless-stopped
+    volumes:
+      - postgres_data:/var/lib/postgresql/data/
+
+  redis:
+    restart: unless-stopped
+
+  nginx:
+    restart: unless-stopped 

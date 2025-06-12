@@ -1,6 +1,12 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
-import { addToCart } from '../services/api'
+import { 
+  fetchCart, 
+  addToCart as apiAddToCart, 
+  updateCartItem, 
+  removeFromCart as apiRemoveFromCart 
+} from '../services/api'
+import useUserStore from './useUserStore'
 
 // Create the cart store
 export const useCartStore = create(
@@ -16,124 +22,177 @@ export const useCartStore = create(
       setLoading: (loading) => set({ loading }),
       setError: (error) => set({ error }),
       
-      // Cart operations
-      addItem: (product, quantity = 1) => {
-        const currentItems = get().items
-        const existingItem = currentItems.find(
-          (item) => 
-            item.id === product.id && 
-            item.selectedSize === product.selectedSize &&
-            item.selectedColor === product.selectedColor
-        )
-        
-        if (existingItem) {
-          // Update quantity if item exists
-          set({
-            items: currentItems.map((item) =>
-              item.id === product.id && 
-              item.selectedSize === product.selectedSize &&
-              item.selectedColor === product.selectedColor
-                ? { ...item, quantity: item.quantity + quantity }
-                : item
-            ),
-          })
-        } else {
-          // Add new item
-          set({
-            items: [...currentItems, { ...product, quantity }],
-          })
+      // Fetch cart from backend
+      fetchCart: async () => {
+        try {
+          const { isAuthenticated } = useUserStore.getState()
+          if (!isAuthenticated) {
+            set({ items: [] })
+            return
+          }
+          
+          set({ loading: true, error: null })
+          const cartData = await fetchCart()
+          set({ items: cartData.items || [], loading: false })
+        } catch (error) {
+          set({ error: error.message, loading: false })
+          console.error('Failed to fetch cart:', error)
         }
       },
       
-      removeItem: (productId, selectedSize, selectedColor) => {
-        set({
-          items: get().items.filter(
-            (item) => !(
-              item.id === productId && 
-              item.selectedSize === selectedSize &&
-              item.selectedColor === selectedColor
+      // Add item to cart (backend + local state)
+      addItem: async (product, quantity = 1) => {
+        try {
+          const { isAuthenticated } = useUserStore.getState()
+          
+          if (isAuthenticated) {
+            // Add to backend cart
+            set({ loading: true, error: null })
+            await apiAddToCart(
+              product.id, 
+              quantity, 
+              product.selectedSize, 
+              product.selectedColor
             )
-          ),
-        })
+            
+            // Refresh cart from backend
+            await get().fetchCart()
+          } else {
+            // Add to local cart for non-authenticated users
+            const currentItems = get().items
+            const existingItem = currentItems.find(
+              (item) => 
+                item.id === product.id && 
+                item.selectedSize === product.selectedSize &&
+                item.selectedColor === product.selectedColor
+            )
+            
+            if (existingItem) {
+              set({
+                items: currentItems.map((item) =>
+                  item.id === product.id && 
+                  item.selectedSize === product.selectedSize &&
+                  item.selectedColor === product.selectedColor
+                    ? { ...item, quantity: item.quantity + quantity }
+                    : item
+                ),
+              })
+            } else {
+              set({
+                items: [...currentItems, { ...product, quantity }],
+              })
+            }
+          }
+        } catch (error) {
+          set({ error: error.message, loading: false })
+          throw error
+        }
       },
       
-      updateQuantity: (productId, selectedSize, selectedColor, quantity) => {
-        if (quantity < 1) {
-          get().removeItem(productId, selectedSize, selectedColor)
-          return
+      // Update item quantity
+      updateQuantity: async (itemId, quantity) => {
+        try {
+          const { isAuthenticated } = useUserStore.getState()
+          
+          if (isAuthenticated) {
+            set({ loading: true, error: null })
+            await updateCartItem(itemId, quantity)
+            await get().fetchCart()
+          } else {
+            // Update local cart
+            set({
+              items: get().items.map((item) =>
+                item.id === itemId ? { ...item, quantity } : item
+              ),
+            })
+          }
+        } catch (error) {
+          set({ error: error.message, loading: false })
+          throw error
         }
-        
-        set({
-          items: get().items.map((item) =>
-            item.id === productId && 
-            item.selectedSize === selectedSize &&
-            item.selectedColor === selectedColor
-              ? { ...item, quantity }
-              : item
-          ),
-        })
+      },
+      
+      // Remove item from cart
+      removeItem: async (itemId) => {
+        try {
+          const { isAuthenticated } = useUserStore.getState()
+          
+          if (isAuthenticated) {
+            set({ loading: true, error: null })
+            await apiRemoveFromCart(itemId)
+            await get().fetchCart()
+          } else {
+            // Remove from local cart
+            set({
+              items: get().items.filter((item) => item.id !== itemId),
+            })
+          }
+        } catch (error) {
+          set({ error: error.message, loading: false })
+          throw error
+        }
       },
       
       // Clear cart
       clearCart: () => {
-        set({ items: [] })
+        set({ items: [], error: null })
       },
       
-      // Get cart total
-      getTotal: () => {
-        return get().items.reduce(
-          (total, item) => total + item.price * item.quantity,
-          0
-        )
+      // Get cart totals
+      getCartTotals: () => {
+        const items = get().items
+        const totalItems = items.reduce((sum, item) => sum + item.quantity, 0)
+        const totalPrice = items.reduce((sum, item) => sum + (item.price * item.quantity), 0)
+        
+        return {
+          totalItems,
+          totalPrice: Number(totalPrice.toFixed(2))
+        }
       },
       
-      // Get item count
-      getItemCount: () => {
-        return get().items.reduce((count, item) => count + item.quantity, 0)
-      },
-      
-      // Check if item is in cart
-      isInCart: (productId, selectedSize, selectedColor) => {
-        return get().items.some(
-          (item) => 
-            item.id === productId && 
-            item.selectedSize === selectedSize &&
-            item.selectedColor === selectedColor
-        )
-      },
-      
-      // Reset store
-      reset: () => {
-        set({
-          items: [],
-          loading: false,
-          error: null,
-        })
-      },
-      
-      // Async actions
-      addToCart: async (productId, quantity = 1) => {
+      // Sync local cart with backend after login
+      syncCartAfterLogin: async () => {
         try {
-          set({ loading: true, error: null })
-          await addToCart(productId, quantity)
-          const product = get().getProductById(productId)
-          if (product) {
-            get().addItem(product, quantity)
+          const localItems = get().items
+          
+          if (localItems.length > 0) {
+            set({ loading: true })
+            
+            // Add each local item to backend cart
+            for (const item of localItems) {
+              await apiAddToCart(
+                item.id,
+                item.quantity,
+                item.selectedSize,
+                item.selectedColor
+              )
+            }
+            
+            // Clear local cart and fetch from backend
+            set({ items: [] })
+            await get().fetchCart()
+          } else {
+            // Just fetch backend cart
+            await get().fetchCart()
           }
-          set({ loading: false })
         } catch (error) {
+          console.error('Failed to sync cart:', error)
           set({ error: error.message, loading: false })
         }
       },
       
-      // Computed values
-      getTotalPrice: () => {
-        return get().items.reduce((total, item) => total + (item.price * item.quantity), 0)
-      },
+      // Reset state
+      reset: () => set({ 
+        items: [], 
+        loading: false, 
+        error: null 
+      })
     }),
     {
-      name: "cart-storage", // unique name for localStorage key
-      partialize: (state) => ({ items: state.items }), // only persist items
+      name: 'cart-store',
+      partialize: (state) => ({
+        items: state.items
+      })
     }
   )
 )
