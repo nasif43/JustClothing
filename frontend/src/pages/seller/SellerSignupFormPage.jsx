@@ -126,17 +126,17 @@ const SellerSignupFormPage = () => {
       >
         <div className="w-full max-w-4xl bg-white/90 rounded-xl shadow-lg p-6 md:p-12 flex flex-col md:flex-row gap-8 relative">
           {error && (
-            <div className="w-full mb-4 rounded-md bg-red-50 p-4 border border-red-200">
-              <div className="text-sm text-red-700">{error}</div>
-            </div>
+                    <div className="w-full mb-4 rounded-md bg-gray-100 p-4 border border-gray-300">
+          <div className="text-sm text-black">{error}</div>
+        </div>
           )}
           <div className="flex-1 space-y-10">
             {/* Owner's Information */}
             <div>
               <h2 className="text-2xl font-bold mb-4 border-b pb-2">Owner's Information</h2>
               {user && (
-                <div className="mb-4 p-3 bg-green-50 border border-green-200 rounded-md">
-                  <div className="text-sm text-green-800">
+                <div className="mb-4 p-3 bg-gray-100 border border-gray-300 rounded-md">
+                  <div className="text-sm text-black">
                     ✓ Your account information has been pre-filled. You can edit these fields if needed.
                   </div>
                 </div>
@@ -145,34 +145,34 @@ const SellerSignupFormPage = () => {
                 <div>
                   <label className="block text-sm font-medium mb-1">
                     First Name 
-                    {user?.first_name && <span className="text-green-600 text-xs ml-1">(pre-filled)</span>}
+                    {user?.first_name && <span className="text-gray-600 text-xs ml-1">(pre-filled)</span>}
                   </label>
                   <input 
                     name="firstName" 
                     value={form.firstName} 
                     onChange={handleChange} 
                     required 
-                    className={`input ${user?.first_name ? 'bg-green-50 border-green-200' : ''}`} 
+                    className={`input ${user?.first_name ? 'bg-gray-100 border-gray-300' : ''}`} 
                   />
                 </div>
                 <div>
                   <label className="block text-sm font-medium mb-1">
                     Last Name
-                    {user?.last_name && <span className="text-green-600 text-xs ml-1">(pre-filled)</span>}
+                    {user?.last_name && <span className="text-gray-600 text-xs ml-1">(pre-filled)</span>}
                   </label>
                   <input 
                     name="lastName" 
                     value={form.lastName} 
                     onChange={handleChange} 
                     required 
-                    className={`input ${user?.last_name ? 'bg-green-50 border-green-200' : ''}`} 
+                    className={`input ${user?.last_name ? 'bg-gray-100 border-gray-300' : ''}`} 
                   />
                 </div>
               </div>
               <div className="mb-4">
                 <label className="block text-sm font-medium mb-1">
                   E-mail address
-                  {user?.email && <span className="text-green-600 text-xs ml-1">(pre-filled)</span>}
+                  {user?.email && <span className="text-gray-600 text-xs ml-1">(pre-filled)</span>}
                 </label>
                 <input 
                   name="email" 
@@ -180,20 +180,20 @@ const SellerSignupFormPage = () => {
                   onChange={handleChange} 
                   required 
                   type="email" 
-                  className={`input ${user?.email ? 'bg-green-50 border-green-200' : ''}`} 
+                  className={`input ${user?.email ? 'bg-gray-100 border-gray-300' : ''}`} 
                 />
               </div>
               <div className="mb-4">
                 <label className="block text-sm font-medium mb-1">
                   Phone number
-                  {user?.phone && <span className="text-green-600 text-xs ml-1">(pre-filled)</span>}
+                  {user?.phone && <span className="text-gray-600 text-xs ml-1">(pre-filled)</span>}
                 </label>
                 <input 
                   name="phone" 
                   value={form.phone} 
                   onChange={handleChange} 
                   required 
-                  className={`input ${user?.phone ? 'bg-green-50 border-green-200' : ''}`} 
+                  className={`input ${user?.phone ? 'bg-gray-100 border-gray-300' : ''}`} 
                 />
               </div>
               <div>
@@ -224,7 +224,7 @@ const SellerSignupFormPage = () => {
               </div>
               <div className="mb-4">
                 <label className="block text-sm font-medium mb-1">Date founded</label>
-                <input name="founded" value={form.founded} onChange={handleChange} required placeholder="DD/MM/YYYY" className="input" />
+                <input name="founded" value={form.founded} onChange={handleChange} required placeholder="YYYY-MM-DD" className="input" />
               </div>
               <div className="mb-4">
                 <label className="block text-sm font-medium mb-1">Bio</label>

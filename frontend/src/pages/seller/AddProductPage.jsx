@@ -1,8 +1,26 @@
 import React, { useState, useEffect } from 'react'
 import SellerLayout from '../../components/layout/SellerLayout'
 import { Plus, Search, ChevronDown, ChevronUp, X } from 'lucide-react'
+import { createProduct } from '../../services/api'
+import { useNavigate } from 'react-router-dom'
 
 const AddProductPage = () => {
+  const navigate = useNavigate()
+  const [isLoading, setIsLoading] = useState(false)
+  const [error, setError] = useState(null)
+  
+  // Form state
+  const [formData, setFormData] = useState({
+    name: '',
+    description: '',
+    price: '',
+    category: '',
+    tags: [],
+    customTags: [],
+    features: []
+  })
+  
+  const [selectedImages, setSelectedImages] = useState([])
   const [customSizes, setCustomSizes] = useState(false)
   const [days, setDays] = useState(3)
   const [selectedSizes, setSelectedSizes] = useState({
@@ -22,11 +40,83 @@ const AddProductPage = () => {
   const [colorInput, setColorInput] = useState('')
   const [quantities, setQuantities] = useState({})
   const [skuCombinations, setSkuCombinations] = useState([])
+  const [requiresAdvancePayment, setRequiresAdvancePayment] = useState(false)
 
   // Generate SKU combinations when selected colors or sizes change
   useEffect(() => {
     generateSkuCombinations()
   }, [selectedColors, selectedSizes])
+
+  const handleFormChange = (e) => {
+    const { name, value } = e.target
+    setFormData(prev => ({
+      ...prev,
+      [name]: value
+    }))
+  }
+
+  const handleImageUpload = (e) => {
+    const files = Array.from(e.target.files)
+    if (files.length + selectedImages.length > 6) {
+      alert('Maximum 6 images allowed')
+      return
+    }
+    setSelectedImages(prev => [...prev, ...files])
+  }
+
+  const removeImage = (index) => {
+    setSelectedImages(prev => prev.filter((_, i) => i !== index))
+  }
+
+  const handleSubmit = async (e) => {
+    e.preventDefault()
+    setIsLoading(true)
+    setError(null)
+
+    try {
+      // Prepare form data
+      const productFormData = new FormData()
+      
+      // Basic product info
+      productFormData.append('name', formData.name)
+      productFormData.append('description', formData.description)
+      productFormData.append('price', formData.price)
+      productFormData.append('estimated_pickup_days', days)
+      productFormData.append('requires_advance_payment', requiresAdvancePayment)
+      
+      // Sizes and colors
+      const activeSizes = Object.entries(selectedSizes)
+        .filter(([_, isSelected]) => isSelected)
+        .map(([size]) => size)
+      
+      productFormData.append('availableSizes', JSON.stringify(activeSizes))
+      productFormData.append('availableColors', JSON.stringify(selectedColors.map(c => c.name)))
+      
+      // Custom sizing
+      productFormData.append('offers_custom_sizes', customSizes)
+      
+      // Calculate total stock quantity from all SKU combinations
+      const totalStock = Object.values(quantities).reduce((sum, qty) => sum + (parseInt(qty) || 0), 0)
+      productFormData.append('stock_quantity', totalStock || 0)
+      
+      // Add images
+      selectedImages.forEach((image, index) => {
+        productFormData.append('uploaded_images', image)
+      })
+
+      const response = await createProduct(productFormData)
+      
+      if (response) {
+        // Redirect to seller products or dashboard on success
+        navigate('/seller/dashboard')
+      }
+    } catch (error) {
+      setError(error.message || 'Failed to create product')
+      console.error('Product creation failed:', error)
+    } finally {
+      setIsLoading(false)
+    }
+  }
 
   const handleSizeChange = (size) => {
     setSelectedSizes({
@@ -98,13 +188,23 @@ const AddProductPage = () => {
       <div className="bg-white/90 rounded-lg p-6 mb-6">
         <h1 className="text-2xl font-bold mb-8 text-center uppercase">LIST YOUR PRODUCT</h1>
         
-        <form className="space-y-6">
+        {error && (
+          <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
+            {error}
+          </div>
+        )}
+        
+        <form className="space-y-6" onSubmit={handleSubmit}>
           {/* Product Title */}
           <div>
-            <label htmlFor="productTitle" className="block mb-2 font-medium text-gray-700">Product Title</label>
+            <label htmlFor="name" className="block mb-2 font-medium text-gray-700">Product Title</label>
             <input 
               type="text" 
-              id="productTitle" 
+              id="name"
+              name="name"
+              value={formData.name}
+              onChange={handleFormChange}
+              required
               className="w-full border border-gray-300 rounded p-2 focus:outline-none focus:ring-1 focus:ring-black"
             />
           </div>
@@ -114,10 +214,35 @@ const AddProductPage = () => {
             <label className="block mb-2 font-medium text-gray-700">
               Add Photos <span className="text-xs text-gray-500">(Max 6)</span>
             </label>
-            <div className="border border-gray-300 rounded-lg p-4 min-h-[150px] flex items-start">
-              <div className="w-16 h-16 bg-gray-200 flex items-center justify-center rounded">
-                <Plus className="w-8 h-8 text-gray-500" />
-              </div>
+            <div className="border border-gray-300 rounded-lg p-4 min-h-[150px] flex items-start gap-4 flex-wrap">
+              {selectedImages.map((image, index) => (
+                <div key={index} className="relative w-16 h-16">
+                  <img 
+                    src={URL.createObjectURL(image)} 
+                    alt={`Preview ${index + 1}`}
+                    className="w-full h-full object-cover rounded"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => removeImage(index)}
+                    className="absolute -top-1 -right-1 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs"
+                  >
+                    ×
+                  </button>
+                </div>
+              ))}
+              {selectedImages.length < 6 && (
+                <label className="w-16 h-16 bg-gray-200 flex items-center justify-center rounded cursor-pointer hover:bg-gray-300">
+                  <Plus className="w-8 h-8 text-gray-500" />
+                  <input
+                    type="file"
+                    multiple
+                    accept="image/*"
+                    onChange={handleImageUpload}
+                    className="hidden"
+                  />
+                </label>
+              )}
             </div>
           </div>
           
@@ -188,7 +313,7 @@ const AddProductPage = () => {
               type="checkbox" 
               id="customSizes" 
               checked={customSizes}
-              onChange={() => setCustomSizes(!customSizes)}
+              onChange={(e) => setCustomSizes(e.target.checked)}
               className="mr-2"
             />
             <label htmlFor="customSizes" className="font-medium text-gray-700">
@@ -244,11 +369,31 @@ const AddProductPage = () => {
             </div>
           </div>
           
+          {/* Price */}
+          <div>
+            <label htmlFor="price" className="block mb-2 font-medium text-gray-700">Price (BDT)</label>
+            <input 
+              type="number" 
+              id="price"
+              name="price"
+              value={formData.price}
+              onChange={handleFormChange}
+              required
+              step="0.01"
+              min="0"
+              className="w-full border border-gray-300 rounded p-2 focus:outline-none focus:ring-1 focus:ring-black"
+            />
+          </div>
+          
           {/* Product Description */}
           <div>
-            <label htmlFor="productDescription" className="block mb-2 font-medium text-gray-700">Product Description</label>
+            <label htmlFor="description" className="block mb-2 font-medium text-gray-700">Product Description</label>
             <textarea 
-              id="productDescription" 
+              id="description" 
+              name="description"
+              value={formData.description}
+              onChange={handleFormChange}
+              required
               className="w-full border border-gray-300 rounded p-2 min-h-[100px] focus:outline-none focus:ring-1 focus:ring-black"
             />
           </div>
@@ -292,10 +437,12 @@ const AddProductPage = () => {
           <div className="flex items-center">
             <input 
               type="checkbox" 
-              id="advancePayment" 
+              id="requiresAdvancePayment" 
+              checked={requiresAdvancePayment}
+              onChange={(e) => setRequiresAdvancePayment(e.target.checked)}
               className="mr-2"
             />
-            <label htmlFor="advancePayment" className="font-medium text-gray-700">
+            <label htmlFor="requiresAdvancePayment" className="font-medium text-gray-700">
               Requires Advance Payment
             </label>
           </div>
@@ -349,9 +496,15 @@ const AddProductPage = () => {
           <div className="text-right">
             <button 
               type="submit" 
-              className="bg-black text-white px-8 py-3 rounded uppercase font-bold transition-colors hover:bg-gray-800"
+              disabled={isLoading}
+              className={`px-8 py-3 rounded uppercase font-bold transition-colors ${
+                isLoading 
+                  ? 'bg-gray-400 cursor-not-allowed' 
+                  : 'bg-black text-white hover:bg-gray-800'
+              }`}
+              onDoubleClick={(e) => e.preventDefault()}
             >
-              Complete Listing
+              {isLoading ? 'Creating Product...' : 'Complete Listing'}
             </button>
           </div>
         </form>

@@ -21,9 +21,12 @@ const useProductStore = create((set, get) => ({
   fetchProducts: async () => {
     try {
       set({ loading: true, error: null })
-      const products = await fetchProducts()
+      const response = await fetchProducts()
+      // Handle paginated response from backend
+      const products = response.results || response || []
       // Also fetch stores whenever products are fetched
-      const stores = await fetchStores()
+      const storeResponse = await fetchStores()
+      const stores = storeResponse.results || storeResponse || []
       set({ products, stores, loading: false })
     } catch (error) {
       set({ error: error.message, loading: false })
@@ -33,7 +36,9 @@ const useProductStore = create((set, get) => ({
   fetchStores: async () => {
     try {
       set({ loading: true, error: null })
-      const stores = await fetchStores()
+      const response = await fetchStores()
+      // Handle paginated response from backend
+      const stores = response.results || response || []
       set({ stores, loading: false })
     } catch (error) {
       set({ error: error.message, loading: false })

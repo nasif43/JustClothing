@@ -8,6 +8,7 @@ import ProductDetailPage from "./pages/customer/ProductDetailPage"
 import StorePage from "./pages/customer/StorePage"
 import CartPage from "./pages/customer/CartPage"
 import OrdersPage from "./pages/customer/OrdersPage"
+import CustomerOrderDetailsPage from "./pages/customer/OrderDetailsPage"
 import QuickCheckoutPage from "./pages/customer/QuickCheckoutPage"
 import OrderConfirmationPage from "./pages/customer/OrderConfirmationPage"
 // Shared pages
@@ -21,7 +22,7 @@ import SellerSignupConfirmationPage from "./pages/seller/SellerSignupConfirmatio
 import SellerDashboardPage from "./pages/seller/SellerDashboardPage"
 import SellerHomepage from "./pages/seller/SellerHomepage"
 import SellerOrdersPage from "./pages/seller/SellerOrdersPage"
-import OrderDetailsPage from "./pages/seller/OrderDetailsPage"
+import SellerOrderDetailsPage from "./pages/seller/OrderDetailsPage"
 import SellerOffersPage from "./pages/seller/SellerOffersPage"
 import SellerReviewsPage from "./pages/seller/SellerReviewsPage"
 import AddProductPage from "./pages/seller/AddProductPage"
@@ -69,9 +70,12 @@ function App() {
   }, [initializeAuth])
 
   useEffect(() => {
-    // Sync cart when user logs in
+    // Sync cart when user logs in or is already authenticated
     if (isAuthenticated) {
       syncCartAfterLogin()
+    } else {
+      // Clear cart when user logs out
+      useCartStore.getState().clearCart()
     }
   }, [isAuthenticated, syncCartAfterLogin])
 
@@ -128,6 +132,11 @@ function AppContent() {
             <MainLayout><OrdersPage /></MainLayout>
           </ProtectedRoute>
         } />
+        <Route path="/order/:orderId" element={
+          <ProtectedRoute>
+            <MainLayout><CustomerOrderDetailsPage /></MainLayout>
+          </ProtectedRoute>
+        } />
         <Route path="/quick-checkout" element={
           <ProtectedRoute>
             <MainLayout><QuickCheckoutPage /></MainLayout>
@@ -172,7 +181,7 @@ function AppContent() {
         } />
         <Route path="/seller/orders/:orderId" element={
           <SellerProtectedRoute>
-            <OrderDetailsPage />
+            <SellerOrderDetailsPage />
           </SellerProtectedRoute>
         } />
         <Route path="/seller/offers" element={

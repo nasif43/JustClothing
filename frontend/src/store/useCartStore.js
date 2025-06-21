@@ -33,9 +33,27 @@ export const useCartStore = create(
           
           set({ loading: true, error: null })
           const cartData = await fetchCart()
-          set({ items: cartData.items || [], loading: false })
+          // Backend returns cart object with items array
+          const rawItems = cartData?.items || []
+          
+          // Normalize items to match frontend expectations
+          const items = rawItems.map(item => ({
+            ...item,
+            // Map backend fields to frontend expectations
+            name: item.product_name,
+            image: item.product_image,
+            price: parseFloat(item.unit_price),
+            selectedSize: item.size,
+            selectedColor: item.color,
+            // Keep original backend fields for API calls
+            product_id: item.product,
+            unit_price: item.unit_price,
+            total_price: item.total_price
+          }))
+          
+          set({ items, loading: false })
         } catch (error) {
-          set({ error: error.message, loading: false })
+          set({ error: error.message, loading: false, items: [] })
           console.error('Failed to fetch cart:', error)
         }
       },
@@ -43,6 +61,15 @@ export const useCartStore = create(
       // Add item to cart (backend + local state)
       addItem: async (product, quantity = 1) => {
         try {
+          // Check if product is in stock before adding
+          if (!product.is_in_stock || product.stock_quantity === 0) {
+            throw new Error('This product is out of stock')
+          }
+          
+          if (quantity > product.stock_quantity) {
+            throw new Error(`Only ${product.stock_quantity} items available in stock`)
+          }
+          
           const { isAuthenticated } = useUserStore.getState()
           
           if (isAuthenticated) {
@@ -55,14 +82,14 @@ export const useCartStore = create(
               product.selectedColor
             )
             
-            // Refresh cart from backend
+            // Refresh cart from backend to get updated state
             await get().fetchCart()
           } else {
             // Add to local cart for non-authenticated users
             const currentItems = get().items
             const existingItem = currentItems.find(
               (item) => 
-                item.id === product.id && 
+                item.product_id === product.id && 
                 item.selectedSize === product.selectedSize &&
                 item.selectedColor === product.selectedColor
             )
@@ -70,7 +97,7 @@ export const useCartStore = create(
             if (existingItem) {
               set({
                 items: currentItems.map((item) =>
-                  item.id === product.id && 
+                  item.product_id === product.id && 
                   item.selectedSize === product.selectedSize &&
                   item.selectedColor === product.selectedColor
                     ? { ...item, quantity: item.quantity + quantity }
@@ -79,18 +106,25 @@ export const useCartStore = create(
               })
             } else {
               set({
-                items: [...currentItems, { ...product, quantity }],
+                items: [...currentItems, { 
+                  ...product, 
+                  product_id: product.id,
+                  quantity,
+                  selectedSize: product.selectedSize,
+                  selectedColor: product.selectedColor
+                }],
               })
             }
           }
         } catch (error) {
           set({ error: error.message, loading: false })
+          console.error('Failed to add to cart:', error)
           throw error
         }
       },
       
       // Update item quantity
-      updateQuantity: async (itemId, quantity) => {
+      updateQuantity: async (itemId, size, color, quantity) => {
         try {
           const { isAuthenticated } = useUserStore.getState()
           
@@ -102,7 +136,11 @@ export const useCartStore = create(
             // Update local cart
             set({
               items: get().items.map((item) =>
-                item.id === itemId ? { ...item, quantity } : item
+                item.id === itemId && 
+                item.selectedSize === size && 
+                item.selectedColor === color
+                  ? { ...item, quantity } 
+                  : item
               ),
             })
           }
@@ -113,29 +151,100 @@ export const useCartStore = create(
       },
       
       // Remove item from cart
-      removeItem: async (itemId) => {
+      removeItem: async (itemId, size = null, color = null) => {
         try {
           const { isAuthenticated } = useUserStore.getState()
           
           if (isAuthenticated) {
-            set({ loading: true, error: null })
-            await apiRemoveFromCart(itemId)
-            await get().fetchCart()
+            // For authenticated users, find the correct cart item ID
+            const currentItems = get().items
+            
+            // First try to find by exact ID match
+            let targetItem = currentItems.find((item) => 
+              item.id === itemId && 
+              item.selectedSize === size && 
+              item.selectedColor === color
+            )
+            
+            // If not found, try to find by product_id (in case itemId is actually product_id)
+            if (!targetItem) {
+              targetItem = currentItems.find((item) => 
+                item.product_id === itemId && 
+                item.selectedSize === size && 
+                item.selectedColor === color
+              )
+            }
+            
+            if (targetItem) {
+              // Immediately remove from local state for instant UI feedback
+              const filteredItems = currentItems.filter((item) => 
+                !(item.id === targetItem.id)
+              )
+              set({ items: filteredItems, loading: true, error: null })
+              
+              try {
+                await apiRemoveFromCart(targetItem.id)
+                
+                // Refresh cart from backend to ensure consistency
+                await get().fetchCart()
+              } catch (apiError) {
+                // If backend removal fails, restore the item
+                console.error('Backend removal failed, restoring item:', apiError)
+                set({ items: currentItems, error: 'Failed to remove item', loading: false })
+                throw apiError
+              }
+            } else {
+              console.error('Cart item not found for removal:', { itemId, size, color })
+              set({ error: 'Item not found in cart', loading: false })
+            }
           } else {
             // Remove from local cart
             set({
-              items: get().items.filter((item) => item.id !== itemId),
+              items: get().items.filter((item) => 
+                !(item.id === itemId && 
+                  item.selectedSize === size && 
+                  item.selectedColor === color)
+              ),
             })
           }
         } catch (error) {
           set({ error: error.message, loading: false })
+          console.error('Failed to remove cart item:', error)
           throw error
         }
       },
       
       // Clear cart
-      clearCart: () => {
-        set({ items: [], error: null })
+      clearCart: async () => {
+        try {
+          const { isAuthenticated } = useUserStore.getState()
+          
+          if (isAuthenticated) {
+            set({ loading: true, error: null })
+            await clearCart() // Call backend API
+            await get().fetchCart() // Refresh from backend to ensure sync
+          } else {
+            set({ items: [], error: null })
+          }
+        } catch (error) {
+          set({ error: error.message, loading: false })
+          console.error('Failed to clear cart:', error)
+          throw error
+        }
+      },
+      
+      // Force refresh cart from backend
+      refreshCart: async () => {
+        try {
+          const { isAuthenticated } = useUserStore.getState()
+          if (isAuthenticated) {
+            set({ loading: true, error: null })
+            await get().fetchCart()
+          }
+        } catch (error) {
+          set({ error: error.message, loading: false })
+          console.error('Failed to refresh cart:', error)
+        }
       },
       
       // Get cart totals

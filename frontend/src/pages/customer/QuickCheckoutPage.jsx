@@ -8,7 +8,9 @@ import {
   CheckoutPaymentMethod,
   ConfirmButton
 } from '../../features/checkout/components';
+import { ShippingAddressModal } from '../../features/cart/components';
 import Alert from '../../components/Alert';
+import { createQuickOrder, fetchUserShippingInfo } from '../../services/api';
 
 function QuickCheckoutPage() {
   const navigate = useNavigate();
@@ -35,23 +37,49 @@ function QuickCheckoutPage() {
   });
   
   const [formValid, setFormValid] = useState(false);
+  const [formData, setFormData] = useState({});
   const [paymentMethod, setPaymentMethod] = useState('cash');
   const [couponCode, setCouponCode] = useState('');
   const [discount, setDiscount] = useState(0);
   const [alertMessage, setAlertMessage] = useState('');
   const [isAlertOpen, setIsAlertOpen] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [isShippingModalOpen, setIsShippingModalOpen] = useState(false);
+  const [shippingInfo, setShippingInfo] = useState({
+    address: '',
+    phone: ''
+  });
+  
   const deliveryFee = 80;
   const grandTotal = product.price + deliveryFee - discount;
 
-  const handleFormChange = (formData) => {
+  // Fetch user's shipping info when component mounts
+  useEffect(() => {
+    const fetchUserInfo = async () => {
+      try {
+        const response = await fetchUserShippingInfo();
+        setShippingInfo({
+          address: response.address_line_1 || '',
+          phone: response.phone || ''
+        });
+      } catch (error) {
+        console.error('Failed to fetch user info:', error);
+      }
+    };
+
+    fetchUserInfo();
+  }, []);
+
+  const handleFormChange = (newFormData) => {
     // Check if all required fields are filled
     const isValid = 
-      formData.name && 
-      formData.phoneNumber && 
-      formData.district && 
-      formData.area && 
-      formData.address;
+      newFormData.name && 
+      newFormData.phoneNumber && 
+      newFormData.district && 
+      newFormData.area && 
+      newFormData.address;
     
+    setFormData(newFormData);
     setFormValid(isValid);
   };
 
@@ -67,19 +95,55 @@ function QuickCheckoutPage() {
     }
   };
 
-  const handleConfirmOrder = () => {
-    if (!formValid) {
-      setAlertMessage('Please fill all the required fields');
-      setIsAlertOpen(true);
-      return;
-    }
+  const handleConfirmOrder = async () => {
+    // Open shipping modal instead of checking form validity
+    setIsShippingModalOpen(true);
+  };
 
-    // Process order here
-    setAlertMessage('Order confirmed! Thank you for your purchase.');
-    setIsAlertOpen(true);
-    setTimeout(() => {
-      navigate('/order-confirmation');
-    }, 2000);
+  const handleShippingConfirm = async (shippingData) => {
+    if (loading) return;
+
+    try {
+      setLoading(true);
+      
+      // Update shipping info state
+      setShippingInfo(shippingData);
+      
+      // Prepare order data
+      const orderData = {
+        product_id: product.id,
+        quantity: product.quantity || 1,
+        size: product.size || '',
+        color: product.color || '',
+        payment_method: paymentMethod === 'cash' ? 'cod' : 'card',
+        customer_name: 'Customer', // Simple default name, could be improved with user profile
+        customer_phone: shippingData.phone,
+        customer_address: shippingData.address
+      };
+
+      // Create order via API
+      const response = await createQuickOrder(orderData);
+      
+      setAlertMessage('Order confirmed! Thank you for your purchase.');
+      setIsAlertOpen(true);
+      setIsShippingModalOpen(false);
+      
+      setTimeout(() => {
+        navigate('/order-confirmation', { 
+          state: { 
+            order: response,
+            orderNumber: response.id 
+          } 
+        });
+      }, 2000);
+      
+    } catch (error) {
+      console.error('Order creation failed:', error);
+      setAlertMessage(error.message || 'Failed to create order. Please try again.');
+      setIsAlertOpen(true);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleBackToProduct = () => {
@@ -107,19 +171,7 @@ function QuickCheckoutPage() {
       </button>
       
       <div className="grid md:grid-cols-2 gap-8">
-        {/* Left Column - Form */}
-        <div>
-          <CheckoutForm onFormChange={handleFormChange} />
-
-          <div className="mt-6">
-            <CheckoutPaymentMethod 
-              paymentMethod={paymentMethod}
-              setPaymentMethod={setPaymentMethod}
-            />
-          </div>
-        </div>
-
-        {/* Right Column - Order Summary */}
+        {/* Left Column - Product Summary */}
         <div>
           <ProductSummary product={product} />
 
@@ -129,24 +181,44 @@ function QuickCheckoutPage() {
             discount={discount}
             grandTotal={grandTotal}
           />
+        </div>
 
-          <div className="mt-6">
+        {/* Right Column - Payment and Checkout */}
+        <div>
+          <div className="mb-6">
+            <CheckoutPaymentMethod 
+              paymentMethod={paymentMethod}
+              setPaymentMethod={setPaymentMethod}
+            />
+          </div>
+
+          <div className="mb-6">
             <CouponInput 
               couponCode={couponCode}
               setCouponCode={setCouponCode}
               handleApplyCoupon={handleApplyCoupon}
             />
+          </div>
 
-            <div className="mt-6">
-              <ConfirmButton 
-                onClick={handleConfirmOrder}
-                disabled={!formValid}
-                buttonText={getButtonText()}
-              />
-            </div>
+          <div className="mt-6">
+            <ConfirmButton 
+              onClick={handleConfirmOrder}
+              disabled={loading}
+              buttonText={loading ? 'Processing...' : getButtonText()}
+            />
           </div>
         </div>
       </div>
+
+      {/* Shipping Address Modal */}
+      <ShippingAddressModal
+        isOpen={isShippingModalOpen}
+        onClose={() => setIsShippingModalOpen(false)}
+        onConfirm={handleShippingConfirm}
+        initialAddress={shippingInfo.address}
+        initialPhone={shippingInfo.phone}
+        loading={loading}
+      />
     </div>
   );
 }

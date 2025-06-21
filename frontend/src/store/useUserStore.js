@@ -1,6 +1,6 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
-import { login, register, logout, refreshToken, fetchUserProfile } from '../services/api'
+import { login, register, logout, refreshToken, fetchUserStatus } from '../services/api'
 
 // Create the user store with persistence
 const useUserStore = create(
@@ -103,11 +103,26 @@ const useUserStore = create(
         try {
           if (!get().isAuthenticated) return
           
-          const profile = await fetchUserProfile()
-          set({ user: profile })
-          return profile
+          // Use fetchUserStatus instead of fetchUserProfile for comprehensive data
+          const userStatus = await fetchUserStatus()
+          
+          console.log('fetchUserStatus response:', userStatus)
+          
+          // Store the complete user data including permissions
+          set({ 
+            user: {
+              ...userStatus.user,
+              customer_profile: userStatus.customer_profile,
+              seller_profile: userStatus.seller_profile,
+              permissions: userStatus.permissions
+            }
+          })
+          
+          console.log('Updated user in store:', get().user)
+          
+          return userStatus
         } catch (error) {
-          console.error('Failed to fetch user profile:', error)
+          console.error('Failed to fetch user status:', error)
           // Don't set error state for profile fetch failures
         }
       },

@@ -65,15 +65,15 @@ function LoginPage() {
         
         <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
           {successMessage && (
-            <div className="rounded-md bg-green-50 p-4 border border-green-200">
-              <div className="text-sm text-green-700">{successMessage}</div>
-            </div>
+                    <div className="rounded-md bg-gray-100 p-4 border border-gray-300">
+          <div className="text-sm text-black">{successMessage}</div>
+        </div>
           )}
           
           {error && (
-            <div className="rounded-md bg-red-50 p-4 border border-red-200">
-              <div className="text-sm text-red-700">{error}</div>
-            </div>
+                    <div className="rounded-md bg-gray-100 p-4 border border-gray-300">
+          <div className="text-sm text-black">{error}</div>
+        </div>
           )}
           
           <div className="space-y-4">

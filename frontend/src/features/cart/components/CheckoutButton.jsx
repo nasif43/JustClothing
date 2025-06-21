@@ -1,8 +1,13 @@
-function CheckoutButton({ onClick, buttonText = "CONFIRM" }) {
+function CheckoutButton({ onClick, buttonText = "CONFIRM", disabled = false }) {
   return (
     <button 
       onClick={onClick}
-      className="w-full bg-black text-white py-3 rounded-full font-bold hover-effect hover:cursor-pointer"
+      disabled={disabled}
+      className={`w-full py-3 rounded-full font-bold transition-colors ${
+        disabled 
+          ? 'bg-gray-400 text-gray-200 cursor-not-allowed' 
+          : 'bg-black text-white hover-effect hover:cursor-pointer'
+      }`}
     >
       {buttonText}
     </button>

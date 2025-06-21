@@ -30,6 +30,14 @@ function ProductDetailPage() {
     }
   }, [products.length, fetchProducts])
 
+  // Also try to fetch the specific product if not found in the list
+  useEffect(() => {
+    if (!product && !loading && products.length > 0) {
+      console.log('Product not found in list, refetching products...')
+      fetchProducts()
+    }
+  }, [product, loading, products.length, fetchProducts])
+
   // Reset the added to cart state if size or color changes
   useEffect(() => {
     if (addedToCart && (selectedSize !== lastAddedSize || selectedColor !== lastAddedColor)) {
@@ -40,6 +48,22 @@ function ProductDetailPage() {
   if (loading) return <div className="text-center py-20">Loading product...</div>
   if (error) return <div className="text-center py-20 text-gray-700">Error: {error}</div>
   if (!product) return <div className="text-center py-20">Product not found</div>
+
+  // Debug: Log product data
+  console.log('Product data:', product)
+  console.log('Stock quantity:', product.stock_quantity)
+  console.log('Is in stock:', product.is_in_stock)
+  console.log('Track inventory:', product.track_inventory)
+
+  // Check if product is out of stock
+  const isOutOfStock = !product.is_in_stock || product.stock_quantity === 0
+  console.log('Is out of stock:', isOutOfStock)
+
+  // Debug function to force refresh
+  const forceRefresh = () => {
+    console.log('Force refreshing product data...')
+    fetchProducts()
+  }
 
   // Get store information
   const store = getStoreById(product.storeId) || { 
@@ -169,6 +193,17 @@ function ProductDetailPage() {
           <h1 className="text-3xl font-bold mb-1">{product.name}</h1>
           <p className="text-sm text-gray-500 mb-4">TAGS: {product.tags}</p>
 
+          {/* Out of Stock Banner */}
+          {isOutOfStock && (
+            <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
+              <div className="flex items-center">
+                <span className="font-bold">⚠️ OUT OF STOCK</span>
+                <span className="ml-2">This item is currently unavailable</span>
+              </div>
+            </div>
+          )}
+
+
           <div className="mb-6">
             <h2 className="text-lg font-medium mb-2">SIZE</h2>
             <div className="flex flex-wrap gap-2">
@@ -216,16 +251,22 @@ function ProductDetailPage() {
           <div className="space-y-3 mb-6">
             <button
               onClick={handleAddToCart}
-              disabled={addedToCart}
+              disabled={addedToCart || isOutOfStock}
               className={`w-full py-3 border border-black rounded-full font-medium flex items-center justify-center gap-2 
                 ${addedToCart 
                   ? 'bg-gray-200 text-black border-black' 
+                  : isOutOfStock
+                  ? 'bg-gray-300 text-gray-500 border-gray-300 cursor-not-allowed'
                   : 'bg-white hover:bg-gray-100'}`}
             >
               {addedToCart ? (
                 <>
                   <Check className="h-5 w-5" />
                   ADDED TO CART
+                </>
+              ) : isOutOfStock ? (
+                <>
+                  OUT OF STOCK
                 </>
               ) : (
                 <>

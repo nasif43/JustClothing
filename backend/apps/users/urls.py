@@ -1,0 +1,64 @@
+from django.urls import path, include
+from rest_framework.routers import DefaultRouter
+from rest_framework_simplejwt.views import TokenRefreshView, TokenVerifyView
+
+from .views import (
+    CustomTokenObtainPairView,
+    RegisterView,
+    ProfileView,
+    ChangePasswordView,
+    SellerSignupView,
+    SellerProfileView,
+    CustomerProfileView,
+    AddressListCreateView,
+    AddressDetailView,
+    SellerTeamMemberListCreateView,
+    SellerTeamMemberDetailView,
+    logout_view,
+    user_status_view,
+    PublicSellerListView,
+    PublicSellerDetailView,
+    seller_stats_view,
+    store_reviews_view,
+    user_shipping_info,
+)
+
+router = DefaultRouter()
+# No ViewSets needed for now, using APIViews
+
+urlpatterns = [
+    # JWT Authentication
+    path('login/', CustomTokenObtainPairView.as_view(), name='token_obtain_pair'),
+    path('refresh/', TokenRefreshView.as_view(), name='token_refresh'),
+    path('verify/', TokenVerifyView.as_view(), name='token_verify'),
+    path('logout/', logout_view, name='logout'),
+    
+    # User management
+    path('register/', RegisterView.as_view(), name='register'),
+    path('profile/', ProfileView.as_view(), name='profile'),
+    path('status/', user_status_view, name='user_status'),
+    path('change-password/', ChangePasswordView.as_view(), name='change_password'),
+    path('shipping-info/', user_shipping_info, name='user_shipping_info'),
+    
+    # Customer profile
+    path('customer-profile/', CustomerProfileView.as_view(), name='customer_profile'),
+    
+    # Seller management
+    path('seller/signup/', SellerSignupView.as_view(), name='seller_signup'),
+    path('seller/profile/', SellerProfileView.as_view(), name='seller_profile'),
+    path('seller/team/', SellerTeamMemberListCreateView.as_view(), name='seller_team_list'),
+    path('seller/team/<int:pk>/', SellerTeamMemberDetailView.as_view(), name='seller_team_detail'),
+    
+    # Address management
+    path('addresses/', AddressListCreateView.as_view(), name='address_list'),
+    path('addresses/<int:pk>/', AddressDetailView.as_view(), name='address_detail'),
+    
+    # Public seller/store endpoints (for store listings)
+    path('stores/', PublicSellerListView.as_view(), name='store_list'),
+    path('stores/<str:id>/', PublicSellerDetailView.as_view(), name='store_detail'),
+    path('stores/<int:seller_id>/stats/', seller_stats_view, name='seller_stats'),
+    path('stores/<int:seller_id>/reviews/', store_reviews_view, name='store_reviews'),
+    
+    # Include router URLs
+    path('', include(router.urls)),
+] 

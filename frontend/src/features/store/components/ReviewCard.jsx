@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom'
-import { MoreHorizontal, User } from 'lucide-react'
+import { MoreHorizontal, User, Star } from 'lucide-react'
 
 function formatTimeAgo(date) {
   const now = new Date()
@@ -19,6 +19,7 @@ function ReviewCard({ review }) {
     id,
     user,
     content,
+    rating,
     productId,
     productName,
     productImage,
@@ -46,7 +47,19 @@ function ReviewCard({ review }) {
         
         {/* Review content */}
         <div className="flex-1">
-          <h3 className="text-xl font-semibold mb-1">{user.name}</h3>
+          <div className="flex items-center gap-2 mb-2">
+            <h3 className="text-xl font-semibold">{user.name}</h3>
+            <div className="flex items-center">
+              {[...Array(5)].map((_, i) => (
+                <Star
+                  key={i}
+                  className={`w-4 h-4 ${
+                    i < rating ? 'text-black fill-black' : 'text-gray-600'
+                  }`}
+                />
+              ))}
+            </div>
+          </div>
           <p className="text-gray-200 mb-4">{content}</p>
           
           {/* Review images */}

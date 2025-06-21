@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom'
 import { useProductStore } from '../../../store'
+import StarRating from '../../../components/ui/StarRating'
 
 function ProductCard({ product, showStoreInfo = true }) {
   if (!product) return null
@@ -41,13 +42,21 @@ function ProductCard({ product, showStoreInfo = true }) {
         <div className="px-3 pb-3">
           {showStoreInfo && store ? (
             <div className="flex justify-between items-center">
-              <div>
+              <div className="flex flex-col">
                 {store.id ? (
                   <Link to={`/store/${store.id}`} className="text-xs text-gray-500 hover:underline">
-                    {store.name} • {store.rating}/5
+                    {store.name}
                   </Link>
                 ) : (
-                  <p className="text-xs text-gray-500">{store.name} • {store.rating}/5</p>
+                  <p className="text-xs text-gray-500">{store.name}</p>
+                )}
+                {store.rating > 0 && (
+                  <StarRating 
+                    rating={store.rating} 
+                    size="small" 
+                    showValue={true}
+                    className="mt-1"
+                  />
                 )}
               </div>
               <p className="text-xl font-medium">£{product.price}</p>

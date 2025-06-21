@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useNavigate } from "react-router-dom"
 import { useCartStore } from "../../store/useCartStore"
 import {
@@ -8,19 +8,47 @@ import {
   PaymentMethod,
   CostBreakdown,
   CouponApply,
-  CheckoutButton
+  CheckoutButton,
+  ShippingAddressModal
 } from "../../features/cart/components"
 import Alert from "../../components/Alert"
+import { createOrder, fetchUserShippingInfo } from "../../services/api"
 
 function CartPage() {
   const navigate = useNavigate()
-  const { items, updateQuantity, removeItem, clearCart } = useCartStore()
+  const { items, updateQuantity, removeItem, clearCart, refreshCart } = useCartStore()
   const [couponCode, setCouponCode] = useState("")
   const [paymentMethod, setPaymentMethod] = useState("cash")
   const [discount, setDiscount] = useState(0)
   const [selectedItems, setSelectedItems] = useState({})
   const [alertMessage, setAlertMessage] = useState("")
   const [isAlertOpen, setIsAlertOpen] = useState(false)
+  const [loading, setLoading] = useState(false)
+  const [isShippingModalOpen, setIsShippingModalOpen] = useState(false)
+  const [shippingInfo, setShippingInfo] = useState({
+    address: '',
+    phone: ''
+  })
+
+  // Fetch user's shipping info when component mounts
+  useEffect(() => {
+    const fetchUserInfo = async () => {
+      try {
+        const response = await fetchUserShippingInfo();
+        setShippingInfo({
+          address: response.address_line_1 || '',
+          phone: response.phone || ''
+        });
+      } catch (error) {
+        console.error('Failed to fetch user info:', error);
+        setAlertMessage('Failed to fetch shipping information. You can still add it during checkout.');
+        setIsAlertOpen(true);
+      }
+    };
+
+    fetchUserInfo();
+    refreshCart();
+  }, [])
 
   // Calculate totals
   const subtotal = items.reduce((total, item) => {
@@ -44,27 +72,72 @@ function CartPage() {
     }
   }
 
-  const handleConfirmOrder = () => {
+  const handleConfirmOrder = async () => {
     const selectedCount = Object.values(selectedItems).filter(Boolean).length
     if (selectedCount === 0) {
       setAlertMessage("Please select at least one item to proceed")
       setIsAlertOpen(true)
       return
     }
-    setAlertMessage("Order confirmed! Thank you for your purchase.")
-    setIsAlertOpen(true)
-    
-    // Clear selected items from cart and navigate after alert is shown
-    setTimeout(() => {
-      const itemsToRemove = items.filter(item => 
-        selectedItems[`${item.id}-${item.selectedSize}-${item.selectedColor}`]
-      )
-      itemsToRemove.forEach(item => {
-        removeItem(item.id, item.selectedSize, item.selectedColor)
-      })
-      setSelectedItems({})
-      navigate("/order-confirmation")
-    }, 2000)
+
+    // Open shipping modal
+    setIsShippingModalOpen(true)
+  }
+
+  const handleShippingConfirm = async (shippingData) => {
+    if (loading) return
+
+    try {
+      setLoading(true)
+      
+      // Update shipping info state
+      setShippingInfo(shippingData)
+      
+      // Prepare order data
+      const orderData = {
+        payment_method: paymentMethod === "cash" ? "cod" : "card",
+        customer_phone: shippingData.phone,
+        customer_address: shippingData.address
+      }
+
+      // Create order via API
+      const response = await createOrder(orderData)
+      
+      setAlertMessage("Order confirmed! Thank you for your purchase.")
+      setIsAlertOpen(true)
+      setIsShippingModalOpen(false)
+      
+      // Clear selected items from cart and navigate after alert is shown
+      setTimeout(() => {
+        const itemsToRemove = items.filter(item => 
+          selectedItems[`${item.id}-${item.selectedSize}-${item.selectedColor}`]
+        )
+        itemsToRemove.forEach(item => {
+          removeItem(item.id, item.selectedSize, item.selectedColor)
+        })
+        setSelectedItems({})
+        
+        // Handle response - it's an array of orders
+        const orders = Array.isArray(response) ? response : [response]
+        const firstOrder = orders[0]
+        
+        navigate("/order-confirmation", {
+          state: {
+            orders: orders,
+            order: firstOrder,
+            orderNumber: firstOrder?.id,
+            totalOrders: orders.length
+          }
+        })
+      }, 2000)
+      
+    } catch (error) {
+      console.error('Order creation failed:', error)
+      setAlertMessage(error.message || 'Failed to create order. Please try again.')
+      setIsAlertOpen(true)
+    } finally {
+      setLoading(false)
+    }
   }
 
   const toggleItemSelection = (itemId, selectedSize, selectedColor) => {
@@ -136,12 +209,23 @@ function CartPage() {
 
               <CheckoutButton 
                 onClick={handleConfirmOrder} 
-                buttonText={getButtonText()}
+                buttonText={loading ? "Processing..." : getButtonText()}
+                disabled={loading}
               />
             </div>
           </div>
         )}
       </div>
+
+      {/* Shipping Address Modal */}
+      <ShippingAddressModal
+        isOpen={isShippingModalOpen}
+        onClose={() => setIsShippingModalOpen(false)}
+        onConfirm={handleShippingConfirm}
+        initialAddress={shippingInfo.address}
+        initialPhone={shippingInfo.phone}
+        loading={loading}
+      />
     </div>
   )
 }

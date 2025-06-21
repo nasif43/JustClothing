@@ -77,9 +77,9 @@ const apiRequest = async (endpoint, options = {}) => {
 // Authentication API
 export const login = async (credentials) => {
   try {
-    // Map email to username since Django Simple JWT expects username field
+    // Send email directly (backend now handles both email and username)
     const loginData = {
-      username: credentials.email,
+      email: credentials.email,  // Send as email field
       password: credentials.password
     }
     
@@ -103,9 +103,15 @@ export const login = async (credentials) => {
 
 export const register = async (userData) => {
   try {
+    // Ensure username is set to email for consistency
+    const registrationData = {
+      ...userData,
+      username: userData.email  // Use email as username
+    }
+    
     const response = await apiRequest('auth/register/', {
       method: 'POST',
-      body: JSON.stringify(userData),
+      body: JSON.stringify(registrationData),
       auth: false
     })
     
@@ -124,9 +130,8 @@ export const sellerSignup = async (sellerData) => {
     formData.append('first_name', sellerData.firstName)
     formData.append('last_name', sellerData.lastName)
     formData.append('email', sellerData.email)
-    formData.append('username', sellerData.email)
     formData.append('phone', sellerData.phone)
-    formData.append('user_type', 'seller')
+    formData.append('id_number', sellerData.idNumber)
     
     // Business information
     formData.append('business_name', sellerData.businessName)
@@ -134,7 +139,6 @@ export const sellerSignup = async (sellerData) => {
     formData.append('founded_date', sellerData.founded)
     formData.append('bio', sellerData.bio)
     formData.append('pickup_location', sellerData.pickupLocation)
-    formData.append('id_number', sellerData.idNumber)
     
     // Social links (optional)
     if (sellerData.instagram) formData.append('instagram', sellerData.instagram)
@@ -149,12 +153,10 @@ export const sellerSignup = async (sellerData) => {
     // Logo file
     if (sellerData.logo) formData.append('logo', sellerData.logo)
     
-    const response = await apiRequest('sellers/signup/', {
+    const response = await apiRequest('auth/seller/signup/', {
       method: 'POST',
       body: formData,
-      auth: false,
-      // Don't set Content-Type header for FormData, let browser set it
-      headers: {}
+      auth: true  // Requires authentication - headers will be set automatically
     })
     
     return response
@@ -228,10 +230,51 @@ export const fetchProductById = async (id) => {
   }
 }
 
+// Seller Product Management API
+export const createProduct = async (productData) => {
+  try {
+    return await apiRequest('products/seller/products/create/', {
+      method: 'POST',
+      body: productData // FormData for file uploads
+    })
+  } catch (error) {
+    throw new Error(error.message || 'Failed to create product')
+  }
+}
+
+export const fetchSellerProducts = async () => {
+  try {
+    return await apiRequest('products/seller/products/')
+  } catch (error) {
+    throw new Error(error.message || 'Failed to fetch seller products')
+  }
+}
+
+export const updateProduct = async (productId, productData) => {
+  try {
+    return await apiRequest(`products/seller/products/${productId}/update/`, {
+      method: 'PATCH',
+      body: productData
+    })
+  } catch (error) {
+    throw new Error(error.message || 'Failed to update product')
+  }
+}
+
+export const deleteProduct = async (productId) => {
+  try {
+    return await apiRequest(`products/seller/products/${productId}/delete/`, {
+      method: 'DELETE'
+    })
+  } catch (error) {
+    throw new Error(error.message || 'Failed to delete product')
+  }
+}
+
 // Stores API
 export const fetchStores = async () => {
   try {
-    return await apiRequest('stores/')
+    return await apiRequest('auth/stores/')
   } catch (error) {
     throw new Error(error.message || 'Failed to fetch stores')
   }
@@ -239,9 +282,20 @@ export const fetchStores = async () => {
 
 export const fetchStoreById = async (id) => {
   try {
-    return await apiRequest(`stores/${id}/`)
+    return await apiRequest(`auth/stores/${id}/`)
   } catch (error) {
     throw new Error(error.message || 'Store not found')
+  }
+}
+
+export const fetchSellerStats = async (sellerId) => {
+  try {
+    return await apiRequest(`users/stores/${sellerId}/stats/`, {
+      method: 'GET',
+      auth: false
+    })
+  } catch (error) {
+    throw new Error(error.message || 'Failed to fetch seller statistics')
   }
 }
 
@@ -249,7 +303,10 @@ export const fetchStoreById = async (id) => {
 export const fetchStoreReviews = async (storeId, sortBy = 'default') => {
   try {
     const params = new URLSearchParams({ sort: sortBy })
-    return await apiRequest(`stores/${storeId}/reviews/?${params}`)
+    return await apiRequest(`auth/stores/${storeId}/reviews/?${params}`, {
+      method: 'GET',
+      auth: false
+    })
   } catch (error) {
     throw new Error(error.message || 'Failed to fetch reviews')
   }
@@ -274,10 +331,27 @@ export const createReview = async (reviewData) => {
   }
 }
 
+export const submitProductReview = async (reviewData) => {
+  try {
+    return await apiRequest('reviews/', {
+      method: 'POST',
+      body: JSON.stringify({
+        product: reviewData.product_id,
+        order: reviewData.order_id,
+        rating: reviewData.rating,
+        content: reviewData.content,
+        review_type: 'product'
+      })
+    })
+  } catch (error) {
+    throw new Error(error.message || 'Failed to submit review')
+  }
+}
+
 // Cart API (if you have cart endpoints in backend)
 export const fetchCart = async () => {
   try {
-    return await apiRequest('cart/')
+    return await apiRequest('orders/cart/')
   } catch (error) {
     throw new Error(error.message || 'Failed to fetch cart')
   }
@@ -292,7 +366,7 @@ export const addToCart = async (productId, quantity = 1, size = null, color = nu
       ...(color && { color })
     }
     
-    return await apiRequest('cart/add/', {
+    return await apiRequest('orders/cart/add/', {
       method: 'POST',
       body: JSON.stringify(cartData)
     })
@@ -303,7 +377,7 @@ export const addToCart = async (productId, quantity = 1, size = null, color = nu
 
 export const updateCartItem = async (itemId, quantity) => {
   try {
-    return await apiRequest(`cart/items/${itemId}/`, {
+    return await apiRequest(`orders/cart/items/${itemId}/update/`, {
       method: 'PATCH',
       body: JSON.stringify({ quantity })
     })
@@ -314,7 +388,7 @@ export const updateCartItem = async (itemId, quantity) => {
 
 export const removeFromCart = async (itemId) => {
   try {
-    return await apiRequest(`cart/items/${itemId}/`, {
+    return await apiRequest(`orders/cart/items/${itemId}/remove/`, {
       method: 'DELETE'
     })
   } catch (error) {
@@ -322,10 +396,31 @@ export const removeFromCart = async (itemId) => {
   }
 }
 
+export const clearCart = async () => {
+  try {
+    return await apiRequest('orders/cart/clear/', {
+      method: 'POST'
+    })
+  } catch (error) {
+    throw new Error(error.message || 'Failed to clear cart')
+  }
+}
+
 // Orders API
 export const createOrder = async (orderData) => {
   try {
-    return await apiRequest('orders/', {
+    return await apiRequest('orders/orders/create/', {
+      method: 'POST',
+      body: JSON.stringify(orderData)
+    })
+  } catch (error) {
+    throw new Error(error.message || 'Failed to create order')
+  }
+}
+
+export const createQuickOrder = async (orderData) => {
+  try {
+    return await apiRequest('orders/orders/quick-create/', {
       method: 'POST',
       body: JSON.stringify(orderData)
     })
@@ -336,7 +431,7 @@ export const createOrder = async (orderData) => {
 
 export const fetchOrders = async () => {
   try {
-    return await apiRequest('orders/')
+    return await apiRequest('orders/orders/')
   } catch (error) {
     throw new Error(error.message || 'Failed to fetch orders')
   }
@@ -344,9 +439,36 @@ export const fetchOrders = async () => {
 
 export const fetchOrderById = async (id) => {
   try {
-    return await apiRequest(`orders/${id}/`)
+    return await apiRequest(`orders/orders/${id}/`)
   } catch (error) {
     throw new Error(error.message || 'Order not found')
+  }
+}
+
+export const fetchSellerOrders = async () => {
+  try {
+    return await apiRequest('orders/seller/orders/')
+  } catch (error) {
+    throw new Error(error.message || 'Failed to fetch seller orders')
+  }
+}
+
+export const fetchSellerOrderDetails = async (orderId) => {
+  try {
+    return await apiRequest(`orders/seller/orders/${orderId}/`)
+  } catch (error) {
+    throw new Error(error.message || 'Failed to fetch order details')
+  }
+}
+
+export const updateOrderStatus = async (orderId, status, notes = '') => {
+  try {
+    return await apiRequest(`orders/seller/orders/${orderId}/update-status/`, {
+      method: 'POST',
+      body: JSON.stringify({ status, notes })
+    })
+  } catch (error) {
+    throw new Error(error.message || 'Failed to update order status')
   }
 }
 
@@ -356,6 +478,15 @@ export const fetchUserProfile = async () => {
     return await apiRequest('users/profile/')
   } catch (error) {
     throw new Error(error.message || 'Failed to fetch user profile')
+  }
+}
+
+// User Status API (comprehensive user data with permissions)
+export const fetchUserStatus = async () => {
+  try {
+    return await apiRequest('auth/status/')
+  } catch (error) {
+    throw new Error(error.message || 'Failed to fetch user status')
   }
 }
 
@@ -396,5 +527,16 @@ export const fetchAnalytics = async (period = '30d') => {
     return await apiRequest(`analytics/?period=${period}`)
   } catch (error) {
     throw new Error(error.message || 'Failed to fetch analytics')
+  }
+}
+
+export const fetchUserShippingInfo = async () => {
+  try {
+    const response = await apiRequest('auth/shipping-info/', {
+      method: 'GET'
+    })
+    return response
+  } catch (error) {
+    throw new Error(error.message || 'Failed to fetch shipping information')
   }
 }

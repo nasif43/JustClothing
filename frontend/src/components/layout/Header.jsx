@@ -4,7 +4,8 @@ import { useCartStore, useUserStore } from "../../store"
 import { useNavigate } from "react-router-dom"
 import logo from "../../assets/logo.svg"
 import SearchBar from "../ui/SearchBar"
-  function Header() {
+
+function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const menuRef = useRef(null)
   const buttonRef = useRef(null)
@@ -36,8 +37,9 @@ import SearchBar from "../ui/SearchBar"
     setIsMenuOpen(!isMenuOpen)
   }
 
-  const handleBecomeSellerClick = (e) => {
+  const handleSellerButtonClick = (e) => {
     e.preventDefault()
+    
     if (!isAuthenticated) {
       // Redirect to login with seller signup intent
       navigate('/login', { 
@@ -46,10 +48,33 @@ import SearchBar from "../ui/SearchBar"
           message: 'Please log in to continue with seller registration.' 
         } 
       });
-    } else {
-      // User is logged in, go to seller onboarding
-      navigate('/seller');
+      return
     }
+
+    // Check seller status and navigate accordingly
+    const hasSellerProfile = user?.seller_profile
+    const isSellerApproved = user?.permissions?.seller_approved
+    
+    if (hasSellerProfile && isSellerApproved) {
+      // Approved seller - go to dashboard
+      navigate('/seller/dashboard')
+    } else if (hasSellerProfile) {
+      // Has seller profile but not approved - go to seller onboarding
+      navigate('/seller')
+    } else {
+      // No seller profile - go to seller onboarding
+      navigate('/seller')
+    }
+  }
+
+  // Determine button text and behavior
+  const getSellerButtonText = () => {
+    if (!isAuthenticated || !user?.seller_profile) {
+      return "Become a seller"
+    }
+    
+    const isSellerApproved = user?.permissions?.seller_approved
+    return isSellerApproved ? "Seller Dashboard" : "Seller Application"
   }
 
   return (
@@ -69,9 +94,12 @@ import SearchBar from "../ui/SearchBar"
               Log in/ Sign up
             </a>
           )}
-          <a href="/seller" onClick={handleBecomeSellerClick} className="text-sm hover:underline">
-            Become a seller
-          </a>
+          <button 
+            onClick={handleSellerButtonClick} 
+            className="text-sm hover:underline"
+          >
+            {getSellerButtonText()}
+          </button>
           <a href="/cart" className="flex items-center relative">
             <ShoppingCart className="h-7 w-7" />
             {itemCount > 0 && (

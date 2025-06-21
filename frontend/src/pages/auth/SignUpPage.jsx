@@ -33,7 +33,8 @@ const SignUpPage = () => {
                 password: data.password,
                 first_name: data.firstName,
                 last_name: data.lastName,
-                username: data.email, // Using email as username
+                username: data.email,
+                password_confirm: data.confirmPassword,
             })
             
             if (response) {
@@ -74,9 +75,9 @@ const SignUpPage = () => {
                 </div>
                 
                 {error && (
-                    <div className="rounded-md bg-red-50 p-4 border border-red-200">
-                        <div className="text-sm text-red-700">{error}</div>
-                    </div>
+                            <div className="rounded-md bg-gray-100 p-4 border border-gray-300">
+          <div className="text-sm text-black">{error}</div>
+        </div>
                 )}
                 
                 <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
@@ -91,7 +92,7 @@ const SignUpPage = () => {
                                     placeholder="Enter your first name"
                                 />
                                 {errors.firstName && (
-                                    <p className="mt-2 text-sm text-red-600">{errors.firstName.message}</p>
+                                    <p className="mt-2 text-sm text-black">{errors.firstName.message}</p>
                                 )}
                             </div>
                         </div>
@@ -105,7 +106,7 @@ const SignUpPage = () => {
                                     placeholder="Enter your last name"
                                 />
                                 {errors.lastName && (
-                                    <p className="mt-2 text-sm text-red-600">{errors.lastName.message}</p>
+                                    <p className="mt-2 text-sm text-black">{errors.lastName.message}</p>
                                 )}
                             </div>
                         </div>
@@ -121,7 +122,7 @@ const SignUpPage = () => {
                                 placeholder="Enter your email"
                             />
                             {errors.email && (
-                                <p className="mt-2 text-sm text-red-600">{errors.email.message}</p>
+                                <p className="mt-2 text-sm text-black">{errors.email.message}</p>
                             )}
                         </div>
                     </div>
@@ -136,7 +137,7 @@ const SignUpPage = () => {
                                 placeholder="Enter your password"
                             />
                             {errors.password && (
-                                <p className="mt-2 text-sm text-red-600">{errors.password.message}</p>
+                                <p className="mt-2 text-sm text-black">{errors.password.message}</p>
                             )}
                         </div>
                     </div>
@@ -151,7 +152,7 @@ const SignUpPage = () => {
                                 placeholder="Confirm your password"
                             />
                             {errors.confirmPassword && (
-                                <p className="mt-2 text-sm text-red-600">{errors.confirmPassword.message}</p>
+                                <p className="mt-2 text-sm text-black">{errors.confirmPassword.message}</p>
                             )}
                         </div>
                     </div>

@@ -2,7 +2,7 @@
 URL configuration for justclothing project.
 
 The `urlpatterns` list routes URLs to views. For more information please see:
-    https://docs.djangoproject.com/en/4.2/topics/http/urls/
+    https://docs.djangoproject.com/en/5.2/topics/http/urls/
 Examples:
 Function views
     1. Add an import:  from my_app import views
@@ -18,52 +18,38 @@ from django.contrib import admin
 from django.urls import path, include
 from django.conf import settings
 from django.conf.urls.static import static
-from rest_framework import permissions
-from drf_yasg.views import get_schema_view
-from drf_yasg import openapi
-from .admin import admin_site
+from drf_spectacular.views import SpectacularAPIView, SpectacularRedocView, SpectacularSwaggerView
 
-# API Documentation
-schema_view = get_schema_view(
-    openapi.Info(
-        title="JustClothing API",
-        default_version='v1',
-        description="E-commerce platform for clothing retailers",
-        terms_of_service="https://www.justclothing.com/terms/",
-        contact=openapi.Contact(email="api@justclothing.com"),
-        license=openapi.License(name="MIT License"),
-    ),
-    public=True,
-    permission_classes=(permissions.AllowAny,),
-)
-
-urlpatterns = [
-    # Admin
-    path('admin/', admin_site.urls),
+# API URL patterns
+api_patterns = [
+    path('auth/', include('apps.users.urls')),
+    path('products/', include('apps.products.urls')),
+    path('orders/', include('apps.orders.urls')),
+    path('payments/', include('apps.payments.urls')),
+    path('reviews/', include('apps.reviews.urls')),
+    path('promos/', include('apps.promos.urls')),
+    path('shipping/', include('apps.shipping.urls')),
+    path('analytics/', include('apps.analytics.urls')),
+    path('notifications/', include('apps.notifications.urls')),
     
     # API Documentation
-    path('swagger/', schema_view.with_ui('swagger', cache_timeout=0), name='schema-swagger-ui'),
-    path('redoc/', schema_view.with_ui('redoc', cache_timeout=0), name='schema-redoc'),
-    path('swagger.json', schema_view.without_ui(cache_timeout=0), name='schema-json'),
-    
-    # Health Check
-    path('health/', include('health_check.urls')),
-    
-    # API Routes
-    path('api/v1/users/', include('users.urls')),
-    path('api/v1/stores/', include('stores.urls')),
-    path('api/v1/products/', include('products.urls')),
-    path('api/v1/orders/', include('orders.urls')),
-    path('api/v1/reviews/', include('reviews.urls')),
-    path('api/v1/promotions/', include('promotions.urls')),
-    path('api/v1/analytics/', include('analytics.urls')),
-    path('api/v1/sellers/', include('sellers.urls')),
-    
-    # Authentication
-    path('api/v1/auth/', include('users.auth_urls')),
+    path('schema/', SpectacularAPIView.as_view(), name='schema'),
+    path('schema/docs/', SpectacularSwaggerView.as_view(url_name='schema'), name='swagger-ui'),
+    path('schema/redoc/', SpectacularRedocView.as_view(url_name='schema'), name='redoc'),
 ]
 
-# Serve media files in development
+# Main URL patterns
+urlpatterns = [
+    path('admin/', admin.site.urls),
+    path('api/v1/', include(api_patterns)),
+]
+
+# Static and media files (only in development)
 if settings.DEBUG:
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
     urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
+
+# Admin site customization
+admin.site.site_header = 'JustClothing Administration'
+admin.site.site_title = 'JustClothing Admin'
+admin.site.index_title = 'Welcome to JustClothing Administration'

@@ -1,16 +1,48 @@
-import React from 'react';
-import orders from '../../data/orders';
+import React, { useState, useEffect } from 'react';
 import marbleBg from '../../assets/marble-bg.jpg';
 import { useNavigate } from 'react-router-dom';
 import { OrderItem } from '../../features/order/components';
+import { fetchOrders } from '../../services/api';
 
 const OrdersPage = () => {
   const navigate = useNavigate();
+  const [orders, setOrders] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    const loadOrders = async () => {
+      try {
+        setLoading(true);
+        const response = await fetchOrders();
+        console.log('Orders API response:', response);
+        
+        // Handle paginated response if needed
+        let ordersData = [];
+        if (Array.isArray(response)) {
+          ordersData = response;
+        } else if (response && Array.isArray(response.results)) {
+          ordersData = response.results;
+        } else if (response && response.data && Array.isArray(response.data)) {
+          ordersData = response.data;
+        }
+        
+        console.log('Setting orders data:', ordersData);
+        setOrders(ordersData);
+      } catch (err) {
+        setError(err.message || 'Failed to load orders');
+        console.error('Failed to fetch orders:', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadOrders();
+  }, []);
 
   const handleOrderClick = (orderId) => {
-    // In a real application, this would navigate to an order details page
     console.log(`Viewing order ${orderId}`);
-    // navigate(`/order/${orderId}`);
+    navigate(`/order/${orderId}`);
   };
 
   return (
@@ -21,7 +53,21 @@ const OrdersPage = () => {
       <h1 className="text-4xl font-bold mb-12 mt-8">ORDERS</h1>
       
       <div className="w-full max-w-5xl space-y-6">
-        {orders.length === 0 ? (
+        {loading ? (
+          <div className="bg-white bg-opacity-80 p-8 rounded-lg text-center">
+            <p className="text-lg">Loading your orders...</p>
+          </div>
+        ) : error ? (
+          <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
+            <p>Error: {error}</p>
+            <button
+              onClick={() => window.location.reload()}
+              className="mt-2 px-4 py-1 bg-red-600 text-white rounded hover:bg-red-700"
+            >
+              Retry
+            </button>
+          </div>
+        ) : !Array.isArray(orders) || orders.length === 0 ? (
           <div className="bg-white bg-opacity-80 p-8 rounded-lg text-center">
             <p className="text-lg mb-4">You don't have any orders yet</p>
             <button
@@ -38,7 +84,7 @@ const OrdersPage = () => {
               <span className="ml-auto mr-4">STATUS</span>
             </div>
             
-            {orders.map((order) => (
+            {Array.isArray(orders) && orders.map((order) => (
               <OrderItem 
                 key={order.id}
                 order={order}
