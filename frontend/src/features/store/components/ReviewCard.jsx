@@ -62,6 +62,19 @@ function ReviewCard({ review }) {
           </div>
           <p className="text-gray-200 mb-4">{content}</p>
           
+          {/* Seller reply */}
+          {review.reply && (
+            <div className="bg-gray-800 rounded-lg p-4 mt-4 border-l-4 border-white">
+              <div className="flex items-center gap-2 mb-2">
+                <span className="font-medium text-white">{review.reply.seller_name}</span>
+                <span className="text-xs text-gray-400">
+                  {formatTimeAgo(review.reply.created_at)}
+                </span>
+              </div>
+              <p className="text-gray-200">{review.reply.content}</p>
+            </div>
+          )}
+          
           {/* Review images */}
           {images && images.length > 0 && (
             <div className="flex gap-2 mb-4">

@@ -2,7 +2,7 @@ from rest_framework import serializers
 from taggit.serializers import TagListSerializerField, TaggitSerializer
 from .models import (
     Category, ProductAttributeType, Product, ProductAttribute, 
-    ProductVariant, ProductVariantAttribute, ProductImage, ProductVideo, Collection
+    ProductVariant, ProductVariantAttribute, ProductImage, ProductVideo, Collection, ProductOffer
 )
 from apps.users.models import SellerProfile
 
@@ -70,14 +70,14 @@ class ProductVariantAttributeSerializer(serializers.ModelSerializer):
 
 
 class ProductVariantSerializer(serializers.ModelSerializer):
-    """Serializer for product variants"""
-    
-    attributes = ProductVariantAttributeSerializer(many=True, read_only=True)
-    images = ProductImageSerializer(many=True, read_only=True)
+    """Product variant serializer"""
     
     class Meta:
         model = ProductVariant
-        fields = ['id', 'sku', 'size', 'color', 'price', 'stock_quantity', 'is_active']
+        fields = [
+            'id', 'sku', 'size', 'color', 'price', 
+            'stock_quantity', 'is_active'
+        ]
 
 
 class CollectionSerializer(serializers.ModelSerializer):
@@ -104,11 +104,18 @@ class ProductListSerializer(serializers.ModelSerializer):
     collection_name = serializers.CharField(source='collection.name', read_only=True)
     tags_list = serializers.SerializerMethodField()
     
+    # Offer fields - will be set after ProductOfferSerializer is defined
+    discounted_price = serializers.ReadOnlyField()
+    original_price = serializers.ReadOnlyField()
+    has_active_offer = serializers.ReadOnlyField()
+    savings_amount = serializers.ReadOnlyField()
+    
     class Meta:
         model = Product
         fields = [
             'id', 'name', 'slug', 'description', 'short_description',
-            'price', 'rating', 'review_count', 'sales_count',
+            'price', 'original_price', 'discounted_price', 'has_active_offer', 'savings_amount',
+            'rating', 'review_count', 'sales_count',
             'category', 'category_name', 'collection', 'collection_name',
             'tags_list', 'availableSizes', 'availableColors', 'features',
             'is_featured', 'status', 'storeId', 'store',
@@ -151,11 +158,18 @@ class ProductDetailSerializer(serializers.ModelSerializer):
     collection_name = serializers.CharField(source='collection.name', read_only=True)
     tags_list = serializers.SerializerMethodField()
     
+    # Offer fields - will be set after ProductOfferSerializer is defined
+    discounted_price = serializers.ReadOnlyField()
+    original_price = serializers.ReadOnlyField()
+    has_active_offer = serializers.ReadOnlyField()
+    savings_amount = serializers.ReadOnlyField()
+    
     class Meta:
         model = Product
         fields = [
             'id', 'name', 'slug', 'description', 'short_description',
-            'price', 'base_price', 'compare_price', 'rating', 'review_count', 'sales_count',
+            'price', 'original_price', 'discounted_price', 'has_active_offer', 'savings_amount',
+            'base_price', 'compare_price', 'rating', 'review_count', 'sales_count',
             'category', 'category_name', 'category_data',
             'collection', 'collection_name', 'collection_data',
             'tags_list', 'availableSizes', 'availableColors', 'features',
@@ -319,4 +333,91 @@ class CategoryCreateSerializer(serializers.ModelSerializer):
         
         # Create new category
         validated_data['name'] = name.title()  # Title case
-        return Category.objects.create(**validated_data) 
+        return Category.objects.create(**validated_data)
+
+
+class ProductOfferSerializer(serializers.ModelSerializer):
+    """Serializer for product offers"""
+    discounted_price = serializers.ReadOnlyField()
+    savings = serializers.ReadOnlyField()
+    is_active = serializers.ReadOnlyField()
+    
+    class Meta:
+        model = ProductOffer
+        fields = [
+            'id', 'name', 'description', 'offer_type',
+            'discount_percentage', 'discount_amount',
+            'start_date', 'end_date', 'status',
+            'discounted_price', 'savings', 'is_active',
+            'created_at', 'updated_at'
+        ]
+        read_only_fields = ['id', 'created_at', 'updated_at']
+    
+    def create(self, validated_data):
+        # Set the seller from the request user
+        validated_data['seller'] = self.context['request'].user.seller_profile
+        return super().create(validated_data)
+
+
+class ProductOfferCreateSerializer(serializers.ModelSerializer):
+    """Serializer for creating product offers"""
+    
+    class Meta:
+        model = ProductOffer
+        fields = [
+            'product', 'name', 'description', 'offer_type',
+            'discount_percentage', 'discount_amount',
+            'start_date', 'end_date'
+        ]
+    
+    def validate(self, data):
+        """Validate offer data"""
+        offer_type = data.get('offer_type')
+        discount_percentage = data.get('discount_percentage')
+        discount_amount = data.get('discount_amount')
+        
+        if offer_type == 'percentage':
+            if not discount_percentage:
+                raise serializers.ValidationError("Discount percentage is required for percentage offers")
+            if discount_percentage <= 0 or discount_percentage > 100:
+                raise serializers.ValidationError("Discount percentage must be between 1 and 100")
+        elif offer_type == 'flat':
+            if not discount_amount:
+                raise serializers.ValidationError("Discount amount is required for flat offers")
+            if discount_amount <= 0:
+                raise serializers.ValidationError("Discount amount must be greater than 0")
+        
+        # Validate dates
+        start_date = data.get('start_date')
+        end_date = data.get('end_date')
+        if start_date and end_date and start_date >= end_date:
+            raise serializers.ValidationError("End date must be after start date")
+        
+        return data
+    
+    def create(self, validated_data):
+        # Set the seller from the request user
+        validated_data['seller'] = self.context['request'].user.seller_profile
+        return super().create(validated_data)
+
+
+class ProductWithOfferSerializer(serializers.ModelSerializer):
+    """Product serializer that includes offer information"""
+    images = ProductImageSerializer(many=True, read_only=True)
+    active_offer = ProductOfferSerializer(read_only=True)
+    discounted_price = serializers.ReadOnlyField()
+    original_price = serializers.ReadOnlyField()
+    has_active_offer = serializers.ReadOnlyField()
+    savings_amount = serializers.ReadOnlyField()
+    
+    class Meta:
+        model = Product
+        fields = [
+            'id', 'name', 'price', 'original_price', 'discounted_price',
+            'has_active_offer', 'savings_amount', 'active_offer',
+            'images', 'stock_quantity', 'status'
+        ]
+
+
+# Offer fields are already defined in the serializers without the active_offer field reference
+# The active_offer field will be handled via the model property 

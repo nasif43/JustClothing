@@ -23,6 +23,7 @@ from drf_spectacular.views import SpectacularAPIView, SpectacularRedocView, Spec
 # API URL patterns
 api_patterns = [
     path('auth/', include('apps.users.urls')),
+    path('users/', include('apps.users.urls')),  # Added for user-related endpoints
     path('products/', include('apps.products.urls')),
     path('orders/', include('apps.orders.urls')),
     path('payments/', include('apps.payments.urls')),

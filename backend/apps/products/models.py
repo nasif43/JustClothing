@@ -192,6 +192,43 @@ class Product(models.Model):
         """Frontend compatibility - returns primary image URL"""
         primary = self.primary_image
         return primary.image.url if primary else None
+    
+    @property
+    def active_offer(self):
+        """Get the currently active offer for this product"""
+        from django.utils import timezone
+        now = timezone.now()
+        return self.offers.filter(
+            status='active',
+            start_date__lte=now,
+            end_date__gte=now
+        ).first()
+    
+    @property
+    def discounted_price(self):
+        """Get current discounted price if offer is active, otherwise original price"""
+        active_offer = self.active_offer
+        if active_offer:
+            return active_offer.discounted_price
+        return float(self.price)
+    
+    @property
+    def original_price(self):
+        """Always return the original price"""
+        return float(self.price)
+    
+    @property
+    def has_active_offer(self):
+        """Check if product has an active offer"""
+        return self.active_offer is not None
+    
+    @property
+    def savings_amount(self):
+        """Get current savings amount"""
+        active_offer = self.active_offer
+        if active_offer:
+            return active_offer.savings
+        return 0
 
 
 class ProductAttributeType(models.Model):
@@ -341,4 +378,96 @@ class ProductVideo(models.Model):
         ordering = ['sort_order']
     
     def __str__(self):
-        return f"Video for {self.product.name}"
+        return f"{self.product.name} - Video {self.id}"
+
+
+class ProductOffer(models.Model):
+    """Direct product offers/sales without promo codes"""
+    
+    OFFER_TYPE = (
+        ('percentage', 'Percentage Discount'),
+        ('flat', 'Flat Discount'),
+    )
+    
+    STATUS_CHOICES = (
+        ('active', 'Active'),
+        ('inactive', 'Inactive'),
+        ('expired', 'Expired'),
+    )
+    
+    product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name='offers')
+    seller = models.ForeignKey('users.SellerProfile', on_delete=models.CASCADE, related_name='product_offers')
+    
+    # Offer details
+    name = models.CharField(max_length=200)
+    description = models.TextField(blank=True)
+    offer_type = models.CharField(max_length=15, choices=OFFER_TYPE)
+    
+    # Discount values
+    discount_percentage = models.DecimalField(
+        max_digits=5, decimal_places=2, null=True, blank=True,
+        validators=[MinValueValidator(0), MaxValueValidator(100)]
+    )
+    discount_amount = models.DecimalField(
+        max_digits=10, decimal_places=2, null=True, blank=True,
+        validators=[MinValueValidator(0)]
+    )
+    
+    # Timing
+    start_date = models.DateTimeField()
+    end_date = models.DateTimeField()
+    
+    # Status
+    status = models.CharField(max_length=15, choices=STATUS_CHOICES, default='active')
+    
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        db_table = 'product_offers'
+        indexes = [
+            models.Index(fields=['product', 'status']),
+            models.Index(fields=['seller', 'status']),
+            models.Index(fields=['start_date', 'end_date']),
+            models.Index(fields=['status']),
+        ]
+        ordering = ['-created_at']
+    
+    def __str__(self):
+        return f"{self.name} - {self.product.name}"
+    
+    @property
+    def is_active(self):
+        """Check if offer is currently active"""
+        from django.utils import timezone
+        now = timezone.now()
+        return (
+            self.status == 'active' and
+            self.start_date <= now <= self.end_date
+        )
+    
+    @property
+    def discounted_price(self):
+        """Calculate the discounted price"""
+        if not self.is_active:
+            return self.product.price
+        
+        original_price = float(self.product.price)
+        
+        if self.offer_type == 'percentage' and self.discount_percentage:
+            discount_value = original_price * (float(self.discount_percentage) / 100)
+            return round(original_price - discount_value, 2)
+        elif self.offer_type == 'flat' and self.discount_amount:
+            return max(0, round(original_price - float(self.discount_amount), 2))
+        
+        return original_price
+    
+    @property
+    def savings(self):
+        """Calculate savings amount"""
+        if not self.is_active:
+            return 0
+        
+        original_price = float(self.product.price)
+        discounted_price = self.discounted_price
+        return round(original_price - discounted_price, 2)

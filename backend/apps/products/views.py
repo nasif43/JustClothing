@@ -7,12 +7,13 @@ from django_filters.rest_framework import DjangoFilterBackend
 from django.db.models import Q, F
 from django.shortcuts import get_object_or_404
 
-from .models import Category, Product, ProductAttributeType, ProductImage, ProductVideo
+from .models import Category, Product, ProductAttributeType, ProductImage, ProductVideo, ProductOffer
 from .serializers import (
     CategorySerializer, CategoryCreateSerializer,
     ProductListSerializer, ProductDetailSerializer, ProductCreateUpdateSerializer,
     ProductAttributeTypeSerializer, ProductImageSerializer, ProductVideoSerializer,
-    ProductSearchSerializer
+    ProductSearchSerializer, ProductOfferSerializer, ProductOfferCreateSerializer,
+    ProductWithOfferSerializer
 )
 from .filters import ProductFilter
 
@@ -296,26 +297,130 @@ def related_products_view(request, product_id):
 @api_view(['POST'])
 @permission_classes([permissions.IsAuthenticated])
 def bulk_update_products_view(request):
-    """Bulk update products for sellers"""
+    """Bulk update multiple products"""
+    
     if not hasattr(request.user, 'seller_profile'):
-        return Response({'error': 'User is not a seller'}, status=400)
+        return Response({'error': 'Only sellers can bulk update products'}, status=403)
     
     product_ids = request.data.get('product_ids', [])
     update_data = request.data.get('update_data', {})
     
-    if not product_ids or not update_data:
-        return Response({'error': 'product_ids and update_data are required'}, status=400)
+    if not product_ids:
+        return Response({'error': 'No product IDs provided'}, status=400)
     
-    # Only allow updating specific fields
-    allowed_fields = ['status', 'is_featured', 'stock_quantity', 'base_price']
-    filtered_data = {k: v for k, v in update_data.items() if k in allowed_fields}
-    
-    updated_count = Product.objects.filter(
+    # Only allow updating products owned by the seller
+    products = Product.objects.filter(
         id__in=product_ids,
         seller=request.user.seller_profile
-    ).update(**filtered_data)
+    )
+    
+    # Apply updates
+    updated_count = products.update(**update_data)
     
     return Response({
         'message': f'Updated {updated_count} products',
         'updated_count': updated_count
     })
+
+
+# Product Offer Views
+class ProductOfferListCreateView(generics.ListCreateAPIView):
+    """List and create product offers for a seller"""
+    permission_classes = [permissions.IsAuthenticated]
+    
+    def get_serializer_class(self):
+        if self.request.method == 'POST':
+            return ProductOfferCreateSerializer
+        return ProductOfferSerializer
+    
+    def get_queryset(self):
+        if not hasattr(self.request.user, 'seller_profile'):
+            return ProductOffer.objects.none()
+        
+        return ProductOffer.objects.filter(
+            seller=self.request.user.seller_profile
+        ).select_related('product').order_by('-created_at')
+    
+    def perform_create(self, serializer):
+        if not hasattr(self.request.user, 'seller_profile'):
+            raise ValueError("User must be a seller to create offers")
+        
+        # Validate that the product belongs to the seller
+        product = serializer.validated_data['product']
+        if product.seller != self.request.user.seller_profile:
+            raise ValueError("You can only create offers for your own products")
+        
+        serializer.save(seller=self.request.user.seller_profile)
+
+
+class ProductOfferDetailView(generics.RetrieveUpdateDestroyAPIView):
+    """Get, update, or delete a product offer"""
+    serializer_class = ProductOfferSerializer
+    permission_classes = [permissions.IsAuthenticated]
+    
+    def get_queryset(self):
+        if not hasattr(self.request.user, 'seller_profile'):
+            return ProductOffer.objects.none()
+        
+        return ProductOffer.objects.filter(seller=self.request.user.seller_profile)
+
+
+@api_view(['GET'])
+@permission_classes([permissions.IsAuthenticated])
+def seller_products_for_offers_view(request):
+    """Get seller's products available for creating offers"""
+    if not hasattr(request.user, 'seller_profile'):
+        return Response({'error': 'Only sellers can access this endpoint'}, status=403)
+    
+    products = Product.objects.filter(
+        seller=request.user.seller_profile,
+        status='active'
+    ).select_related('seller').prefetch_related('images').order_by('-created_at')
+    
+    serializer = ProductWithOfferSerializer(products, many=True, context={'request': request})
+    return Response({'products': serializer.data})
+
+
+@api_view(['GET'])
+@permission_classes([permissions.IsAuthenticated])
+def seller_active_offers_view(request):
+    """Get seller's currently active offers"""
+    if not hasattr(request.user, 'seller_profile'):
+        return Response({'error': 'Only sellers can access this endpoint'}, status=403)
+    
+    from django.utils import timezone
+    now = timezone.now()
+    
+    active_offers = ProductOffer.objects.filter(
+        seller=request.user.seller_profile,
+        status='active',
+        start_date__lte=now,
+        end_date__gte=now
+    ).select_related('product').prefetch_related('product__images')
+    
+    serializer = ProductOfferSerializer(active_offers, many=True)
+    return Response({'offers': serializer.data})
+
+
+@api_view(['GET'])
+@permission_classes([permissions.AllowAny])
+def store_active_offers_view(request, seller_id):
+    """Get active offers for a specific store/seller"""
+    from django.utils import timezone
+    now = timezone.now()
+    
+    try:
+        from apps.users.models import SellerProfile
+        seller = SellerProfile.objects.get(id=seller_id)
+    except SellerProfile.DoesNotExist:
+        return Response({'offers': []})
+    
+    active_offers = ProductOffer.objects.filter(
+        seller=seller,
+        status='active',
+        start_date__lte=now,
+        end_date__gte=now
+    ).select_related('product').prefetch_related('product__images')
+    
+    serializer = ProductOfferSerializer(active_offers, many=True)
+    return Response({'offers': serializer.data})

@@ -32,7 +32,7 @@ const handleApiError = async (response) => {
     
     try {
       const errorData = await response.json()
-      errorMessage = errorData.detail || errorData.message || errorMessage
+      errorMessage = errorData.error || errorData.detail || errorData.message || errorMessage
     } catch (e) {
       errorMessage = `${response.status} ${response.statusText}`
     }
@@ -290,7 +290,7 @@ export const fetchStoreById = async (id) => {
 
 export const fetchSellerStats = async (sellerId) => {
   try {
-    return await apiRequest(`users/stores/${sellerId}/stats/`, {
+    return await apiRequest(`auth/stores/${sellerId}/stats/`, {
       method: 'GET',
       auth: false
     })
@@ -299,11 +299,67 @@ export const fetchSellerStats = async (sellerId) => {
   }
 }
 
+// Enhanced seller reviews API
+export const fetchSellerReviews = async (sellerId, page = 1, limit = 10) => {
+  try {
+    return await apiRequest(`reviews/seller/reviews/`, {
+      method: 'GET',
+      auth: true
+    })
+  } catch (error) {
+    throw new Error(error.message || 'Failed to fetch seller reviews')
+  }
+}
+
+export const fetchSellerReviewStats = async (sellerId) => {
+  try {
+    return await apiRequest(`reviews/sellers/${sellerId}/stats/`, {
+      method: 'GET',
+      auth: false
+    })
+  } catch (error) {
+    throw new Error(error.message || 'Failed to fetch seller review stats')
+  }
+}
+
+// Seller analytics API
+export const fetchSellerAnalytics = async (period = '30d') => {
+  try {
+    return await apiRequest(`analytics/seller/?period=${period}`)
+  } catch (error) {
+    throw new Error(error.message || 'Failed to fetch seller analytics')
+  }
+}
+
+export const fetchSellerDashboardStats = async () => {
+  try {
+    return await apiRequest('analytics/seller/dashboard/')
+  } catch (error) {
+    throw new Error(error.message || 'Failed to fetch seller dashboard stats')
+  }
+}
+
+export const fetchSellerOrderAnalytics = async (period = '30d') => {
+  try {
+    return await apiRequest(`analytics/seller/orders/?period=${period}`)
+  } catch (error) {
+    throw new Error(error.message || 'Failed to fetch seller order analytics')
+  }
+}
+
+export const fetchSellerRevenueAnalytics = async (period = '30d') => {
+  try {
+    return await apiRequest(`analytics/seller/revenue/?period=${period}`)
+  } catch (error) {
+    throw new Error(error.message || 'Failed to fetch seller revenue analytics')
+  }
+}
+
 // Reviews API
 export const fetchStoreReviews = async (storeId, sortBy = 'default') => {
   try {
     const params = new URLSearchParams({ sort: sortBy })
-    return await apiRequest(`auth/stores/${storeId}/reviews/?${params}`, {
+    return await apiRequest(`reviews/stores/${storeId}/?${params}`, {
       method: 'GET',
       auth: false
     })
@@ -314,7 +370,7 @@ export const fetchStoreReviews = async (storeId, sortBy = 'default') => {
 
 export const fetchProductReviews = async (productId) => {
   try {
-    return await apiRequest(`products/${productId}/reviews/`)
+    return await apiRequest(`reviews/products/${productId}/`)
   } catch (error) {
     throw new Error(error.message || 'Failed to fetch product reviews')
   }
@@ -345,6 +401,29 @@ export const submitProductReview = async (reviewData) => {
     })
   } catch (error) {
     throw new Error(error.message || 'Failed to submit review')
+  }
+}
+
+export const replyToReview = async (reviewId, content) => {
+  try {
+    return await apiRequest(`reviews/seller/reviews/${reviewId}/reply/`, {
+      method: 'POST',
+      body: JSON.stringify({
+        content: content
+      })
+    })
+  } catch (error) {
+    // Parse specific error messages from backend
+    if (error.message.includes('reply already exists')) {
+      throw new Error('You have already replied to this review')
+    } else if (error.message.includes('Only sellers can reply')) {
+      throw new Error('Only sellers can reply to reviews')
+    } else if (error.message.includes('your own products')) {
+      throw new Error('You can only reply to reviews for your own products')
+    } else if (error.message.includes('Review not found')) {
+      throw new Error('Review not found')
+    }
+    throw new Error(error.message || 'Failed to reply to review')
   }
 }
 
@@ -504,7 +583,7 @@ export const updateUserProfile = async (profileData) => {
 // Promotions API
 export const fetchPromotions = async () => {
   try {
-    return await apiRequest('promotions/')
+    return await apiRequest('promos/promotions/')
   } catch (error) {
     throw new Error(error.message || 'Failed to fetch promotions')
   }
@@ -512,12 +591,77 @@ export const fetchPromotions = async () => {
 
 export const validatePromoCode = async (code) => {
   try {
-    return await apiRequest('promotions/validate/', {
+    return await apiRequest('promos/validate/', {
       method: 'POST',
       body: JSON.stringify({ code })
     })
   } catch (error) {
     throw new Error(error.message || 'Invalid promo code')
+  }
+}
+
+// Product Offers API (Direct Discounts)
+export const fetchSellerProductsForOffers = async () => {
+  try {
+    return await apiRequest('products/seller/products/for-offers/')
+  } catch (error) {
+    throw new Error(error.message || 'Failed to fetch seller products for offers')
+  }
+}
+
+export const createProductOffer = async (offerData) => {
+  try {
+    return await apiRequest('products/seller/offers/', {
+      method: 'POST',
+      body: JSON.stringify(offerData)
+    })
+  } catch (error) {
+    throw new Error(error.message || 'Failed to create product offer')
+  }
+}
+
+export const fetchSellerOffers = async () => {
+  try {
+    return await apiRequest('products/seller/offers/')
+  } catch (error) {
+    throw new Error(error.message || 'Failed to fetch seller offers')
+  }
+}
+
+export const fetchSellerActiveOffers = async () => {
+  try {
+    return await apiRequest('products/seller/offers/active/')
+  } catch (error) {
+    throw new Error(error.message || 'Failed to fetch active offers')
+  }
+}
+
+export const updateProductOffer = async (offerId, offerData) => {
+  try {
+    return await apiRequest(`products/seller/offers/${offerId}/`, {
+      method: 'PATCH',
+      body: JSON.stringify(offerData)
+    })
+  } catch (error) {
+    throw new Error(error.message || 'Failed to update product offer')
+  }
+}
+
+export const deleteProductOffer = async (offerId) => {
+  try {
+    return await apiRequest(`products/seller/offers/${offerId}/`, {
+      method: 'DELETE'
+    })
+  } catch (error) {
+    throw new Error(error.message || 'Failed to delete product offer')
+  }
+}
+
+export const fetchStoreActiveOffers = async (sellerId) => {
+  try {
+    return await apiRequest(`products/stores/${sellerId}/offers/`)
+  } catch (error) {
+    throw new Error(error.message || 'Failed to fetch store offers')
   }
 }
 
@@ -538,5 +682,32 @@ export const fetchUserShippingInfo = async () => {
     return response
   } catch (error) {
     throw new Error(error.message || 'Failed to fetch shipping information')
+  }
+}
+
+export const fetchSellerHomepageProducts = async () => {
+  try {
+    return await apiRequest('users/seller/homepage-products/')
+  } catch (error) {
+    throw new Error(error.message || 'Failed to fetch homepage products')
+  }
+}
+
+export const updateSellerHomepageProducts = async (data) => {
+  try {
+    return await apiRequest('users/seller/homepage-products/', {
+      method: 'POST',
+      body: JSON.stringify(data)
+    })
+  } catch (error) {
+    throw new Error(error.message || 'Failed to update homepage products')
+  }
+}
+
+export const fetchStoreHomepageProducts = async (storeId) => {
+  try {
+    return await apiRequest(`users/stores/${storeId}/homepage-products/`)
+  } catch (error) {
+    throw new Error(error.message || 'Failed to fetch store homepage products')
   }
 }

@@ -8,7 +8,7 @@ from rest_framework_simplejwt.tokens import RefreshToken
 from django.contrib.auth import get_user_model
 from django.shortcuts import get_object_or_404
 
-from .models import CustomerProfile, SellerProfile, Address, SellerTeamMember
+from .models import CustomerProfile, SellerProfile, Address, SellerTeamMember, SellerHomepageProduct
 from .serializers import (
     CustomTokenObtainPairSerializer,
     UserRegistrationSerializer,
@@ -18,7 +18,8 @@ from .serializers import (
     CustomerProfileSerializer,
     AddressSerializer,
     ChangePasswordSerializer,
-    SellerTeamMemberSerializer
+    SellerTeamMemberSerializer,
+    SellerHomepageProductSerializer
 )
 
 User = get_user_model()
@@ -363,3 +364,115 @@ def user_shipping_info(request):
         })
     
     return Response(shipping_info)
+
+
+@api_view(['GET', 'POST'])
+@permission_classes([permissions.IsAuthenticated])
+def seller_homepage_products_view(request):
+    """Get or set seller's homepage products"""
+    
+    if not hasattr(request.user, 'seller_profile'):
+        return Response({'error': 'User is not a seller'}, status=status.HTTP_403_FORBIDDEN)
+    
+    seller = request.user.seller_profile
+    
+    if request.method == 'GET':
+        print(f"🏪 DEBUG: Seller {seller.id} ({seller.business_name}) fetching their homepage products")
+        
+        homepage_products = SellerHomepageProduct.objects.filter(
+            seller=seller
+        ).select_related('product').order_by('order')
+        
+        print(f"🏪 DEBUG: Found {homepage_products.count()} homepage products for seller")
+        for hp in homepage_products:
+            print(f"🏪 DEBUG: Seller's Product {hp.order}: {hp.product.name} (ID: {hp.product.id})")
+        
+        serializer = SellerHomepageProductSerializer(homepage_products, many=True, context={'request': request})
+        print(f"🏪 DEBUG: Seller's serialized data: {serializer.data}")
+        
+        return Response(serializer.data)
+    
+    elif request.method == 'POST':
+        # Update homepage products
+        print(f"🔍 DEBUG: Raw request data: {request.data}")
+        print(f"🔍 DEBUG: Request content type: {request.content_type}")
+        print(f"🔍 DEBUG: Request META Authorization: {request.META.get('HTTP_AUTHORIZATION', 'None')}")
+        
+        products_data = request.data.get('products', [])
+        
+        print(f"🏪 DEBUG: Seller {seller.id} ({seller.business_name}) updating homepage products")
+        print(f"🏪 DEBUG: Products data received: {products_data}")
+        print(f"🏪 DEBUG: Products data type: {type(products_data)}")
+        print(f"🏪 DEBUG: Products data length: {len(products_data) if hasattr(products_data, '__len__') else 'N/A'}")
+        
+        # Clear existing homepage products
+        deleted_count = SellerHomepageProduct.objects.filter(seller=seller).count()
+        SellerHomepageProduct.objects.filter(seller=seller).delete()
+        print(f"🏪 DEBUG: Deleted {deleted_count} existing homepage products")
+        
+        # Create new homepage products
+        created_count = 0
+        for product_data in products_data:
+            product_id = product_data.get('product_id')
+            order = product_data.get('order', 0)
+            
+            print(f"🏪 DEBUG: Creating product: ID={product_id}, order={order}")
+            
+            try:
+                # Verify the product exists and belongs to this seller
+                from apps.products.models import Product
+                product = Product.objects.get(id=product_id, seller=seller)
+                
+                SellerHomepageProduct.objects.create(
+                    seller=seller,
+                    product=product,
+                    order=order
+                )
+                created_count += 1
+                print(f"🏪 DEBUG: Successfully created homepage product for {product.name}")
+                
+            except Product.DoesNotExist:
+                print(f"🏪 DEBUG: ERROR - Product {product_id} not found or doesn't belong to seller")
+                continue
+            except Exception as e:
+                print(f"🏪 DEBUG: ERROR creating homepage product: {e}")
+                continue
+        
+        print(f"🏪 DEBUG: Created {created_count} new homepage products")
+        
+        # Verification - check what was actually saved
+        saved_products = SellerHomepageProduct.objects.filter(seller=seller).order_by('order')
+        print(f"🏪 DEBUG: Verification - found {saved_products.count()} saved homepage products:")
+        for sp in saved_products:
+            print(f"🏪 DEBUG: - {sp.product.name} (ID: {sp.product.id}) at order {sp.order}")
+        
+        return Response({'message': 'Homepage products updated successfully'})
+
+
+@api_view(['GET'])
+@permission_classes([permissions.AllowAny])
+def store_homepage_products_view(request, store_id):
+    """Get homepage products for a specific store (public endpoint)"""
+    
+    print(f"🔍 DEBUG: Fetching homepage products for store_id: {store_id}")
+    
+    try:
+        seller = SellerProfile.objects.get(id=store_id)
+        print(f"🔍 DEBUG: Found seller: {seller.business_name}, status: {seller.status}")
+        
+        homepage_products = SellerHomepageProduct.objects.filter(
+            seller=seller
+        ).select_related('product').order_by('order')
+        
+        print(f"🔍 DEBUG: Found {homepage_products.count()} homepage products")
+        for hp in homepage_products:
+            print(f"🔍 DEBUG: Product {hp.order}: {hp.product.name} (ID: {hp.product.id})")
+        
+        serializer = SellerHomepageProductSerializer(homepage_products, many=True, context={'request': request})
+        print(f"🔍 DEBUG: Serialized data: {serializer.data}")
+        
+        return Response(serializer.data)
+    
+    except SellerProfile.DoesNotExist:
+        print(f"❌ DEBUG: Seller with ID {store_id} not found")
+        return Response({'error': 'Store not found'}, status=status.HTTP_404_NOT_FOUND)

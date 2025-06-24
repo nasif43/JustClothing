@@ -25,6 +25,7 @@ import SellerOrdersPage from "./pages/seller/SellerOrdersPage"
 import SellerOrderDetailsPage from "./pages/seller/OrderDetailsPage"
 import SellerOffersPage from "./pages/seller/SellerOffersPage"
 import SellerReviewsPage from "./pages/seller/SellerReviewsPage"
+import SellerProductsPage from "./pages/seller/SellerProductsPage"
 import AddProductPage from "./pages/seller/AddProductPage"
 
 import ScrollToTop from "./components/ScrollToTop"
@@ -192,6 +193,11 @@ function AppContent() {
         <Route path="/seller/reviews" element={
           <SellerProtectedRoute>
             <SellerReviewsPage />
+          </SellerProtectedRoute>
+        } />
+        <Route path="/seller/products" element={
+          <SellerProtectedRoute>
+            <SellerProductsPage />
           </SellerProtectedRoute>
         } />
         <Route path="/seller/products/add" element={

@@ -17,6 +17,13 @@ urlpatterns = [
     path('sellers/', views.SellerReviewListCreateView.as_view(), name='seller-review-list-create'),
     path('sellers/<int:seller_id>/stats/', views.seller_review_stats, name='seller-review-stats'),
     
+    # Store reviews endpoint (for customer view)
+    path('stores/<int:store_id>/', views.store_reviews, name='store-reviews'),
+    
+    # Seller management endpoints
+    path('seller/reviews/', views.SellerReviewsView.as_view(), name='seller-reviews'),
+    path('seller/reviews/<int:review_id>/reply/', views.ReviewReplyCreateView.as_view(), name='review-reply'),
+    
     # Include router URLs
     path('', include(router.urls)),
 ] 

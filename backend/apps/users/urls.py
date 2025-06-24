@@ -21,6 +21,8 @@ from .views import (
     seller_stats_view,
     store_reviews_view,
     user_shipping_info,
+    seller_homepage_products_view,
+    store_homepage_products_view,
 )
 
 router = DefaultRouter()
@@ -58,6 +60,12 @@ urlpatterns = [
     path('stores/<str:id>/', PublicSellerDetailView.as_view(), name='store_detail'),
     path('stores/<int:seller_id>/stats/', seller_stats_view, name='seller_stats'),
     path('stores/<int:seller_id>/reviews/', store_reviews_view, name='store_reviews'),
+    
+    # Seller homepage products
+    path('seller/homepage-products/', seller_homepage_products_view, name='seller_homepage_products'),
+    
+    # Store homepage products
+    path('stores/<int:store_id>/homepage-products/', store_homepage_products_view, name='store_homepage_products'),
     
     # Include router URLs
     path('', include(router.urls)),

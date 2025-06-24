@@ -9,9 +9,10 @@ import Alert from "../../components/Alert"
 
 function ProductDetailPage() {
   const { id } = useParams()
-  const { products, getStoreById, fetchProducts, loading, error } = useProductStore()
+  const { products, selectedProduct, getStoreById, fetchProducts, loading, error } = useProductStore()
   const { addItem } = useCartStore()
-  const product = products.find((p) => p.id === Number(id))
+  // Use selectedProduct from store for detailed data, fallback to products list
+  const product = selectedProduct || products.find((p) => p.id === Number(id))
   const navigate = useNavigate()
 
   const [selectedSize, setSelectedSize] = useState("")
@@ -22,6 +23,7 @@ function ProductDetailPage() {
   const [lastAddedColor, setLastAddedColor] = useState("")
   const [alertMessage, setAlertMessage] = useState("")
   const [isAlertOpen, setIsAlertOpen] = useState(false)
+  const [customMeasurements, setCustomMeasurements] = useState({}) // For custom sizing
 
   // Fetch products if not already loaded
   useEffect(() => {
@@ -29,6 +31,16 @@ function ProductDetailPage() {
       fetchProducts()
     }
   }, [products.length, fetchProducts])
+
+  // Fetch detailed product data using the product store
+  useEffect(() => {
+    if (id) {
+      // Always fetch detailed product data for the product detail page
+      // This ensures we get custom sizing fields and other detailed info
+      const { fetchProductById } = useProductStore.getState()
+      fetchProductById(id)
+    }
+  }, [id])
 
   // Also try to fetch the specific product if not found in the list
   useEffect(() => {
@@ -54,6 +66,8 @@ function ProductDetailPage() {
   console.log('Stock quantity:', product.stock_quantity)
   console.log('Is in stock:', product.is_in_stock)
   console.log('Track inventory:', product.track_inventory)
+  console.log('Offers custom sizes:', product.offers_custom_sizes)
+  console.log('Custom size fields:', product.custom_size_fields)
 
   // Check if product is out of stock
   const isOutOfStock = !product.is_in_stock || product.stock_quantity === 0
@@ -84,19 +98,55 @@ function ProductDetailPage() {
     setCurrentImageIndex((prev) => (prev === thumbnails.length - 1 ? 0 : prev + 1))
   }
 
-  const handleAddToCart = () => {
-    if (!selectedSize) {
-      setAlertMessage("Please select a size")
-      setIsAlertOpen(true)
-      return
+  const handleCustomMeasurementChange = (fieldName, value) => {
+    setCustomMeasurements(prev => ({
+      ...prev,
+      [fieldName]: value
+    }))
+  }
+
+  const validateCustomMeasurements = () => {
+    if (product.offers_custom_sizes && product.custom_size_fields?.length > 0) {
+      for (const field of product.custom_size_fields) {
+        if (!customMeasurements[field] || customMeasurements[field].trim() === '') {
+          setAlertMessage(`Please provide your ${field}`)
+          setIsAlertOpen(true)
+          return false
+        }
+      }
     }
+    return true
+  }
+
+  const handleAddToCart = () => {
     if (!selectedColor) {
       setAlertMessage("Please select a color")
       setIsAlertOpen(true)
       return
     }
-    // Add the product with size and color to cart using the cart store
-    addItem({ ...product, selectedSize, selectedColor }, 1)
+
+    // For custom sizing, skip standard size validation
+    if (!product.offers_custom_sizes && !selectedSize) {
+      setAlertMessage("Please select a size")
+      setIsAlertOpen(true)
+      return
+    }
+
+    // Validate custom measurements if required
+    if (!validateCustomMeasurements()) {
+      return
+    }
+
+    // Add the product with size, color, and custom measurements to cart
+    const productData = { 
+      ...product, 
+      price: product.has_active_offer ? product.discounted_price : product.price,
+      selectedSize: product.offers_custom_sizes ? 'Custom' : selectedSize, 
+      selectedColor,
+      customMeasurements: product.offers_custom_sizes ? customMeasurements : undefined
+    }
+    
+    addItem(productData, 1)
     
     // Set added to cart state and remember the selected options
     setAddedToCart(true)
@@ -105,14 +155,21 @@ function ProductDetailPage() {
   }
 
   const handleQuickCheckout = () => {
-    if (!selectedSize) {
+    if (!selectedColor) {
+      setAlertMessage("Please select a color")
+      setIsAlertOpen(true)
+      return
+    }
+
+    // For custom sizing, skip standard size validation
+    if (!product.offers_custom_sizes && !selectedSize) {
       setAlertMessage("Please select a size")
       setIsAlertOpen(true)
       return
     }
-    if (!selectedColor) {
-      setAlertMessage("Please select a color")
-      setIsAlertOpen(true)
+
+    // Validate custom measurements if required
+    if (!validateCustomMeasurements()) {
       return
     }
     
@@ -122,10 +179,11 @@ function ProductDetailPage() {
         product: {
           id: product.id,
           name: product.name,
-          price: product.price,
+          price: product.has_active_offer ? product.discounted_price : product.price,
           quantity: 1,
           color: selectedColor,
-          size: selectedSize,
+          size: product.offers_custom_sizes ? 'Custom' : selectedSize,
+          customMeasurements: product.offers_custom_sizes ? customMeasurements : undefined,
           imageUrl: product.image
         }
       }
@@ -191,7 +249,29 @@ function ProductDetailPage() {
         {/* Product details - 4 columns */}
         <div className="col-span-4">
           <h1 className="text-3xl font-bold mb-1">{product.name}</h1>
-          <p className="text-sm text-gray-500 mb-4">TAGS: {product.tags}</p>
+          <p className="text-sm text-gray-500 mb-2">TAGS: {product.tags}</p>
+          
+          {/* Price Display */}
+          <div className="mb-4">
+            {product.has_active_offer ? (
+              <div className="space-y-1">
+                <div className="flex items-center space-x-3">
+                  <span className="text-gray-500 line-through text-lg">৳{product.original_price}</span>
+                  <span className="text-3xl font-bold text-black">৳{product.discounted_price}</span>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <span className="bg-black text-white px-2 py-1 rounded text-sm font-medium">
+                    SALE
+                  </span>
+                  <span className="text-sm text-gray-600">
+                    Save ৳{product.savings_amount}
+                  </span>
+                </div>
+              </div>
+            ) : (
+              <div className="text-3xl font-bold text-black">৳{product.price}</div>
+            )}
+          </div>
 
           {/* Out of Stock Banner */}
           {isOutOfStock && (
@@ -204,22 +284,56 @@ function ProductDetailPage() {
           )}
 
 
-          <div className="mb-6">
-            <h2 className="text-lg font-medium mb-2">SIZE</h2>
-            <div className="flex flex-wrap gap-2">
-              {product.availableSizes.map((size) => (
-                <button
-                  key={size}
-                  className={`w-10 h-10 border ${
-                    selectedSize === size ? "border-black bg-black text-white" : "border-gray-300 hover:border-gray-500"
-                  }`}
-                  onClick={() => setSelectedSize(size)}
-                >
-                  {size}
-                </button>
-              ))}
+          {/* Size Selection - only show if not custom sizing */}
+          {!product.offers_custom_sizes && (
+            <div className="mb-6">
+              <h2 className="text-lg font-medium mb-2">SIZE</h2>
+              <div className="flex flex-wrap gap-2">
+                {product.availableSizes.map((size) => (
+                  <button
+                    key={size}
+                    className={`w-10 h-10 border ${
+                      selectedSize === size ? "border-black bg-black text-white" : "border-gray-300 hover:border-gray-500"
+                    }`}
+                    onClick={() => setSelectedSize(size)}
+                  >
+                    {size}
+                  </button>
+                ))}
+              </div>
             </div>
-          </div>
+          )}
+
+          {/* Custom Measurements - only show if custom sizing is offered */}
+          {product.offers_custom_sizes && product.custom_size_fields?.length > 0 && (
+            <div className="mb-6">
+              <h2 className="text-lg font-medium mb-2">CUSTOM MEASUREMENTS</h2>
+              <div className="bg-gray-50 p-4 rounded-lg">
+                <p className="text-sm text-gray-600 mb-4">
+                  Please provide your measurements below. Our team will use these to create your custom-sized product.
+                </p>
+                <div className="space-y-3">
+                  {product.custom_size_fields.map((field, index) => (
+                    <div key={index}>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        {field} <span className="text-red-500">*</span>
+                      </label>
+                      <input
+                        type="text"
+                        value={customMeasurements[field] || ''}
+                        onChange={(e) => handleCustomMeasurementChange(field, e.target.value)}
+                        placeholder={`Enter your ${field.toLowerCase()} (e.g., 32 inches, 81 cm)`}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-black focus:border-black"
+                      />
+                    </div>
+                  ))}
+                </div>
+                <p className="text-xs text-gray-500 mt-3">
+                  💡 Tip: Include units in your measurements (inches, cm, etc.) for best results
+                </p>
+              </div>
+            </div>
+          )}
 
           <div className="mb-6">
             <h2 className="text-lg font-medium mb-2">COLOR</h2>

@@ -1,7 +1,21 @@
 from rest_framework import serializers
-from .models import Review, SellerReview, ReviewImage
+from .models import Review, SellerReview, ReviewImage, ReviewReply
 from apps.products.models import Product
 from apps.users.models import SellerProfile
+
+
+class ReviewReplySerializer(serializers.ModelSerializer):
+    """Serializer for review replies"""
+    
+    seller_name = serializers.CharField(source='seller.business_name', read_only=True)
+    
+    class Meta:
+        model = ReviewReply
+        fields = [
+            'id', 'content', 'seller', 'seller_name', 'is_approved', 
+            'created_at', 'updated_at'
+        ]
+        read_only_fields = ('id', 'seller', 'seller_name', 'is_approved', 'created_at', 'updated_at')
 
 
 class ReviewSerializer(serializers.ModelSerializer):
@@ -9,17 +23,18 @@ class ReviewSerializer(serializers.ModelSerializer):
     
     user_info = serializers.SerializerMethodField()
     product_name = serializers.CharField(source='product.name', read_only=True)
+    reply = ReviewReplySerializer(read_only=True)
     
     class Meta:
         model = Review
         fields = [
             'id', 'user', 'user_info', 'product', 'product_name', 'productId',
             'order', 'rating', 'content', 'review_type', 'is_approved',
-            'is_featured', 'created_at', 'createdAt', 'updated_at'
+            'is_featured', 'created_at', 'createdAt', 'updated_at', 'reply'
         ]
         read_only_fields = (
             'id', 'user', 'user_info', 'product_name', 'productId', 
-            'is_approved', 'is_featured', 'created_at', 'createdAt', 'updated_at'
+            'is_approved', 'is_featured', 'created_at', 'createdAt', 'updated_at', 'reply'
         )
     
     def get_user_info(self, obj):
@@ -64,17 +79,18 @@ class SellerReviewSerializer(serializers.ModelSerializer):
     
     user_info = serializers.SerializerMethodField()
     seller_name = serializers.CharField(source='seller.business_name', read_only=True)
+    reply = ReviewReplySerializer(read_only=True)
     
     class Meta:
         model = SellerReview
         fields = [
             'id', 'user', 'user_info', 'seller', 'seller_name', 'order',
             'rating', 'content', 'communication_rating', 'shipping_rating',
-            'quality_rating', 'is_approved', 'created_at', 'updated_at'
+            'quality_rating', 'is_approved', 'created_at', 'updated_at', 'reply'
         ]
         read_only_fields = (
             'id', 'user', 'user_info', 'seller_name', 'is_approved', 
-            'created_at', 'updated_at'
+            'created_at', 'updated_at', 'reply'
         )
     
     def get_user_info(self, obj):

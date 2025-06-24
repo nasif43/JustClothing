@@ -3,7 +3,7 @@ from django.utils.html import format_html
 from django.db.models import Count, Avg, Q
 from .models import (
     Category, Collection, Product, ProductImage, ProductVariant,
-    ProductAttributeType, ProductAttribute, ProductVariantAttribute, ProductVideo
+    ProductAttributeType, ProductAttribute, ProductVariantAttribute, ProductVideo, ProductOffer
 )
 
 
@@ -260,14 +260,56 @@ class ProductVariantAttributeAdmin(admin.ModelAdmin):
 class ProductVideoAdmin(admin.ModelAdmin):
     """Product video management"""
     
-    list_display = ['product', 'title', 'video_preview', 'sort_order', 'created_at']
-    list_filter = ['created_at', 'product__category']
-    search_fields = ['product__name', 'title', 'description']
-    raw_id_fields = ['product']
-    readonly_fields = ['created_at']
+    list_display = ['product', 'title', 'sort_order', 'created_at']
+    list_filter = ['created_at']
+    search_fields = ['product__name', 'title']
+    ordering = ['product', 'sort_order']
+
+
+@admin.register(ProductOffer)
+class ProductOfferAdmin(admin.ModelAdmin):
+    """Product offer management"""
+    list_display = [
+        'name', 'product', 'seller', 'offer_type', 
+        'discount_display', 'status', 'start_date', 'end_date', 'is_active'
+    ]
+    list_filter = [
+        'offer_type', 'status', 'start_date', 'end_date', 
+        'created_at', ('seller', admin.RelatedOnlyFieldListFilter)
+    ]
+    search_fields = ['name', 'product__name', 'seller__business_name']
+    readonly_fields = ['discounted_price', 'savings', 'is_active', 'created_at', 'updated_at']
+    raw_id_fields = ['product', 'seller']
     
-    def video_preview(self, obj):
-        if obj.thumbnail:
-            return format_html('<img src="{}" style="max-height: 50px;"/>', obj.thumbnail.url)
-        return "No thumbnail"
-    video_preview.short_description = 'Thumbnail'
+    fieldsets = (
+        ('Basic Information', {
+            'fields': ('name', 'description', 'product', 'seller')
+        }),
+        ('Discount Details', {
+            'fields': ('offer_type', 'discount_percentage', 'discount_amount')
+        }),
+        ('Validity Period', {
+            'fields': ('start_date', 'end_date', 'status')
+        }),
+        ('Calculated Values', {
+            'fields': ('discounted_price', 'savings', 'is_active'),
+            'classes': ('collapse',)
+        }),
+        ('Timestamps', {
+            'fields': ('created_at', 'updated_at'),
+            'classes': ('collapse',)
+        }),
+    )
+    
+    def discount_display(self, obj):
+        if obj.offer_type == 'percentage' and obj.discount_percentage:
+            return f"{obj.discount_percentage}%"
+        elif obj.offer_type == 'flat' and obj.discount_amount:
+            return f"৳{obj.discount_amount}"
+        return "-"
+    discount_display.short_description = "Discount"
+    
+    def is_active(self, obj):
+        return obj.is_active
+    is_active.boolean = True
+    is_active.short_description = "Currently Active"

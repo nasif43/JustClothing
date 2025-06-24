@@ -9,7 +9,9 @@ from .views import (
     ProductVideoListCreateView, ProductVideoDetailView,
     ProductAttributeTypeListView,
     featured_products_view, trending_products_view, 
-    related_products_view, bulk_update_products_view
+    related_products_view, bulk_update_products_view,
+    ProductOfferListCreateView, ProductOfferDetailView,
+    seller_products_for_offers_view, seller_active_offers_view, store_active_offers_view
 )
 
 router = DefaultRouter()
@@ -33,6 +35,15 @@ urlpatterns = [
     path('seller/products/<str:pk>/update/', ProductUpdateView.as_view(), name='product_update'),
     path('seller/products/<str:pk>/delete/', ProductDeleteView.as_view(), name='product_delete'),
     path('seller/products/bulk-update/', bulk_update_products_view, name='bulk_update_products'),
+    path('seller/products/for-offers/', seller_products_for_offers_view, name='seller_products_for_offers'),
+    
+    # Product Offers - Seller Management
+    path('seller/offers/', ProductOfferListCreateView.as_view(), name='seller_offer_list_create'),
+    path('seller/offers/<int:pk>/', ProductOfferDetailView.as_view(), name='seller_offer_detail'),
+    path('seller/offers/active/', seller_active_offers_view, name='seller_active_offers'),
+    
+    # Store Offers - Public
+    path('stores/<int:seller_id>/offers/', store_active_offers_view, name='store_active_offers'),
     
     # Product Images
     path('<str:product_id>/images/', ProductImageListCreateView.as_view(), name='product_image_list'),

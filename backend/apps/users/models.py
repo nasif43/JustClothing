@@ -236,3 +236,23 @@ class SellerTeamMember(models.Model):
     
     def __str__(self):
         return f"{self.user.email} - {self.get_role_display()} at {self.seller.business_name}"
+
+
+class SellerHomepageProduct(models.Model):
+    """Track products selected by seller for their homepage/store profile"""
+    
+    seller = models.ForeignKey(SellerProfile, on_delete=models.CASCADE, related_name='homepage_products')
+    product = models.ForeignKey('products.Product', on_delete=models.CASCADE, related_name='homepage_selections')
+    order = models.PositiveIntegerField(default=0)  # Display order (0-5 for 6 slots)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        db_table = 'seller_homepage_products'
+        unique_together = [['seller', 'order']]  # Only one product per order position
+        indexes = [
+            models.Index(fields=['seller', 'order']),
+        ]
+    
+    def __str__(self):
+        return f"{self.seller.business_name} - {self.product.name} (Position {self.order})"

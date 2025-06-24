@@ -59,10 +59,38 @@ function ProductCard({ product, showStoreInfo = true }) {
                   />
                 )}
               </div>
-              <p className="text-xl font-medium">£{product.price}</p>
+              <div>
+                {product.has_active_offer ? (
+                  <div className="text-right">
+                    <div className="flex items-center justify-end space-x-2">
+                      <span className="text-gray-500 line-through text-sm">৳{product.original_price}</span>
+                      <span className="text-xl font-medium text-black">৳{product.discounted_price}</span>
+                    </div>
+                    <div className="text-xs text-gray-600">
+                      Save ৳{product.savings_amount}
+                    </div>
+                  </div>
+                ) : (
+                  <p className="text-xl font-medium">৳{product.price}</p>
+                )}
+              </div>
             </div>
           ) : (
-            <p className="text-xl font-medium text-center mt-1 mb-2">£{product.price}</p>
+            <div className="text-center mt-1 mb-2">
+              {product.has_active_offer ? (
+                <div className="space-y-1">
+                  <div className="flex items-center justify-center space-x-2">
+                    <span className="text-gray-500 line-through text-sm">৳{product.original_price}</span>
+                    <span className="text-xl font-medium text-black">৳{product.discounted_price}</span>
+                  </div>
+                  <div className="text-xs text-gray-600">
+                    Save ৳{product.savings_amount}
+                  </div>
+                </div>
+              ) : (
+                <p className="text-xl font-medium">৳{product.price}</p>
+              )}
+            </div>
           )}
         </div>
       </div>

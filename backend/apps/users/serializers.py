@@ -2,7 +2,7 @@ from rest_framework import serializers
 from django.contrib.auth import authenticate
 from django.contrib.auth.password_validation import validate_password
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
-from .models import User, CustomerProfile, SellerProfile, Address, SellerTeamMember
+from .models import User, CustomerProfile, SellerProfile, Address, SellerTeamMember, SellerHomepageProduct
 
 
 class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
@@ -230,4 +230,20 @@ class ChangePasswordSerializer(serializers.Serializer):
         user = self.context['request'].user
         if not user.check_password(value):
             raise serializers.ValidationError("Old password is incorrect.")
-        return value 
+        return value
+
+
+class SellerHomepageProductSerializer(serializers.ModelSerializer):
+    """Serializer for seller homepage products"""
+    
+    product_data = serializers.SerializerMethodField()
+    
+    class Meta:
+        model = SellerHomepageProduct
+        fields = ['id', 'product', 'product_data', 'order', 'created_at']
+        read_only_fields = ['seller', 'created_at']
+    
+    def get_product_data(self, obj):
+        """Get basic product information"""
+        from apps.products.serializers import ProductListSerializer
+        return ProductListSerializer(obj.product, context=self.context).data 

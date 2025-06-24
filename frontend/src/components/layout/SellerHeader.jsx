@@ -69,6 +69,9 @@ function SellerHeader() {
                 <a href="/seller/homepage" className="block px-4 py-2 text-sm hover:font-bold">
                   HOMEPAGE
                 </a>
+                <a href="/seller/products" className="block px-4 py-2 text-sm hover:font-bold">
+                  PRODUCTS
+                </a>
                 <a href="/seller/orders" className="block px-4 py-2 text-sm hover:font-bold">
                   ORDERS
                 </a>

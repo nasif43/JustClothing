@@ -252,6 +252,32 @@ class SellerReview(models.Model):
         return f"Seller review by {self.user.email} for {self.seller.business_name}"
 
 
+class ReviewReply(models.Model):
+    """Replies to reviews by sellers"""
+    
+    review = models.OneToOneField(Review, on_delete=models.CASCADE, related_name='reply')
+    seller = models.ForeignKey('users.SellerProfile', on_delete=models.CASCADE, related_name='review_replies')
+    content = models.TextField()
+    
+    # Moderation
+    is_approved = models.BooleanField(default=True)
+    moderated_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='moderated_review_replies')
+    moderated_at = models.DateTimeField(null=True, blank=True)
+    
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        db_table = 'review_replies'
+        indexes = [
+            models.Index(fields=['review']),
+            models.Index(fields=['created_at']),
+        ]
+    
+    def __str__(self):
+        return f"Reply by {self.seller.business_name} to review {self.review.id}"
+
+
 # Signal handlers for review notifications
 @receiver(post_save, sender=Review)
 def handle_new_review(sender, instance, created, **kwargs):
