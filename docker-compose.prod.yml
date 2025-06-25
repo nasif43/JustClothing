@@ -10,6 +10,10 @@ services:
       - media_volume:/app/media
       - static_volume:/app/staticfiles
     restart: unless-stopped
+    command: >
+      sh -c "python manage.py migrate &&
+             python manage.py collectstatic --noinput &&
+             gunicorn justclothing.wsgi:application --bind 0.0.0.0:8000"
 
   celery:
     environment:
@@ -32,4 +36,9 @@ services:
     restart: unless-stopped
 
   nginx:
-    restart: unless-stopped 
+    restart: unless-stopped
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile.prod 
