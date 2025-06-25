@@ -15,15 +15,16 @@ function ProductDetailPage() {
   const product = selectedProduct || products.find((p) => p.id === Number(id))
   const navigate = useNavigate()
 
-  const [selectedSize, setSelectedSize] = useState("")
-  const [selectedColor, setSelectedColor] = useState("")
+  const [selectedSize, setSelectedSize] = useState(null)
+  const [selectedColor, setSelectedColor] = useState(null)
   const [currentImageIndex, setCurrentImageIndex] = useState(0)
   const [addedToCart, setAddedToCart] = useState(false)
-  const [lastAddedSize, setLastAddedSize] = useState("")
-  const [lastAddedColor, setLastAddedColor] = useState("")
+  const [isAddingToCart, setIsAddingToCart] = useState(false) // Prevent multiple clicks
+  const [lastAddedSize, setLastAddedSize] = useState(null)
+  const [lastAddedColor, setLastAddedColor] = useState(null)
+  const [customMeasurements, setCustomMeasurements] = useState({})
   const [alertMessage, setAlertMessage] = useState("")
   const [isAlertOpen, setIsAlertOpen] = useState(false)
-  const [customMeasurements, setCustomMeasurements] = useState({}) // For custom sizing
 
   // Fetch products if not already loaded
   useEffect(() => {
@@ -119,6 +120,14 @@ function ProductDetailPage() {
   }
 
   const handleAddToCart = () => {
+    console.log('🔘 handleAddToCart called')
+    
+    // Prevent multiple rapid clicks
+    if (isAddingToCart) {
+      console.warn('🔘 Already adding to cart, ignoring click')
+      return
+    }
+    
     if (!selectedColor) {
       setAlertMessage("Please select a color")
       setIsAlertOpen(true)
@@ -137,6 +146,9 @@ function ProductDetailPage() {
       return
     }
 
+    setIsAddingToCart(true) // Set loading state
+    console.log('🔘 Starting add to cart process...')
+
     // Add the product with size, color, and custom measurements to cart
     const productData = { 
       ...product, 
@@ -146,12 +158,24 @@ function ProductDetailPage() {
       customMeasurements: product.offers_custom_sizes ? customMeasurements : undefined
     }
     
+    console.log('🔘 Calling addItem with:', productData)
     addItem(productData, 1)
-    
-    // Set added to cart state and remember the selected options
-    setAddedToCart(true)
-    setLastAddedSize(selectedSize)
-    setLastAddedColor(selectedColor)
+      .then(() => {
+        console.log('🔘 addItem successful')
+        // Set added to cart state and remember the selected options
+        setAddedToCart(true)
+        setLastAddedSize(selectedSize)
+        setLastAddedColor(selectedColor)
+      })
+      .catch((error) => {
+        console.error('🔘 addItem failed:', error)
+        setAlertMessage(error.message || 'Failed to add item to cart')
+        setIsAlertOpen(true)
+      })
+      .finally(() => {
+        console.log('🔘 addItem process completed')
+        setIsAddingToCart(false) // Reset loading state
+      })
   }
 
   const handleQuickCheckout = () => {
@@ -365,12 +389,14 @@ function ProductDetailPage() {
           <div className="space-y-3 mb-6">
             <button
               onClick={handleAddToCart}
-              disabled={addedToCart || isOutOfStock}
+              disabled={addedToCart || isOutOfStock || isAddingToCart}
               className={`w-full py-3 border border-black rounded-full font-medium flex items-center justify-center gap-2 
                 ${addedToCart 
                   ? 'bg-gray-200 text-black border-black' 
                   : isOutOfStock
                   ? 'bg-gray-300 text-gray-500 border-gray-300 cursor-not-allowed'
+                  : isAddingToCart
+                  ? 'bg-gray-100 text-gray-600 cursor-not-allowed'
                   : 'bg-white hover:bg-gray-100'}`}
             >
               {addedToCart ? (
@@ -381,6 +407,10 @@ function ProductDetailPage() {
               ) : isOutOfStock ? (
                 <>
                   OUT OF STOCK
+                </>
+              ) : isAddingToCart ? (
+                <>
+                  ADDING...
                 </>
               ) : (
                 <>

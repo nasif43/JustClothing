@@ -16,6 +16,7 @@ from .views import (
     SellerTeamMemberDetailView,
     logout_view,
     user_status_view,
+    user_preferences_view,
     PublicSellerListView,
     PublicSellerDetailView,
     seller_stats_view,
@@ -39,6 +40,7 @@ urlpatterns = [
     path('register/', RegisterView.as_view(), name='register'),
     path('profile/', ProfileView.as_view(), name='profile'),
     path('status/', user_status_view, name='user_status'),
+    path('preferences/', user_preferences_view, name='user_preferences'),
     path('change-password/', ChangePasswordView.as_view(), name='change_password'),
     path('shipping-info/', user_shipping_info, name='user_shipping_info'),
     

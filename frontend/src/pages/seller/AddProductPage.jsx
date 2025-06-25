@@ -3,6 +3,7 @@ import SellerLayout from '../../components/layout/SellerLayout'
 import { Plus, Search, ChevronDown, ChevronUp, X, Trash2 } from 'lucide-react'
 import { createProduct, updateProduct, fetchProductById } from '../../services/api'
 import { useNavigate, useParams } from 'react-router-dom'
+import TagSelector from '../../components/TagSelector'
 
 const AddProductPage = () => {
   const navigate = useNavigate()
@@ -66,7 +67,7 @@ const AddProductPage = () => {
         description: product.description || product.short_description || '',
         price: product.base_price?.amount || product.price || '',
         category: product.category?.name || '',
-        tags: product.tags || [],
+        tags: product.tags_list || product.tags || [],
         customTags: [],
         features: product.features || []
       })
@@ -368,6 +369,11 @@ const AddProductPage = () => {
       productFormData.append('availableSizes', JSON.stringify(activeSizes))
       productFormData.append('availableColors', JSON.stringify(selectedColors.map(c => c.name)))
       
+      // Tags
+      if (formData.tags && formData.tags.length > 0) {
+        productFormData.append('tags', JSON.stringify(formData.tags))
+      }
+      
       // Custom sizing
       productFormData.append('offers_custom_sizes', customSizes)
       if (customSizes && customSizeFields.length > 0) {
@@ -601,6 +607,14 @@ const AddProductPage = () => {
               className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-black focus:border-black"
               placeholder="0.00"
               required
+            />
+          </div>
+
+          {/* Tags */}
+          <div>
+            <TagSelector
+              selectedTags={formData.tags}
+              onTagsChange={(tags) => setFormData(prev => ({ ...prev, tags }))}
             />
           </div>
 

@@ -7,7 +7,7 @@ from .views import (
     ProductUpdateView, ProductDeleteView, SellerProductListView,
     ProductImageListCreateView, ProductImageDetailView,
     ProductVideoListCreateView, ProductVideoDetailView,
-    ProductAttributeTypeListView,
+    ProductAttributeTypeListView, TagListView,
     featured_products_view, trending_products_view, 
     related_products_view, bulk_update_products_view,
     ProductOfferListCreateView, ProductOfferDetailView,
@@ -21,6 +21,9 @@ urlpatterns = [
     # Categories
     path('categories/', CategoryListCreateView.as_view(), name='category_list_create'),
     path('categories/<str:slug>/', CategoryDetailView.as_view(), name='category_detail'),
+    
+    # Tags (must come before product detail to avoid conflict)
+    path('tags/', TagListView.as_view(), name='tag_list'),
     
     # Products - Public
     path('', ProductListView.as_view(), name='product_list'),

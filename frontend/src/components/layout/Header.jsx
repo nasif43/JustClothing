@@ -80,7 +80,7 @@ function Header() {
   return (
     <header className="bg-black text-white p-4 relative sticky top-0 z-50">
       <div className="max-w-7xl mx-auto flex items-center justify-between">
-        <div className="flex" onClick={() => navigate("/")}>
+        <div className="flex" onClick={() => navigate("/home")}>
           <img src={logo} alt="logo" className="w-auto h-15 hover:cursor-pointer" />
         </div>
         <div className="w-xl flex justify-center">
@@ -89,6 +89,8 @@ function Header() {
         <div className="flex items-center gap-8">
           {isAuthenticated ? (
             <span className="text-sm">Hello, {user?.first_name || user?.username}</span>
+          ) : user?.isGuest ? (
+            <span className="text-sm">Hello, Guest</span>
           ) : (
             <a href="/login" className="text-sm hover:underline">
               Log in/ Sign up
@@ -123,15 +125,19 @@ function Header() {
                 ref={menuRef}
                 className="absolute right-0 mt-2 w-48 bg-black rounded-md shadow-lg py-1 z-10 text-white menu-font"
               >
-                <a href="/" className="block px-4 py-2 text-sm hover:font-bold">
+                <a href="/home" className="block px-4 py-2 text-sm hover:font-bold">
                   Home
                 </a>
-                <a href="/orders" className="block px-4 py-2 text-sm hover:font-bold">
-                  Orders
-                </a>
-                <a href="/cart" className="block px-4 py-2 text-sm hover:font-bold">
-                  Cart {itemCount > 0 && `(${itemCount})`}
-                </a>
+                {(isAuthenticated || user?.isGuest) && (
+                  <>
+                    <a href="/orders" className="block px-4 py-2 text-sm hover:font-bold">
+                      Orders
+                    </a>
+                    <a href="/cart" className="block px-4 py-2 text-sm hover:font-bold">
+                      Cart {itemCount > 0 && `(${itemCount})`}
+                    </a>
+                  </>
+                )}
                 <a href="/trending" className="block px-4 py-2 text-sm hover:font-bold">
                   Trending
                 </a>
@@ -147,6 +153,13 @@ function Header() {
                     className="block w-full text-left px-4 py-2 text-sm hover:font-bold"
                   >
                     Sign Out
+                  </button>
+                ) : user?.isGuest ? (
+                  <button 
+                    onClick={() => navigate('/welcome')} 
+                    className="block w-full text-left px-4 py-2 text-sm hover:font-bold"
+                  >
+                    Sign In
                   </button>
                 ) : (
                   <a href="/signout" className="block px-4 py-2 text-sm hover:font-bold">

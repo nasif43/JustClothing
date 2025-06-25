@@ -47,7 +47,7 @@ const OrderConfirmationPage = () => {
           </p>
           
           <Link
-            to="/"
+            to="/home"
             className="bg-black text-white px-8 py-3 rounded-full font-semibold text-lg absolute bottom-8 right-8"
           >
             HOME

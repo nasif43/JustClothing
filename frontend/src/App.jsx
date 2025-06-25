@@ -1,4 +1,4 @@
-import { Routes, Route } from "react-router-dom"
+import { Routes, Route, Navigate } from "react-router-dom"
 import Header from "./components/layout/Header"
 import Footer from "./components/layout/Footer"
 import marbleBg from './assets/marble-bg.jpg'
@@ -30,7 +30,7 @@ import AddProductPage from "./pages/seller/AddProductPage"
 
 import ScrollToTop from "./components/ScrollToTop"
 import "./App.css"
-import { useEffect } from 'react'
+import { useEffect, useRef } from 'react'
 import useUserStore from './store/useUserStore'
 import useCartStore from './store/useCartStore'
 import { initializeApiInterceptor } from './services/apiInterceptor'
@@ -38,6 +38,8 @@ import ProtectedRoute from './components/ProtectedRoute'
 import SellerProtectedRoute from './components/SellerProtectedRoute'
 import LoginPage from './pages/auth/LoginPage'
 import SignUpPage from './pages/auth/SignUpPage'
+import PreferencePage from './pages/customer/PreferencePage'
+import OnboardingCheck from './components/OnboardingCheck'
 // Layout component for pages that need header and footer
 const MainLayout = ({ children }) => {
   const { notification, dismissNotification } = useProducts();
@@ -61,6 +63,7 @@ const MainLayout = ({ children }) => {
 function App() {
   const { initializeAuth, isAuthenticated } = useUserStore()
   const { fetchCart, syncCartAfterLogin } = useCartStore()
+  const hasInitializedCart = useRef(false)
 
   useEffect(() => {
     // Initialize API interceptor
@@ -71,14 +74,16 @@ function App() {
   }, [initializeAuth])
 
   useEffect(() => {
-    // Sync cart when user logs in or is already authenticated
-    if (isAuthenticated) {
-      syncCartAfterLogin()
-    } else {
+    if (isAuthenticated && !hasInitializedCart.current) {
+      // Only sync cart once when user is authenticated for the first time
+      hasInitializedCart.current = true
+      fetchCart() // Just fetch the existing cart instead of syncing
+    } else if (!isAuthenticated) {
       // Clear cart when user logs out
+      hasInitializedCart.current = false
       useCartStore.getState().clearCart()
     }
-  }, [isAuthenticated, syncCartAfterLogin])
+  }, [isAuthenticated, fetchCart])
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -95,20 +100,31 @@ function AppContent() {
   const { notification, dismissNotification } = useProducts();
   
   return (
-    <>
+    <OnboardingCheck>
       <Routes>
+        {/* Redirect root to welcome page */}
+        <Route path="/" element={<Navigate to="/welcome" replace />} />
+        
         {/* Public routes */}
         <Route path="/login" element={<LoginPage />} />
         <Route path="/welcome" element={<WelcomePage />} />
         <Route path="/signup" element={<SignUpPage />} />
-        {/* Protected routes */}
-        <Route path="/" element={
+        
+        {/* Preference/Onboarding Page */}
+        <Route path="/preferences" element={
           <ProtectedRoute>
-            <MainLayout>
-              <Homepage />
-            </MainLayout>
+            <PreferencePage />
           </ProtectedRoute>
         } />
+
+        {/* Homepage accessible to both authenticated users and guests */}
+        <Route path="/home" element={
+          <MainLayout>
+            <Homepage />
+          </MainLayout>
+        } />
+        
+        {/* Protected routes */}
         <Route path="/product/:id" element={
           <ProtectedRoute>
             <MainLayout>
@@ -206,7 +222,7 @@ function AppContent() {
           </SellerProtectedRoute>
         } />
       </Routes>
-    </>
+    </OnboardingCheck>
   );
 }
 

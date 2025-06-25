@@ -47,7 +47,7 @@ function CartPage() {
     };
 
     fetchUserInfo();
-    refreshCart();
+    // Removed refreshCart() as it's already called in App.jsx when user is authenticated
   }, [])
 
   // Calculate totals
@@ -107,28 +107,39 @@ function CartPage() {
       setIsAlertOpen(true)
       setIsShippingModalOpen(false)
       
-      // Clear selected items from cart and navigate after alert is shown
-      setTimeout(() => {
-        const itemsToRemove = items.filter(item => 
-          selectedItems[`${item.id}-${item.selectedSize}-${item.selectedColor}`]
-        )
-        itemsToRemove.forEach(item => {
-          removeItem(item.id, item.selectedSize, item.selectedColor)
-        })
-        setSelectedItems({})
-        
-        // Handle response - it's an array of orders
-        const orders = Array.isArray(response) ? response : [response]
-        const firstOrder = orders[0]
-        
-        navigate("/order-confirmation", {
-          state: {
-            orders: orders,
-            order: firstOrder,
-            orderNumber: firstOrder?.id,
-            totalOrders: orders.length
-          }
-        })
+      // Clear the entire cart after successful order creation
+      setTimeout(async () => {
+        try {
+          await clearCart() // Clear the entire cart
+          setSelectedItems({})
+          
+          // Handle response - it's an array of orders
+          const orders = Array.isArray(response) ? response : [response]
+          const firstOrder = orders[0]
+          
+          navigate("/order-confirmation", {
+            state: {
+              orders: orders,
+              order: firstOrder,
+              orderNumber: firstOrder?.id,
+              totalOrders: orders.length
+            }
+          })
+        } catch (clearError) {
+          console.error('Failed to clear cart after order:', clearError)
+          // Still navigate even if cart clearing fails
+          const orders = Array.isArray(response) ? response : [response]
+          const firstOrder = orders[0]
+          
+          navigate("/order-confirmation", {
+            state: {
+              orders: orders,
+              order: firstOrder,
+              orderNumber: firstOrder?.id,
+              totalOrders: orders.length
+            }
+          })
+        }
       }, 2000)
       
     } catch (error) {

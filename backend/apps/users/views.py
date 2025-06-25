@@ -211,6 +211,8 @@ def user_status_view(request):
             'last_name': user.last_name,
             'user_type': user.user_type,
             'is_verified': user.is_verified,
+            'preferred_tags': customer_profile.preferred_tags if customer_profile else [],
+            'onboarding_completed': customer_profile.onboarding_completed if customer_profile else False,
         },
         'customer_profile': CustomerProfileSerializer(customer_profile).data if customer_profile else None,
         'seller_profile': SellerProfileSerializer(seller_profile).data if seller_profile else None,
@@ -221,6 +223,37 @@ def user_status_view(request):
             'seller_approved': seller_profile.status == 'approved' if seller_profile else False,
         }
     })
+
+
+@api_view(['GET', 'POST'])
+@permission_classes([permissions.IsAuthenticated])
+def user_preferences_view(request):
+    """Get or update user preferences for onboarding"""
+    user = request.user
+    
+    # Get or create customer profile
+    customer_profile, created = CustomerProfile.objects.get_or_create(user=user)
+    
+    if request.method == 'GET':
+        return Response({
+            'preferred_tags': customer_profile.preferred_tags,
+            'onboarding_completed': customer_profile.onboarding_completed,
+        })
+    
+    elif request.method == 'POST':
+        # Update preferences
+        preferred_tags = request.data.get('preferred_tags', [])
+        onboarding_completed = request.data.get('onboarding_completed', False)
+        
+        customer_profile.preferred_tags = preferred_tags
+        customer_profile.onboarding_completed = onboarding_completed
+        customer_profile.save()
+        
+        return Response({
+            'message': 'Preferences updated successfully',
+            'preferred_tags': customer_profile.preferred_tags,
+            'onboarding_completed': customer_profile.onboarding_completed,
+        })
 
 
 class PublicSellerListView(generics.ListAPIView):

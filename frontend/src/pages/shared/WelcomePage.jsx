@@ -1,14 +1,18 @@
 import React from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import useUserStore from '../../store/useUserStore';
 import marbleBg from '../../assets/marble-bg.jpg';
 import logo from '../../assets/logo-black.svg';
 
 const WelcomePage = () => {
   const navigate = useNavigate();
+  const { guestLogin } = useUserStore();
 
   const handleGuestLogin = () => {
-    // Handle guest login logic here
-    navigate('/');
+    // Set guest user state
+    guestLogin();
+    // Navigate to home page where guests can see products
+    navigate('/home');
   };
 
   return (

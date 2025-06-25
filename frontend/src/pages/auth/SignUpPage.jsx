@@ -20,9 +20,19 @@ const SignUpPage = () => {
     const [isLoading, setIsLoading] = useState(false)
     const [error, setError] = useState(null)
 
-    const { register, handleSubmit, formState: { errors } } = useForm({
+    const { register, handleSubmit, formState: { errors }, watch } = useForm({
         resolver: yupResolver(signupSchema)
     })
+
+    // Watch form changes to clear API errors
+    const watchedFields = watch()
+    
+    // Clear API error when user starts typing
+    React.useEffect(() => {
+        if (error) {
+            setError(null)
+        }
+    }, [watchedFields])
 
     const onSubmit = async (data) => {
         setIsLoading(true)
@@ -46,7 +56,8 @@ const SignUpPage = () => {
                 })
             }
         } catch (error) {
-            setError(error.message || 'An error occurred during registration')
+            // Display the actual API error message
+            setError(error.message)
         } finally {
             setIsLoading(false)
         }

@@ -48,7 +48,9 @@ class CustomerProfile(models.Model):
     
     # Preferences
     preferred_categories = models.ManyToManyField('products.Category', blank=True)
+    preferred_tags = models.JSONField(default=list, blank=True)  # Store user's preferred tags from onboarding
     newsletter_subscription = models.BooleanField(default=True)
+    onboarding_completed = models.BooleanField(default=False)  # Track if user completed onboarding
     
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)

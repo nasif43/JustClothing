@@ -3,31 +3,59 @@ import { useProductStore } from '../../../store'
 import ProductCard from './ProductCard'
 
 function ProductGrid({ storeId = null, showStoreInfo = true, className = "m-10" }) {
-  const { products, loading, error, fetchProducts } = useProductStore()
+  const { 
+    products, 
+    filteredProducts, 
+    currentBusinessType, 
+    loading, 
+    error, 
+    fetchProducts,
+    getCurrentProducts 
+  } = useProductStore()
   const [displayProducts, setDisplayProducts] = useState([])
   
   useEffect(() => {
-    if (products.length === 0) {
+    // Initialize products if not loaded
+    if (products.length === 0 && !loading) {
       fetchProducts()
-    } else if (storeId) {
-      // Filter products for specific store if storeId is provided
-      const storeProducts = products.filter(product => 
+    }
+  }, [products, loading, fetchProducts])
+  
+  useEffect(() => {
+    let productsToShow = []
+    
+    if (storeId) {
+      // If storeId is provided, filter from all products for that specific store
+      productsToShow = products.filter(product => 
         product.storeId === Number(storeId)
       )
-      setDisplayProducts(storeProducts)
     } else {
-      // Use all products if no storeId is provided
-      setDisplayProducts(products)
+      // Use current products (filtered by business type or all products)
+      productsToShow = getCurrentProducts()
     }
-  }, [products, storeId, fetchProducts])
+    
+    setDisplayProducts(productsToShow)
+  }, [products, filteredProducts, currentBusinessType, storeId, getCurrentProducts])
   
   if (loading) return <div className="text-center py-8">Loading products...</div>
   if (error) return <div className="text-center py-8 text-gray-700">Error: {error}</div>
   
   if (!displayProducts.length) {
+    let emptyMessage = "No products found"
+    
+    if (storeId) {
+      emptyMessage = "No products found for this store"
+    } else if (currentBusinessType) {
+      // Map business type to display name
+      const displayName = currentBusinessType === "General Clothing" ? "General Clothing" :
+                          currentBusinessType === "Thrifted Clothing" ? "Thrifted Clothing" :
+                          currentBusinessType === "Loose Fabric" ? "Loose Fabric" : currentBusinessType
+      emptyMessage = `No products found for ${displayName}`
+    }
+    
     return (
       <div className="text-center py-8">
-        {storeId ? "No products found for this store" : "No products found"}
+        {emptyMessage}
       </div>
     )
   }

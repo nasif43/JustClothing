@@ -1,10 +1,10 @@
 from django.shortcuts import render
-from rest_framework import generics, filters, status, permissions
+from rest_framework import generics, filters, status, permissions, serializers
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from django_filters.rest_framework import DjangoFilterBackend
-from django.db.models import Q, F
+from django.db.models import Q, F, Count
 from django.shortcuts import get_object_or_404
 
 from .models import Category, Product, ProductAttributeType, ProductImage, ProductVideo, ProductOffer
@@ -16,6 +16,7 @@ from .serializers import (
     ProductWithOfferSerializer
 )
 from .filters import ProductFilter
+from taggit.models import Tag
 
 
 class CategoryListCreateView(generics.ListCreateAPIView):
@@ -419,3 +420,30 @@ def store_active_offers_view(request, seller_id):
     
     serializer = ProductOfferSerializer(active_offers, many=True)
     return Response({'offers': serializer.data})
+
+
+class TagListView(APIView):
+    """
+    API endpoint for listing all available tags
+    Tags are sorted by usage count (most used first)
+    """
+    permission_classes = []  # Allow public access
+    
+    def get(self, request, *args, **kwargs):
+        tags = Tag.objects.annotate(
+            usage_count=Count('taggit_taggeditem_items')
+        ).order_by('-usage_count', 'name')
+        
+        tag_data = []
+        for tag in tags:
+            tag_data.append({
+                'id': tag.id,
+                'name': tag.name,
+                'slug': tag.slug,
+                'usage_count': tag.usage_count
+            })
+        
+        return Response({
+            'results': tag_data,
+            'count': len(tag_data)
+        })

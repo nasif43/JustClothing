@@ -20,6 +20,22 @@ const useUserStore = create(
       setError: (error) => set({ error }),
       setIsAuthenticated: (isAuthenticated) => set({ isAuthenticated }),
       
+      // Guest login functionality
+      guestLogin: () => {
+        set({
+          user: {
+            id: 'guest',
+            username: 'Guest User',
+            email: 'guest@example.com',
+            isGuest: true
+          },
+          token: null,
+          isAuthenticated: false, // Keep false for guest, but user object exists
+          loading: false,
+          error: null
+        })
+      },
+      
       // Initialize auth state from localStorage
       initializeAuth: () => {
         const token = localStorage.getItem('access_token')
@@ -137,6 +153,19 @@ const useUserStore = create(
           set({ error: error.message, loading: false })
           throw error
         }
+      },
+
+      // Update user data directly
+      updateUser: (userData) => {
+        set({ 
+          user: { ...get().user, ...userData }
+        })
+      },
+
+      // Check if user needs onboarding
+      needsOnboarding: () => {
+        const { user } = get()
+        return user && !user.isGuest && !user.onboarding_completed
       },
       
       // Reset state

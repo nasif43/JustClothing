@@ -1,0 +1,799 @@
+Watching for file changes with StatReloader
+Forbidden (CSRF token missing.): /admin/login/
+"POST /admin/login/?next=/admin/users/user/ HTTP/1.1" 403 2505
+Not Found: /favicon.ico
+"GET /favicon.ico HTTP/1.1" 404 2476
+"GET /admin HTTP/1.1" 301 0
+"GET /admin/ HTTP/1.1" 302 0
+"GET /admin/login/?next=/admin/ HTTP/1.1" 200 4166
+"GET /static/admin/css/login.css HTTP/1.1" 200 958
+"GET /static/admin/css/base.css HTTP/1.1" 304 0
+"GET /static/admin/css/dark_mode.css HTTP/1.1" 304 0
+"GET /static/admin/css/nav_sidebar.css HTTP/1.1" 304 0
+"GET /static/admin/css/responsive.css HTTP/1.1" 304 0
+"GET /static/admin/js/theme.js HTTP/1.1" 304 0
+"GET /static/admin/js/nav_sidebar.js HTTP/1.1" 304 0
+"OPTIONS /api/v1/products/ HTTP/1.1" 200 0
+"OPTIONS /api/v1/products/ HTTP/1.1" 200 0
+"GET /api/v1/products/ HTTP/1.1" 200 8404
+"OPTIONS /api/v1/auth/stores/ HTTP/1.1" 200 0
+"GET /api/v1/auth/stores/ HTTP/1.1" 200 3220
+"GET /api/v1/products/ HTTP/1.1" 200 8404
+"GET /api/v1/auth/stores/ HTTP/1.1" 200 3220
+"OPTIONS /api/v1/users/stores/3/homepage-products/ HTTP/1.1" 200 0
+"OPTIONS /api/v1/users/stores/3/homepage-products/ HTTP/1.1" 200 0
+"GET /api/v1/users/stores/3/homepage-products/ HTTP/1.1" 200 2
+"GET /api/v1/users/stores/3/homepage-products/ HTTP/1.1" 200 2
+"OPTIONS /api/v1/products/stores/3/offers/ HTTP/1.1" 200 0
+"GET /api/v1/products/stores/3/offers/ HTTP/1.1" 200 13
+"OPTIONS /api/v1/reviews/stores/3/?sort=default HTTP/1.1" 200 0
+"OPTIONS /api/v1/reviews/stores/3/?sort=default HTTP/1.1" 200 0
+"GET /api/v1/reviews/stores/3/?sort=default HTTP/1.1" 200 266
+"GET /api/v1/reviews/stores/3/?sort=default HTTP/1.1" 200 266
+"GET /api/v1/products/stores/3/offers/ HTTP/1.1" 200 13
+"GET /api/v1/reviews/stores/3/?sort=default HTTP/1.1" 200 266
+"GET /api/v1/reviews/stores/3/?sort=default HTTP/1.1" 200 266
+"GET /api/v1/users/stores/3/homepage-products/ HTTP/1.1" 200 2
+"OPTIONS /api/v1/auth/status/ HTTP/1.1" 200 0
+"OPTIONS /api/v1/orders/cart/ HTTP/1.1" 200 0
+"OPTIONS /api/v1/auth/status/ HTTP/1.1" 200 0
+"OPTIONS /api/v1/orders/cart/ HTTP/1.1" 200 0
+"GET /api/v1/auth/status/ HTTP/1.1" 200 1337
+"GET /api/v1/orders/cart/ HTTP/1.1" 200 161
+"GET /api/v1/auth/status/ HTTP/1.1" 200 1337
+"GET /api/v1/orders/cart/ HTTP/1.1" 200 161
+"GET /api/v1/products/ HTTP/1.1" 200 8404
+"GET /api/v1/auth/stores/ HTTP/1.1" 200 3220
+"GET /api/v1/products/ HTTP/1.1" 200 8404
+"GET /api/v1/auth/stores/ HTTP/1.1" 200 3220
+"GET /api/v1/auth/status/ HTTP/1.1" 200 1337
+"GET /api/v1/orders/cart/ HTTP/1.1" 200 161
+"GET /api/v1/auth/status/ HTTP/1.1" 200 1337
+"GET /api/v1/orders/cart/ HTTP/1.1" 200 161
+"GET /api/v1/auth/status/ HTTP/1.1" 200 1337
+"GET /api/v1/orders/cart/ HTTP/1.1" 200 161
+"GET /api/v1/products/ HTTP/1.1" 200 8404
+"GET /api/v1/auth/stores/ HTTP/1.1" 200 3220
+"GET /api/v1/products/ HTTP/1.1" 200 8404
+"GET /api/v1/auth/stores/ HTTP/1.1" 200 3220
+"OPTIONS /api/v1/auth/login/ HTTP/1.1" 200 0
+Bad Request: /api/v1/auth/login/
+"POST /api/v1/auth/login/ HTTP/1.1" 400 51
+"OPTIONS /api/v1/auth/login/ HTTP/1.1" 200 0
+Bad Request: /api/v1/auth/login/
+"POST /api/v1/auth/login/ HTTP/1.1" 400 51
+Bad Request: /api/v1/auth/login/
+"POST /api/v1/auth/login/ HTTP/1.1" 400 51
+Bad Request: /api/v1/auth/login/
+"POST /api/v1/auth/login/ HTTP/1.1" 400 51
+Bad Request: /api/v1/auth/login/
+"POST /api/v1/auth/login/ HTTP/1.1" 400 51
+Bad Request: /api/v1/auth/login/
+"POST /api/v1/auth/login/ HTTP/1.1" 400 51
+"GET /api/v1/auth/status/ HTTP/1.1" 200 1337
+"GET /api/v1/auth/status/ HTTP/1.1" 200 1337
+"GET /api/v1/orders/cart/ HTTP/1.1" 200 161
+Bad Request: /api/v1/auth/login/
+"POST /api/v1/auth/login/ HTTP/1.1" 400 51
+"OPTIONS /api/v1/auth/register/ HTTP/1.1" 200 0
+"POST /api/v1/auth/register/ HTTP/1.1" 201 1069
+"POST /api/v1/auth/login/ HTTP/1.1" 200 769
+"GET /api/v1/auth/status/ HTTP/1.1" 200 541
+"GET /api/v1/products/ HTTP/1.1" 200 8404
+"GET /api/v1/auth/stores/ HTTP/1.1" 200 3220
+"GET /api/v1/products/ HTTP/1.1" 200 8404
+"GET /api/v1/auth/stores/ HTTP/1.1" 200 3220
+"GET /api/v1/auth/status/ HTTP/1.1" 200 541
+"GET /api/v1/auth/status/ HTTP/1.1" 200 541
+"GET /api/v1/products/ HTTP/1.1" 200 8404
+"GET /api/v1/auth/stores/ HTTP/1.1" 200 3220
+"OPTIONS /api/v1/products/?business_type=General+Clothing HTTP/1.1" 200 0
+"GET /api/v1/products/?business_type=General+Clothing HTTP/1.1" 200 3681
+"OPTIONS /api/v1/products/?business_type=Thrifted+Clothing HTTP/1.1" 200 0
+"GET /api/v1/products/?business_type=Thrifted+Clothing HTTP/1.1" 200 2402
+"OPTIONS /api/v1/products/?business_type=Loose+Fabric HTTP/1.1" 200 0
+"GET /api/v1/products/?business_type=Loose+Fabric HTTP/1.1" 200 2423
+"GET /api/v1/products/ HTTP/1.1" 200 8404
+"GET /api/v1/products/?business_type=General+Clothing HTTP/1.1" 200 3681
+"GET /api/v1/products/?business_type=Thrifted+Clothing HTTP/1.1" 200 2402
+"GET /api/v1/products/?business_type=General+Clothing HTTP/1.1" 200 3681
+"GET /api/v1/products/?business_type=Thrifted+Clothing HTTP/1.1" 200 2402
+"GET /api/v1/products/?business_type=General+Clothing HTTP/1.1" 200 3681
+"GET /api/v1/products/ HTTP/1.1" 200 8404
+"OPTIONS /api/v1/products/6/ HTTP/1.1" 200 0
+"OPTIONS /api/v1/products/6/ HTTP/1.1" 200 0
+"GET /api/v1/products/6/ HTTP/1.1" 200 1727
+"GET /api/v1/products/6/ HTTP/1.1" 200 1727
+"OPTIONS /api/v1/products/7/ HTTP/1.1" 200 0
+"OPTIONS /api/v1/products/7/ HTTP/1.1" 200 0
+"GET /api/v1/products/7/ HTTP/1.1" 200 1728
+"GET /api/v1/products/7/ HTTP/1.1" 200 1728
+"GET /api/v1/users/stores/3/homepage-products/ HTTP/1.1" 200 2
+"GET /api/v1/users/stores/3/homepage-products/ HTTP/1.1" 200 2
+"GET /api/v1/products/stores/3/offers/ HTTP/1.1" 200 13
+"GET /api/v1/reviews/stores/3/?sort=default HTTP/1.1" 200 266
+"GET /api/v1/reviews/stores/3/?sort=default HTTP/1.1" 200 266
+"GET /api/v1/reviews/stores/3/?sort=default HTTP/1.1" 200 266
+"GET /api/v1/reviews/stores/3/?sort=default HTTP/1.1" 200 266
+"GET /api/v1/users/stores/3/homepage-products/ HTTP/1.1" 200 2
+"GET /api/v1/products/6/ HTTP/1.1" 200 1727
+"GET /api/v1/products/6/ HTTP/1.1" 200 1727
+"OPTIONS /api/v1/orders/cart/add/ HTTP/1.1" 200 0
+"POST /api/v1/orders/cart/add/ HTTP/1.1" 201 375
+"GET /api/v1/orders/cart/ HTTP/1.1" 200 538
+"OPTIONS /api/v1/auth/shipping-info/ HTTP/1.1" 200 0
+"GET /api/v1/auth/status/ HTTP/1.1" 200 541
+"GET /api/v1/orders/cart/ HTTP/1.1" 200 538
+"POST /api/v1/orders/cart/add/ HTTP/1.1" 201 375
+"GET /api/v1/auth/shipping-info/ HTTP/1.1" 200 75
+"GET /api/v1/auth/status/ HTTP/1.1" 200 541
+"POST /api/v1/orders/cart/add/ HTTP/1.1" 201 376
+"GET /api/v1/auth/shipping-info/ HTTP/1.1" 200 75
+"GET /api/v1/orders/cart/ HTTP/1.1" 200 916
+"GET /api/v1/orders/cart/ HTTP/1.1" 200 916
+"GET /api/v1/orders/cart/ HTTP/1.1" 200 916
+"OPTIONS /api/v1/orders/orders/create/ HTTP/1.1" 200 0
+"POST /api/v1/orders/orders/create/ HTTP/1.1" 201 1839
+"OPTIONS /api/v1/orders/cart/items/1/remove/ HTTP/1.1" 200 0
+"OPTIONS /api/v1/orders/cart/items/2/remove/ HTTP/1.1" 200 0
+Not Found: /api/v1/orders/cart/items/1/remove/
+Not Found: /api/v1/orders/cart/items/2/remove/
+"DELETE /api/v1/orders/cart/items/1/remove/ HTTP/1.1" 404 23
+"DELETE /api/v1/orders/cart/items/2/remove/ HTTP/1.1" 404 23
+"POST /api/v1/auth/login/ HTTP/1.1" 200 769
+"GET /api/v1/auth/status/ HTTP/1.1" 200 541
+"GET /api/v1/products/ HTTP/1.1" 200 8404
+"GET /api/v1/auth/stores/ HTTP/1.1" 200 3220
+"GET /api/v1/products/ HTTP/1.1" 200 8404
+"GET /api/v1/auth/stores/ HTTP/1.1" 200 3220
+"GET /api/v1/auth/shipping-info/ HTTP/1.1" 200 75
+"GET /api/v1/orders/cart/ HTTP/1.1" 200 161
+"GET /api/v1/auth/status/ HTTP/1.1" 200 541
+"POST /api/v1/orders/cart/add/ HTTP/1.1" 201 369
+"GET /api/v1/auth/shipping-info/ HTTP/1.1" 200 75
+"GET /api/v1/auth/status/ HTTP/1.1" 200 541
+"GET /api/v1/orders/cart/ HTTP/1.1" 200 533
+"GET /api/v1/orders/cart/ HTTP/1.1" 200 533
+Internal Server Error: /api/v1/orders/cart/add/
+Traceback (most recent call last):
+  File "D:\Work\mufrad\JustClothing\backend\env\Lib\site-packages\django\db\backends\utils.py", line 105, in _execute
+    return self.cursor.execute(sql, params)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+psycopg2.errors.UniqueViolation: duplicate key value violates unique constraint "cart_items_cart_id_product_id_size_color_6119cf01_uniq"
+DETAIL:  Key (cart_id, product_id, size, color)=(4, 2, Per Yard, Cream) already exists.
+
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "D:\Work\mufrad\JustClothing\backend\env\Lib\site-packages\django\core\handlers\exception.py", line 55, in inner
+    response = get_response(request)
+               ^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Work\mufrad\JustClothing\backend\env\Lib\site-packages\django\core\handlers\base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Work\mufrad\JustClothing\backend\env\Lib\site-packages\django\views\decorators\csrf.py", line 65, in _view_wrapper
+    return view_func(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Work\mufrad\JustClothing\backend\env\Lib\site-packages\django\views\generic\base.py", line 104, in view
+    return self.dispatch(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Work\mufrad\JustClothing\backend\env\Lib\site-packages\rest_framework\views.py", line 509, in dispatch
+    response = self.handle_exception(exc)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Work\mufrad\JustClothing\backend\env\Lib\site-packages\rest_framework\views.py", line 469, in handle_exception
+    self.raise_uncaught_exception(exc)
+  File "D:\Work\mufrad\JustClothing\backend\env\Lib\site-packages\rest_framework\views.py", line 480, in raise_uncaught_exception
+    raise exc
+  File "D:\Work\mufrad\JustClothing\backend\env\Lib\site-packages\rest_framework\views.py", line 506, in dispatch
+    response = handler(request, *args, **kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Work\mufrad\JustClothing\backend\apps\orders\views.py", line 101, in post
+    item = CartItem.objects.create(
+           ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Work\mufrad\JustClothing\backend\env\Lib\site-packages\django\db\models\manager.py", line 87, in manager_method
+    return getattr(self.get_queryset(), name)(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Work\mufrad\JustClothing\backend\env\Lib\site-packages\django\db\models\query.py", line 679, in create
+    obj.save(force_insert=True, using=self.db)
+  File "D:\Work\mufrad\JustClothing\backend\env\Lib\site-packages\django\db\models\base.py", line 822, in save
+    self.save_base(
+  File "D:\Work\mufrad\JustClothing\backend\env\Lib\site-packages\django\db\models\base.py", line 909, in save_base
+    updated = self._save_table(
+              ^^^^^^^^^^^^^^^^^
+  File "D:\Work\mufrad\JustClothing\backend\env\Lib\site-packages\django\db\models\base.py", line 1067, in _save_table
+    results = self._do_insert(
+              ^^^^^^^^^^^^^^^^
+  File "D:\Work\mufrad\JustClothing\backend\env\Lib\site-packages\django\db\models\base.py", line 1108, in _do_insert
+    return manager._insert(
+           ^^^^^^^^^^^^^^^^
+  File "D:\Work\mufrad\JustClothing\backend\env\Lib\site-packages\django\db\models\manager.py", line 87, in manager_method
+    return getattr(self.get_queryset(), name)(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Work\mufrad\JustClothing\backend\env\Lib\site-packages\django\db\models\query.py", line 1847, in _insert
+    return query.get_compiler(using=using).execute_sql(returning_fields)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Work\mufrad\JustClothing\backend\env\Lib\site-packages\django\db\models\sql\compiler.py", line 1823, in execute_sql
+    cursor.execute(sql, params)
+  File "D:\Work\mufrad\JustClothing\backend\env\Lib\site-packages\django\db\backends\utils.py", line 122, in execute
+    return super().execute(sql, params)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Work\mufrad\JustClothing\backend\env\Lib\site-packages\django\db\backends\utils.py", line 79, in execute
+    return self._execute_with_wrappers(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Work\mufrad\JustClothing\backend\env\Lib\site-packages\django\db\backends\utils.py", line 92, in _execute_with_wrappers
+    return executor(sql, params, many, context)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Work\mufrad\JustClothing\backend\env\Lib\site-packages\django\db\backends\utils.py", line 100, in _execute
+    with self.db.wrap_database_errors:
+  File "D:\Work\mufrad\JustClothing\backend\env\Lib\site-packages\django\db\utils.py", line 91, in __exit__
+    raise dj_exc_value.with_traceback(traceback) from exc_value
+  File "D:\Work\mufrad\JustClothing\backend\env\Lib\site-packages\django\db\backends\utils.py", line 105, in _execute
+    return self.cursor.execute(sql, params)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+django.db.utils.IntegrityError: duplicate key value violates unique constraint "cart_items_cart_id_product_id_size_color_6119cf01_uniq"
+DETAIL:  Key (cart_id, product_id, size, color)=(4, 2, Per Yard, Cream) already exists.
+
+"POST /api/v1/orders/cart/add/ HTTP/1.1" 500 198233
+"OPTIONS /api/v1/orders/cart/items/3/remove/ HTTP/1.1" 200 0
+"DELETE /api/v1/orders/cart/items/3/remove/ HTTP/1.1" 204 0
+"GET /api/v1/orders/cart/ HTTP/1.1" 200 161
+"GET /api/v1/products/ HTTP/1.1" 200 8404
+"GET /api/v1/auth/stores/ HTTP/1.1" 200 3220
+"GET /api/v1/products/ HTTP/1.1" 200 8404
+"GET /api/v1/auth/stores/ HTTP/1.1" 200 3220
+"GET /api/v1/auth/shipping-info/ HTTP/1.1" 200 75
+"GET /api/v1/orders/cart/ HTTP/1.1" 200 161
+"GET /api/v1/auth/status/ HTTP/1.1" 200 541
+"GET /api/v1/auth/shipping-info/ HTTP/1.1" 200 75
+"GET /api/v1/orders/cart/ HTTP/1.1" 200 161
+"GET /api/v1/auth/status/ HTTP/1.1" 200 541
+"GET /api/v1/orders/cart/ HTTP/1.1" 200 161
+"GET /api/v1/orders/cart/ HTTP/1.1" 200 161
+"GET /api/v1/products/ HTTP/1.1" 200 8404
+- Broken pipe from ('127.0.0.1', 50431)
+- Broken pipe from ('127.0.0.1', 50300)
+- Broken pipe from ('127.0.0.1', 50430)
+"GET /api/v1/orders/cart/ HTTP/1.1" 200 161
+"GET /api/v1/auth/status/ HTTP/1.1" 200 541
+"GET /api/v1/orders/cart/ HTTP/1.1" 200 161
+"GET /api/v1/auth/status/ HTTP/1.1" 200 541
+"GET /api/v1/products/ HTTP/1.1" 200 8404
+"GET /api/v1/auth/stores/ HTTP/1.1" 200 3220
+"GET /api/v1/products/ HTTP/1.1" 200 8404
+"GET /api/v1/auth/stores/ HTTP/1.1" 200 3220
+"GET /api/v1/products/6/ HTTP/1.1" 200 1727
+"GET /api/v1/products/6/ HTTP/1.1" 200 1727
+"GET /api/v1/products/?business_type=General+Clothing HTTP/1.1" 200 3681
+"OPTIONS /api/v1/products/3/ HTTP/1.1" 200 0
+"OPTIONS /api/v1/products/3/ HTTP/1.1" 200 0
+"GET /api/v1/products/3/ HTTP/1.1" 200 1762
+"GET /api/v1/products/3/ HTTP/1.1" 200 1762
+"POST /api/v1/orders/cart/add/ HTTP/1.1" 201 357
+"GET /api/v1/orders/cart/ HTTP/1.1" 200 521
+"GET /api/v1/auth/shipping-info/ HTTP/1.1" 200 75
+"GET /api/v1/auth/status/ HTTP/1.1" 200 541
+"GET /api/v1/orders/cart/ HTTP/1.1" 200 521
+"GET /api/v1/auth/shipping-info/ HTTP/1.1" 200 75
+"POST /api/v1/orders/cart/add/ HTTP/1.1" 201 359
+"GET /api/v1/auth/status/ HTTP/1.1" 200 541
+"GET /api/v1/orders/cart/ HTTP/1.1" 200 881
+Internal Server Error: /api/v1/orders/cart/add/
+Traceback (most recent call last):
+  File "D:\Work\mufrad\JustClothing\backend\env\Lib\site-packages\django\db\backends\utils.py", line 105, in _execute
+    return self.cursor.execute(sql, params)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+psycopg2.errors.UniqueViolation: duplicate key value violates unique constraint "cart_items_cart_id_product_id_size_color_6119cf01_uniq"
+DETAIL:  Key (cart_id, product_id, size, color)=(4, 5, M, Grey) already exists.
+
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "D:\Work\mufrad\JustClothing\backend\env\Lib\site-packages\django\core\handlers\exception.py", line 55, in inner
+    response = get_response(request)
+               ^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Work\mufrad\JustClothing\backend\env\Lib\site-packages\django\core\handlers\base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Work\mufrad\JustClothing\backend\env\Lib\site-packages\django\views\decorators\csrf.py", line 65, in _view_wrapper
+    return view_func(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Work\mufrad\JustClothing\backend\env\Lib\site-packages\django\views\generic\base.py", line 104, in view
+    return self.dispatch(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Work\mufrad\JustClothing\backend\env\Lib\site-packages\rest_framework\views.py", line 509, in dispatch
+    response = self.handle_exception(exc)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Work\mufrad\JustClothing\backend\env\Lib\site-packages\rest_framework\views.py", line 469, in handle_exception
+    self.raise_uncaught_exception(exc)
+  File "D:\Work\mufrad\JustClothing\backend\env\Lib\site-packages\rest_framework\views.py", line 480, in raise_uncaught_exception
+    raise exc
+  File "D:\Work\mufrad\JustClothing\backend\env\Lib\site-packages\rest_framework\views.py", line 506, in dispatch
+    response = handler(request, *args, **kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Work\mufrad\JustClothing\backend\apps\orders\views.py", line 101, in post
+    item = CartItem.objects.create(
+           ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Work\mufrad\JustClothing\backend\env\Lib\site-packages\django\db\models\manager.py", line 87, in manager_method
+    return getattr(self.get_queryset(), name)(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Work\mufrad\JustClothing\backend\env\Lib\site-packages\django\db\models\query.py", line 679, in create
+    obj.save(force_insert=True, using=self.db)
+  File "D:\Work\mufrad\JustClothing\backend\env\Lib\site-packages\django\db\models\base.py", line 822, in save
+    self.save_base(
+  File "D:\Work\mufrad\JustClothing\backend\env\Lib\site-packages\django\db\models\base.py", line 909, in save_base
+    updated = self._save_table(
+              ^^^^^^^^^^^^^^^^^
+  File "D:\Work\mufrad\JustClothing\backend\env\Lib\site-packages\django\db\models\base.py", line 1067, in _save_table
+    results = self._do_insert(
+              ^^^^^^^^^^^^^^^^
+  File "D:\Work\mufrad\JustClothing\backend\env\Lib\site-packages\django\db\models\base.py", line 1108, in _do_insert
+    return manager._insert(
+           ^^^^^^^^^^^^^^^^
+  File "D:\Work\mufrad\JustClothing\backend\env\Lib\site-packages\django\db\models\manager.py", line 87, in manager_method
+    return getattr(self.get_queryset(), name)(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Work\mufrad\JustClothing\backend\env\Lib\site-packages\django\db\models\query.py", line 1847, in _insert
+    return query.get_compiler(using=using).execute_sql(returning_fields)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Work\mufrad\JustClothing\backend\env\Lib\site-packages\django\db\models\sql\compiler.py", line 1823, in execute_sql
+    cursor.execute(sql, params)
+  File "D:\Work\mufrad\JustClothing\backend\env\Lib\site-packages\django\db\backends\utils.py", line 122, in execute
+    return super().execute(sql, params)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Work\mufrad\JustClothing\backend\env\Lib\site-packages\django\db\backends\utils.py", line 79, in execute
+    return self._execute_with_wrappers(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Work\mufrad\JustClothing\backend\env\Lib\site-packages\django\db\backends\utils.py", line 92, in _execute_with_wrappers
+    return executor(sql, params, many, context)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Work\mufrad\JustClothing\backend\env\Lib\site-packages\django\db\backends\utils.py", line 100, in _execute
+    with self.db.wrap_database_errors:
+  File "D:\Work\mufrad\JustClothing\backend\env\Lib\site-packages\django\db\utils.py", line 91, in __exit__
+    raise dj_exc_value.with_traceback(traceback) from exc_value
+  File "D:\Work\mufrad\JustClothing\backend\env\Lib\site-packages\django\db\backends\utils.py", line 105, in _execute
+    return self.cursor.execute(sql, params)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+django.db.utils.IntegrityError: duplicate key value violates unique constraint "cart_items_cart_id_product_id_size_color_6119cf01_uniq"
+DETAIL:  Key (cart_id, product_id, size, color)=(4, 5, M, Grey) already exists.
+
+"POST /api/v1/orders/cart/add/ HTTP/1.1" 500 198137
+"GET /api/v1/orders/cart/ HTTP/1.1" 200 881
+"POST /api/v1/auth/login/ HTTP/1.1" 200 769
+"GET /api/v1/auth/status/ HTTP/1.1" 200 541
+"GET /api/v1/products/ HTTP/1.1" 200 8404
+"GET /api/v1/auth/stores/ HTTP/1.1" 200 3220
+"GET /api/v1/products/ HTTP/1.1" 200 8404
+"GET /api/v1/auth/stores/ HTTP/1.1" 200 3220
+"POST /api/v1/orders/cart/add/ HTTP/1.1" 201 357
+"POST /api/v1/orders/cart/add/ HTTP/1.1" 201 359
+"GET /api/v1/orders/cart/ HTTP/1.1" 200 881
+"GET /api/v1/products/?business_type=General+Clothing HTTP/1.1" 200 3681
+"GET /api/v1/products/ HTTP/1.1" 200 8404
+"GET /api/v1/auth/shipping-info/ HTTP/1.1" 200 75
+"POST /api/v1/orders/cart/add/ HTTP/1.1" 201 357
+"GET /api/v1/orders/cart/ HTTP/1.1" 200 881
+"GET /api/v1/auth/status/ HTTP/1.1" 200 541
+"GET /api/v1/auth/shipping-info/ HTTP/1.1" 200 75
+"POST /api/v1/orders/cart/add/ HTTP/1.1" 201 357
+"GET /api/v1/orders/cart/ HTTP/1.1" 200 882
+"GET /api/v1/auth/status/ HTTP/1.1" 200 541
+"POST /api/v1/orders/cart/add/ HTTP/1.1" 201 359
+"POST /api/v1/orders/cart/add/ HTTP/1.1" 201 360
+"GET /api/v1/orders/cart/ HTTP/1.1" 200 884
+"GET /api/v1/orders/cart/ HTTP/1.1" 200 884
+"OPTIONS /api/v1/orders/cart/items/5/remove/ HTTP/1.1" 200 0
+"DELETE /api/v1/orders/cart/items/5/remove/ HTTP/1.1" 204 0
+"GET /api/v1/orders/cart/ HTTP/1.1" 200 525
+"OPTIONS /api/v1/orders/cart/items/6/remove/ HTTP/1.1" 200 0
+"DELETE /api/v1/orders/cart/items/6/remove/ HTTP/1.1" 204 0
+"GET /api/v1/orders/cart/ HTTP/1.1" 200 161
+"GET /api/v1/products/ HTTP/1.1" 200 8404
+"GET /api/v1/auth/stores/ HTTP/1.1" 200 3220
+"GET /api/v1/products/ HTTP/1.1" 200 8404
+"GET /api/v1/auth/stores/ HTTP/1.1" 200 3220
+"GET /api/v1/products/6/ HTTP/1.1" 200 1727
+"GET /api/v1/products/6/ HTTP/1.1" 200 1727
+"GET /api/v1/products/?business_type=General+Clothing HTTP/1.1" 200 3681
+"GET /api/v1/products/?business_type=Thrifted+Clothing HTTP/1.1" 200 2402
+"OPTIONS /api/v1/products/4/ HTTP/1.1" 200 0
+"OPTIONS /api/v1/products/4/ HTTP/1.1" 200 0
+"GET /api/v1/products/4/ HTTP/1.1" 200 1719
+"GET /api/v1/products/4/ HTTP/1.1" 200 1719
+"POST /api/v1/orders/cart/add/ HTTP/1.1" 201 368
+"GET /api/v1/orders/cart/ HTTP/1.1" 200 532
+"GET /api/v1/auth/shipping-info/ HTTP/1.1" 200 75
+"GET /api/v1/auth/status/ HTTP/1.1" 200 541
+"GET /api/v1/orders/cart/ HTTP/1.1" 200 532
+"POST /api/v1/orders/cart/add/ HTTP/1.1" 201 368
+"POST /api/v1/orders/cart/add/ HTTP/1.1" 201 368
+"GET /api/v1/auth/shipping-info/ HTTP/1.1" 200 75
+"GET /api/v1/auth/status/ HTTP/1.1" 200 541
+"GET /api/v1/orders/cart/ HTTP/1.1" 200 532
+"GET /api/v1/orders/cart/ HTTP/1.1" 200 532
+"GET /api/v1/orders/cart/ HTTP/1.1" 200 532
+"OPTIONS /api/v1/orders/cart/items/8/update/ HTTP/1.1" 200 0
+"PATCH /api/v1/orders/cart/items/8/update/ HTTP/1.1" 200 368
+"GET /api/v1/orders/cart/ HTTP/1.1" 200 532
+"PATCH /api/v1/orders/cart/items/8/update/ HTTP/1.1" 200 368
+"GET /api/v1/orders/cart/ HTTP/1.1" 200 532
+"GET /api/v1/products/ HTTP/1.1" 200 8404
+"GET /api/v1/auth/stores/ HTTP/1.1" 200 3220
+"GET /api/v1/products/ HTTP/1.1" 200 8404
+"GET /api/v1/auth/stores/ HTTP/1.1" 200 3220
+"POST /api/v1/orders/cart/add/ HTTP/1.1" 201 368
+"GET /api/v1/orders/cart/ HTTP/1.1" 200 532
+"GET /api/v1/products/?business_type=General+Clothing HTTP/1.1" 200 3681
+"GET /api/v1/auth/shipping-info/ HTTP/1.1" 200 75
+"GET /api/v1/auth/status/ HTTP/1.1" 200 541
+"POST /api/v1/orders/cart/add/ HTTP/1.1" 201 368
+"GET /api/v1/orders/cart/ HTTP/1.1" 200 533
+"POST /api/v1/orders/cart/add/ HTTP/1.1" 201 369
+"GET /api/v1/auth/shipping-info/ HTTP/1.1" 200 75
+"GET /api/v1/auth/status/ HTTP/1.1" 200 541
+"GET /api/v1/orders/cart/ HTTP/1.1" 200 534
+"GET /api/v1/orders/cart/ HTTP/1.1" 200 534
+"GET /api/v1/orders/cart/ HTTP/1.1" 200 534
+"OPTIONS /api/v1/orders/cart/items/8/remove/ HTTP/1.1" 200 0
+"DELETE /api/v1/orders/cart/items/8/remove/ HTTP/1.1" 204 0
+"GET /api/v1/orders/cart/ HTTP/1.1" 200 161
+"GET /api/v1/products/ HTTP/1.1" 200 8404
+"GET /api/v1/auth/stores/ HTTP/1.1" 200 3220
+"GET /api/v1/products/ HTTP/1.1" 200 8404
+"GET /api/v1/auth/stores/ HTTP/1.1" 200 3220
+"GET /api/v1/products/6/ HTTP/1.1" 200 1727
+"GET /api/v1/products/6/ HTTP/1.1" 200 1728
+"GET /api/v1/products/?business_type=General+Clothing HTTP/1.1" 200 3681
+"OPTIONS /api/v1/products/1/ HTTP/1.1" 200 0
+"OPTIONS /api/v1/products/1/ HTTP/1.1" 200 0
+"GET /api/v1/products/1/ HTTP/1.1" 200 1761
+"GET /api/v1/products/1/ HTTP/1.1" 200 1761
+"GET /api/v1/orders/cart/ HTTP/1.1" 200 161
+"GET /api/v1/auth/status/ HTTP/1.1" 200 541
+"GET /api/v1/products/1/ HTTP/1.1" 200 1761
+"GET /api/v1/products/ HTTP/1.1" 200 8404
+"GET /api/v1/auth/stores/ HTTP/1.1" 200 3220
+"POST /api/v1/orders/cart/add/ HTTP/1.1" 201 368
+"GET /api/v1/orders/cart/ HTTP/1.1" 200 531
+"GET /api/v1/auth/shipping-info/ HTTP/1.1" 200 75
+"GET /api/v1/auth/status/ HTTP/1.1" 200 541
+"GET /api/v1/orders/cart/ HTTP/1.1" 200 532
+"POST /api/v1/orders/cart/add/ HTTP/1.1" 201 369
+"GET /api/v1/orders/cart/ HTTP/1.1" 200 533
+"GET /api/v1/products/ HTTP/1.1" 200 8404
+"GET /api/v1/auth/stores/ HTTP/1.1" 200 3220
+"GET /api/v1/auth/shipping-info/ HTTP/1.1" 200 75
+"GET /api/v1/auth/status/ HTTP/1.1" 200 541
+"GET /api/v1/orders/cart/ HTTP/1.1" 200 533
+"POST /api/v1/orders/cart/add/ HTTP/1.1" 201 369
+"GET /api/v1/orders/cart/ HTTP/1.1" 200 533
+"OPTIONS /api/v1/products/ HTTP/1.1" 200 0
+"GET /api/v1/products/ HTTP/1.1" 200 8404
+"OPTIONS /api/v1/auth/stores/ HTTP/1.1" 200 0
+"GET /api/v1/auth/stores/ HTTP/1.1" 200 3220
+"OPTIONS /api/v1/auth/shipping-info/ HTTP/1.1" 200 0
+"OPTIONS /api/v1/orders/cart/ HTTP/1.1" 200 0
+"OPTIONS /api/v1/auth/status/ HTTP/1.1" 200 0
+"OPTIONS /api/v1/orders/cart/add/ HTTP/1.1" 200 0
+"GET /api/v1/auth/shipping-info/ HTTP/1.1" 200 75
+"GET /api/v1/auth/status/ HTTP/1.1" 200 541
+"GET /api/v1/orders/cart/ HTTP/1.1" 200 533
+"POST /api/v1/orders/cart/add/ HTTP/1.1" 201 369
+"OPTIONS /api/v1/orders/cart/ HTTP/1.1" 200 0
+"GET /api/v1/orders/cart/ HTTP/1.1" 200 533
+"OPTIONS /api/v1/orders/cart/items/9/remove/ HTTP/1.1" 200 0
+"DELETE /api/v1/orders/cart/items/9/remove/ HTTP/1.1" 204 0
+"OPTIONS /api/v1/orders/cart/ HTTP/1.1" 200 0
+"GET /api/v1/orders/cart/ HTTP/1.1" 200 161
+"OPTIONS /api/v1/products/ HTTP/1.1" 200 0
+"GET /api/v1/products/ HTTP/1.1" 200 8404
+"OPTIONS /api/v1/auth/stores/ HTTP/1.1" 200 0
+"GET /api/v1/auth/stores/ HTTP/1.1" 200 3220
+"OPTIONS /api/v1/auth/status/ HTTP/1.1" 200 0
+"GET /api/v1/auth/status/ HTTP/1.1" 200 541
+"OPTIONS /api/v1/products/ HTTP/1.1" 200 0
+"GET /api/v1/products/ HTTP/1.1" 200 8404
+"OPTIONS /api/v1/auth/stores/ HTTP/1.1" 200 0
+"GET /api/v1/auth/stores/ HTTP/1.1" 200 3220
+"OPTIONS /api/v1/products/4/ HTTP/1.1" 200 0
+"GET /api/v1/products/4/ HTTP/1.1" 200 1719
+"OPTIONS /api/v1/orders/cart/add/ HTTP/1.1" 200 0
+"POST /api/v1/orders/cart/add/ HTTP/1.1" 201 369
+"OPTIONS /api/v1/orders/cart/ HTTP/1.1" 200 0
+"GET /api/v1/orders/cart/ HTTP/1.1" 200 533
+"OPTIONS /api/v1/auth/shipping-info/ HTTP/1.1" 200 0
+"OPTIONS /api/v1/orders/cart/ HTTP/1.1" 200 0
+"OPTIONS /api/v1/orders/cart/add/ HTTP/1.1" 200 0
+"OPTIONS /api/v1/auth/status/ HTTP/1.1" 200 0
+"GET /api/v1/auth/shipping-info/ HTTP/1.1" 200 75
+"GET /api/v1/orders/cart/ HTTP/1.1" 200 533
+"POST /api/v1/orders/cart/add/ HTTP/1.1" 201 369
+"GET /api/v1/auth/status/ HTTP/1.1" 200 541
+"OPTIONS /api/v1/orders/cart/ HTTP/1.1" 200 0
+"GET /api/v1/orders/cart/ HTTP/1.1" 200 533
+"OPTIONS /api/v1/products/ HTTP/1.1" 200 0
+"OPTIONS /api/v1/products/4/ HTTP/1.1" 200 0
+"OPTIONS /api/v1/orders/cart/add/ HTTP/1.1" 200 0
+"OPTIONS /api/v1/auth/status/ HTTP/1.1" 200 0
+"GET /api/v1/auth/status/ HTTP/1.1" 200 541
+"POST /api/v1/orders/cart/add/ HTTP/1.1" 201 369
+"GET /api/v1/products/4/ HTTP/1.1" 200 1719
+"OPTIONS /api/v1/orders/cart/ HTTP/1.1" 200 0
+"GET /api/v1/products/ HTTP/1.1" 200 8404
+"OPTIONS /api/v1/auth/stores/ HTTP/1.1" 200 0
+"GET /api/v1/orders/cart/ HTTP/1.1" 200 533
+"GET /api/v1/auth/stores/ HTTP/1.1" 200 3220
+"OPTIONS /api/v1/orders/cart/add/ HTTP/1.1" 200 0
+"POST /api/v1/orders/cart/add/ HTTP/1.1" 201 370
+"OPTIONS /api/v1/orders/cart/ HTTP/1.1" 200 0
+"GET /api/v1/orders/cart/ HTTP/1.1" 200 535
+"OPTIONS /api/v1/orders/cart/ HTTP/1.1" 200 0
+"OPTIONS /api/v1/auth/status/ HTTP/1.1" 200 0
+"OPTIONS /api/v1/auth/shipping-info/ HTTP/1.1" 200 0
+"OPTIONS /api/v1/orders/cart/add/ HTTP/1.1" 200 0
+"GET /api/v1/auth/shipping-info/ HTTP/1.1" 200 75
+"GET /api/v1/auth/status/ HTTP/1.1" 200 541
+"GET /api/v1/orders/cart/ HTTP/1.1" 200 535
+"POST /api/v1/orders/cart/add/ HTTP/1.1" 201 371
+"OPTIONS /api/v1/orders/cart/ HTTP/1.1" 200 0
+"GET /api/v1/orders/cart/ HTTP/1.1" 200 537
+"GET /api/v1/products/ HTTP/1.1" 200 8404
+"GET /api/v1/auth/stores/ HTTP/1.1" 200 3220
+"GET /api/v1/auth/shipping-info/ HTTP/1.1" 200 75
+"GET /api/v1/auth/status/ HTTP/1.1" 200 541
+"POST /api/v1/orders/cart/add/ HTTP/1.1" 201 371
+"GET /api/v1/orders/cart/ HTTP/1.1" 200 537
+"OPTIONS /api/v1/orders/cart/items/10/remove/ HTTP/1.1" 200 0
+"DELETE /api/v1/orders/cart/items/10/remove/ HTTP/1.1" 204 0
+"GET /api/v1/orders/cart/ HTTP/1.1" 200 161
+"GET /api/v1/products/ HTTP/1.1" 200 8404
+"GET /api/v1/auth/stores/ HTTP/1.1" 200 3220
+"GET /api/v1/products/6/ HTTP/1.1" 200 1728
+"POST /api/v1/orders/cart/add/ HTTP/1.1" 201 376
+"GET /api/v1/orders/cart/ HTTP/1.1" 200 539
+"GET /api/v1/auth/shipping-info/ HTTP/1.1" 200 75
+"GET /api/v1/auth/status/ HTTP/1.1" 200 541
+"POST /api/v1/orders/cart/add/ HTTP/1.1" 201 376
+"GET /api/v1/orders/cart/ HTTP/1.1" 200 539
+"GET /api/v1/products/ HTTP/1.1" 200 8404
+"GET /api/v1/auth/stores/ HTTP/1.1" 200 3220
+"GET /api/v1/auth/shipping-info/ HTTP/1.1" 200 75
+"GET /api/v1/auth/status/ HTTP/1.1" 200 541
+"POST /api/v1/orders/cart/add/ HTTP/1.1" 201 377
+"GET /api/v1/orders/cart/ HTTP/1.1" 200 541
+"OPTIONS /api/v1/products/ HTTP/1.1" 200 0
+"GET /api/v1/products/ HTTP/1.1" 200 8404
+"OPTIONS /api/v1/auth/stores/ HTTP/1.1" 200 0
+"GET /api/v1/auth/stores/ HTTP/1.1" 200 3220
+"OPTIONS /api/v1/auth/shipping-info/ HTTP/1.1" 200 0
+"OPTIONS /api/v1/auth/status/ HTTP/1.1" 200 0
+"OPTIONS /api/v1/orders/cart/add/ HTTP/1.1" 200 0
+"GET /api/v1/auth/shipping-info/ HTTP/1.1" 200 75
+"GET /api/v1/auth/status/ HTTP/1.1" 200 541
+"POST /api/v1/orders/cart/add/ HTTP/1.1" 201 377
+"OPTIONS /api/v1/orders/cart/ HTTP/1.1" 200 0
+"GET /api/v1/orders/cart/ HTTP/1.1" 200 541
+"OPTIONS /api/v1/auth/status/ HTTP/1.1" 200 0
+"OPTIONS /api/v1/orders/cart/add/ HTTP/1.1" 200 0
+"GET /api/v1/auth/status/ HTTP/1.1" 200 541
+"POST /api/v1/orders/cart/add/ HTTP/1.1" 201 378
+"OPTIONS /api/v1/orders/cart/ HTTP/1.1" 200 0
+"GET /api/v1/orders/cart/ HTTP/1.1" 200 543
+"OPTIONS /api/v1/auth/shipping-info/ HTTP/1.1" 200 0
+"OPTIONS /api/v1/auth/status/ HTTP/1.1" 200 0
+"OPTIONS /api/v1/orders/cart/ HTTP/1.1" 200 0
+"GET /api/v1/auth/shipping-info/ HTTP/1.1" 200 75
+"GET /api/v1/auth/status/ HTTP/1.1" 200 541
+"GET /api/v1/orders/cart/ HTTP/1.1" 200 543
+"OPTIONS /api/v1/auth/status/ HTTP/1.1" 200 0
+"GET /api/v1/auth/status/ HTTP/1.1" 200 541
+"OPTIONS /api/v1/orders/cart/items/11/remove/ HTTP/1.1" 200 0
+"DELETE /api/v1/orders/cart/items/11/remove/ HTTP/1.1" 204 0
+"OPTIONS /api/v1/orders/cart/ HTTP/1.1" 200 0
+"GET /api/v1/orders/cart/ HTTP/1.1" 200 161
+"OPTIONS /api/v1/products/ HTTP/1.1" 200 0
+"GET /api/v1/products/ HTTP/1.1" 200 8404
+"OPTIONS /api/v1/auth/stores/ HTTP/1.1" 200 0
+"GET /api/v1/auth/stores/ HTTP/1.1" 200 3220
+"OPTIONS /api/v1/products/7/ HTTP/1.1" 200 0
+"GET /api/v1/products/7/ HTTP/1.1" 200 1728
+"OPTIONS /api/v1/orders/cart/add/ HTTP/1.1" 200 0
+"POST /api/v1/orders/cart/add/ HTTP/1.1" 201 379
+"OPTIONS /api/v1/orders/cart/ HTTP/1.1" 200 0
+"GET /api/v1/orders/cart/ HTTP/1.1" 200 543
+"OPTIONS /api/v1/auth/shipping-info/ HTTP/1.1" 200 0
+"OPTIONS /api/v1/auth/status/ HTTP/1.1" 200 0
+"OPTIONS /api/v1/orders/cart/ HTTP/1.1" 200 0
+"GET /api/v1/auth/shipping-info/ HTTP/1.1" 200 75
+"GET /api/v1/auth/status/ HTTP/1.1" 200 541
+"GET /api/v1/orders/cart/ HTTP/1.1" 200 543
+"OPTIONS /api/v1/products/ HTTP/1.1" 200 0
+"GET /api/v1/products/ HTTP/1.1" 200 8404
+"OPTIONS /api/v1/auth/stores/ HTTP/1.1" 200 0
+"GET /api/v1/auth/stores/ HTTP/1.1" 200 3220
+"OPTIONS /api/v1/products/5/ HTTP/1.1" 200 0
+"GET /api/v1/products/5/ HTTP/1.1" 200 1740
+"OPTIONS /api/v1/orders/cart/add/ HTTP/1.1" 200 0
+"POST /api/v1/orders/cart/add/ HTTP/1.1" 201 367
+"OPTIONS /api/v1/orders/cart/ HTTP/1.1" 200 0
+"GET /api/v1/orders/cart/ HTTP/1.1" 200 911
+"OPTIONS /api/v1/auth/shipping-info/ HTTP/1.1" 200 0
+"OPTIONS /api/v1/orders/cart/ HTTP/1.1" 200 0
+"OPTIONS /api/v1/auth/status/ HTTP/1.1" 200 0
+"GET /api/v1/auth/shipping-info/ HTTP/1.1" 200 75
+"GET /api/v1/auth/status/ HTTP/1.1" 200 541
+"GET /api/v1/orders/cart/ HTTP/1.1" 200 911
+"OPTIONS /api/v1/orders/orders/create/ HTTP/1.1" 200 0
+"POST /api/v1/orders/orders/create/ HTTP/1.1" 201 1837
+"OPTIONS /api/v1/orders/cart/clear/ HTTP/1.1" 200 0
+"POST /api/v1/orders/cart/clear/ HTTP/1.1" 200 39
+"OPTIONS /api/v1/auth/shipping-info/ HTTP/1.1" 200 0
+"GET /api/v1/auth/shipping-info/ HTTP/1.1" 200 75
+"OPTIONS /api/v1/products/ HTTP/1.1" 200 0
+"GET /api/v1/products/ HTTP/1.1" 200 8404
+"OPTIONS /api/v1/auth/stores/ HTTP/1.1" 200 0
+"GET /api/v1/auth/stores/ HTTP/1.1" 200 3220
+"OPTIONS /api/v1/orders/orders/ HTTP/1.1" 200 0
+"OPTIONS /api/v1/auth/status/ HTTP/1.1" 200 0
+"OPTIONS /api/v1/orders/cart/ HTTP/1.1" 200 0
+"GET /api/v1/auth/status/ HTTP/1.1" 200 541
+"GET /api/v1/orders/cart/ HTTP/1.1" 200 161
+"GET /api/v1/orders/orders/ HTTP/1.1" 200 3675
+"OPTIONS /api/v1/orders/orders/74275/ HTTP/1.1" 200 0
+"GET /api/v1/orders/orders/74275/ HTTP/1.1" 200 908
+"OPTIONS /api/v1/products/ HTTP/1.1" 200 0
+"GET /api/v1/products/ HTTP/1.1" 200 8404
+"OPTIONS /api/v1/auth/stores/ HTTP/1.1" 200 0
+"GET /api/v1/auth/stores/ HTTP/1.1" 200 3220
+"GET /api/v1/orders/orders/74275/ HTTP/1.1" 200 908
+"GET /api/v1/orders/orders/ HTTP/1.1" 200 3675
+"GET /api/v1/auth/stores/ HTTP/1.1" 200 3220
+"GET /api/v1/auth/shipping-info/ HTTP/1.1" 200 75
+"GET /api/v1/auth/status/ HTTP/1.1" 200 541
+"GET /api/v1/orders/cart/ HTTP/1.1" 200 161
+"GET /api/v1/auth/status/ HTTP/1.1" 200 541
+"GET /api/v1/products/ HTTP/1.1" 200 8404
+"GET /api/v1/auth/stores/ HTTP/1.1" 200 3220
+"GET /api/v1/products/?business_type=Thrifted+Clothing HTTP/1.1" 200 2402
+"GET /api/v1/auth/status/ HTTP/1.1" 200 541
+"GET /api/v1/orders/cart/ HTTP/1.1" 200 161
+"GET /api/v1/products/ HTTP/1.1" 200 8404
+"GET /api/v1/auth/stores/ HTTP/1.1" 200 3220
+"GET /api/v1/auth/status/ HTTP/1.1" 200 541
+"OPTIONS /api/v1/auth/seller/signup/ HTTP/1.1" 200 0
+"POST /api/v1/auth/seller/signup/ HTTP/1.1" 201 870
+"GET /api/v1/auth/status/ HTTP/1.1" 200 1317
+"GET /api/v1/auth/status/ HTTP/1.1" 200 1317
+"POST /admin/login/?next=/admin/ HTTP/1.1" 200 4333
+"POST /admin/login/?next=/admin/ HTTP/1.1" 200 4333
+D:\Work\mufrad\JustClothing\backend\apps\products\views.py changed, reloading.
+Watching for file changes with StatReloader
+D:\Work\mufrad\JustClothing\backend\apps\products\views.py changed, reloading.
+Watching for file changes with StatReloader
+"GET /api/v1/products/ HTTP/1.1" 200 8404
+"GET /api/v1/auth/stores/ HTTP/1.1" 200 3220
+D:\Work\mufrad\JustClothing\backend\apps\products\views.py changed, reloading.
+Watching for file changes with StatReloader
+"OPTIONS /api/v1/products/tags/ HTTP/1.1" 200 0
+Not Found: /api/v1/products/tags/
+"GET /api/v1/products/tags/ HTTP/1.1" 404 23
+"GET /api/v1/orders/cart/ HTTP/1.1" 200 161
+"GET /api/v1/auth/status/ HTTP/1.1" 200 1317
+"GET /api/v1/products/ HTTP/1.1" 200 8404
+"GET /api/v1/auth/stores/ HTTP/1.1" 200 3220
+"GET /api/v1/orders/cart/ HTTP/1.1" 200 161
+"GET /api/v1/auth/status/ HTTP/1.1" 200 1317
+"GET /api/v1/auth/stores/ HTTP/1.1" 200 3220
+"GET /api/v1/orders/cart/ HTTP/1.1" 200 161
+"GET /api/v1/auth/status/ HTTP/1.1" 200 1317
+"OPTIONS /api/v1/products/?tags=Streetwear HTTP/1.1" 200 0
+"GET /api/v1/products/?tags=Streetwear HTTP/1.1" 200 52
+"OPTIONS /api/v1/products/?tags=Gym+wear HTTP/1.1" 200 0
+"GET /api/v1/products/?tags=Gym+wear HTTP/1.1" 200 52
+"OPTIONS /api/v1/products/?tags=Formal+wear HTTP/1.1" 200 0
+"GET /api/v1/products/?tags=Formal+wear HTTP/1.1" 200 52
+"OPTIONS /api/v1/products/?tags=Oversized+fits HTTP/1.1" 200 0
+"GET /api/v1/products/?tags=Oversized+fits HTTP/1.1" 200 52
+"GET /api/v1/orders/cart/ HTTP/1.1" 200 161
+"GET /api/v1/auth/status/ HTTP/1.1" 200 1317
+"GET /api/v1/products/ HTTP/1.1" 200 8404
+"GET /api/v1/auth/stores/ HTTP/1.1" 200 3220
+Not Found: /api/v1/products/tags/
+"GET /api/v1/products/tags/ HTTP/1.1" 404 23
+Not Found: /api/v1/products/tags/
+"GET /api/v1/products/tags/ HTTP/1.1" 404 23
+Not Found: /api/v1/products/tags/
+"GET /api/v1/products/tags/ HTTP/1.1" 404 23
+"OPTIONS /api/v1/products/tags/ HTTP/1.1" 200 0
+"OPTIONS /api/v1/products/ HTTP/1.1" 200 0
+Not Found: /api/v1/products/tags/
+"OPTIONS /api/v1/orders/cart/ HTTP/1.1" 200 0
+"OPTIONS /api/v1/auth/status/ HTTP/1.1" 200 0
+"GET /api/v1/products/tags/ HTTP/1.1" 404 23
+"GET /api/v1/orders/cart/ HTTP/1.1" 200 161
+"GET /api/v1/auth/status/ HTTP/1.1" 200 1317
+"GET /api/v1/products/ HTTP/1.1" 200 8404
+"OPTIONS /api/v1/auth/stores/ HTTP/1.1" 200 0
+"GET /api/v1/auth/stores/ HTTP/1.1" 200 3220
+Not Found: /api/v1/products/tags/
+"GET /api/v1/products/tags/ HTTP/1.1" 404 23
+Watching for file changes with StatReloader
+Not Found: /api/v1/products/tags/
+"GET /api/v1/products/tags/ HTTP/1.1" 404 23
+D:\Work\mufrad\JustClothing\backend\apps\products\urls.py changed, reloading.
+Watching for file changes with StatReloader
+"OPTIONS /api/v1/products/ HTTP/1.1" 200 0
+"GET /api/v1/products/ HTTP/1.1" 200 8404
+D:\Work\mufrad\JustClothing\backend\apps\products\urls.py changed, reloading.
+Watching for file changes with StatReloader
+Unauthorized: /api/v1/products/tags/
+"GET /api/v1/products/tags/ HTTP/1.1" 401 58
+D:\Work\mufrad\JustClothing\backend\apps\products\views.py changed, reloading.
+Watching for file changes with StatReloader
+"GET /api/v1/products/tags/ HTTP/1.1" 200 2137
+"GET /api/v1/products/tags/ HTTP/1.1" 200 2137
+"GET /api/v1/orders/cart/ HTTP/1.1" 200 161
+"GET /api/v1/auth/status/ HTTP/1.1" 200 1317
+"GET /api/v1/products/ HTTP/1.1" 200 8404
+"GET /api/v1/auth/stores/ HTTP/1.1" 200 3220
+"OPTIONS /api/v1/products/?tags=athletic HTTP/1.1" 200 0
+"GET /api/v1/products/?tags=athletic HTTP/1.1" 200 1242
+"GET /api/v1/products/?tags=Formal+wear HTTP/1.1" 200 52
+"OPTIONS /api/v1/products/?tags=Formal+wear%2Cstreetwear HTTP/1.1" 200 0
+"GET /api/v1/products/?tags=Formal+wear%2Cstreetwear HTTP/1.1" 200 3618
+"OPTIONS /api/v1/products/?tags=streetwear HTTP/1.1" 200 0
+"GET /api/v1/products/?tags=streetwear HTTP/1.1" 200 3618
+"GET /api/v1/products/ HTTP/1.1" 200 8404
+"GET /api/v1/products/ HTTP/1.1" 200 8404
+"OPTIONS /api/v1/products/?tags=vintage HTTP/1.1" 200 0
+"GET /api/v1/products/?tags=vintage HTTP/1.1" 200 2402
+"GET /api/v1/products/ HTTP/1.1" 200 8404
+"GET /api/v1/products/tags/ HTTP/1.1" 200 2137
+"GET /api/v1/products/tags/ HTTP/1.1" 200 2137
+"GET /api/v1/products/?tags=Gym+wear HTTP/1.1" 200 52
+"GET /api/v1/products/ HTTP/1.1" 200 8404
+"GET /api/v1/products/?business_type=General+Clothing HTTP/1.1" 200 3681
+"GET /api/v1/products/ HTTP/1.1" 200 8404
+"GET /api/v1/products/3/ HTTP/1.1" 200 1762
+"OPTIONS /api/v1/users/stores/1/homepage-products/ HTTP/1.1" 200 0
+"GET /api/v1/users/stores/1/homepage-products/ HTTP/1.1" 200 2
+"GET /api/v1/products/tags/ HTTP/1.1" 200 2137
+"GET /api/v1/products/tags/ HTTP/1.1" 200 2137
+"GET /api/v1/auth/status/ HTTP/1.1" 200 1317
+"GET /api/v1/products/ HTTP/1.1" 200 8404
+"GET /api/v1/auth/stores/ HTTP/1.1" 200 3220
+"GET /api/v1/products/tags/ HTTP/1.1" 200 2137
+"GET /api/v1/auth/status/ HTTP/1.1" 200 1317
+"GET /api/v1/auth/status/ HTTP/1.1" 200 1317
+"GET /api/v1/auth/status/ HTTP/1.1" 200 1317
+"GET /api/v1/auth/status/ HTTP/1.1" 200 1317
+"GET /api/v1/auth/status/ HTTP/1.1" 200 1317
+"GET /api/v1/auth/status/ HTTP/1.1" 200 1317
+"GET /api/v1/auth/status/ HTTP/1.1" 200 1317
+"GET /api/v1/auth/status/ HTTP/1.1" 200 1317
+"GET /api/v1/auth/status/ HTTP/1.1" 200 1317
+"GET /api/v1/products/tags/ HTTP/1.1" 200 2137
+"GET /api/v1/auth/status/ HTTP/1.1" 200 1317
+"GET /api/v1/auth/status/ HTTP/1.1" 200 1317
+D:\Work\mufrad\JustClothing\backend\apps\users\models.py changed, reloading.
+Watching for file changes with StatReloader
+D:\Work\mufrad\JustClothing\backend\apps\users\views.py changed, reloading.
+Watching for file changes with StatReloader
+D:\Work\mufrad\JustClothing\backend\apps\users\views.py changed, reloading.
+Watching for file changes with StatReloader
+D:\Work\mufrad\JustClothing\backend\apps\users\urls.py changed, reloading.
+Watching for file changes with StatReloader
+"OPTIONS /api/v1/auth/preferences/ HTTP/1.1" 200 0
+Not Found: /api/v1/auth/preferences/
+"POST /api/v1/auth/preferences/ HTTP/1.1" 404 10399
+D:\Work\mufrad\JustClothing\backend\apps\users\urls.py changed, reloading.
+Watching for file changes with StatReloader
+"POST /api/v1/auth/preferences/ HTTP/1.1" 200 125
+"GET /api/v1/products/tags/ HTTP/1.1" 200 2137
+"GET /api/v1/products/?business_type=Thrifted+Clothing HTTP/1.1" 200 2402
+"OPTIONS /api/v1/products/?tags=Ethnic+wear HTTP/1.1" 200 0
+"GET /api/v1/products/?tags=Ethnic+wear HTTP/1.1" 200 52
+"GET /api/v1/products/ HTTP/1.1" 200 8404
+"GET /api/v1/products/ HTTP/1.1" 200 8404
+Watching for file changes with StatReloader

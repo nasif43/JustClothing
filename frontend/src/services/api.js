@@ -32,7 +32,32 @@ const handleApiError = async (response) => {
     
     try {
       const errorData = await response.json()
-      errorMessage = errorData.error || errorData.detail || errorData.message || errorMessage
+      
+      // Handle different error response formats
+      if (errorData.error) {
+        errorMessage = errorData.error
+      } else if (errorData.detail) {
+        errorMessage = errorData.detail
+      } else if (errorData.message) {
+        errorMessage = errorData.message
+      } else if (errorData.non_field_errors && Array.isArray(errorData.non_field_errors)) {
+        errorMessage = errorData.non_field_errors.join(', ')
+      } else if (typeof errorData === 'string') {
+        errorMessage = errorData
+      } else if (typeof errorData === 'object') {
+        // Handle field-specific errors (e.g., email: ["This field is required"])
+        const fieldErrors = []
+        for (const [field, errors] of Object.entries(errorData)) {
+          if (Array.isArray(errors)) {
+            fieldErrors.push(`${field}: ${errors.join(', ')}`)
+          } else if (typeof errors === 'string') {
+            fieldErrors.push(`${field}: ${errors}`)
+          }
+        }
+        if (fieldErrors.length > 0) {
+          errorMessage = fieldErrors.join('; ')
+        }
+      }
     } catch (e) {
       errorMessage = `${response.status} ${response.statusText}`
     }
@@ -709,5 +734,42 @@ export const fetchStoreHomepageProducts = async (storeId) => {
     return await apiRequest(`users/stores/${storeId}/homepage-products/`)
   } catch (error) {
     throw new Error(error.message || 'Failed to fetch store homepage products')
+  }
+}
+
+// Tags API
+export const fetchTags = async () => {
+  try {
+    const response = await apiRequest('products/tags/', {
+      method: 'GET',
+      auth: false
+    })
+    return response
+  } catch (error) {
+    throw new Error(error.message || 'Failed to fetch tags')
+  }
+}
+
+// User preferences API
+export const updateUserPreferences = async (preferences) => {
+  try {
+    const response = await apiRequest('auth/preferences/', {
+      method: 'POST',
+      body: JSON.stringify(preferences)
+    })
+    return response
+  } catch (error) {
+    throw new Error(error.message || 'Failed to update user preferences')
+  }
+}
+
+export const fetchUserPreferences = async () => {
+  try {
+    const response = await apiRequest('auth/preferences/', {
+      method: 'GET'
+    })
+    return response
+  } catch (error) {
+    throw new Error(error.message || 'Failed to fetch user preferences')
   }
 }

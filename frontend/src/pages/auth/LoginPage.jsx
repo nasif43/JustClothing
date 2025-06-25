@@ -6,7 +6,7 @@ import marbleBg from '../../assets/marble-bg.jpg'
 function LoginPage() {
   const navigate = useNavigate()
   const location = useLocation()
-  const { login, loading, error } = useUserStore()
+  const { login, loading, error, setError } = useUserStore()
   const [formData, setFormData] = useState({
     email: '',
     password: ''
@@ -26,6 +26,11 @@ function LoginPage() {
       ...prev,
       [name]: value
     }))
+    
+    // Clear error when user starts typing
+    if (error) {
+      setError(null)
+    }
   }
 
   const handleSubmit = async (e) => {
@@ -33,7 +38,7 @@ function LoginPage() {
     try {
       await login(formData)
       // Check if user was trying to access a specific page
-      const redirectTo = location.state?.from || '/'
+      const redirectTo = location.state?.from || '/home'
       navigate(redirectTo) // Redirect to intended page or home page after successful login
     } catch (error) {
       // Error is handled by the store
