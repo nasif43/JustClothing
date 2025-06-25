@@ -42,51 +42,46 @@ class CategoryDetailView(generics.RetrieveAPIView):
 
 
 class ProductListView(generics.ListAPIView):
-    """List products with filtering and search"""
-    queryset = Product.objects.select_related('seller', 'category').prefetch_related(
-        'images', 'tags'
-    ).filter(status='active')
+    """List products with comprehensive filtering"""
     serializer_class = ProductListSerializer
     permission_classes = [permissions.AllowAny]
     filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
     filterset_class = ProductFilter
-    search_fields = ['name', 'short_description', 'long_description', 'tags__name']
-    ordering_fields = ['created_at', 'base_price', 'rating', 'sales_count', 'views_count', 'name']
+    search_fields = ['name', 'description', 'seller__business_name']
+    ordering_fields = ['price', 'created_at', 'rating', 'sales_count']
     ordering = ['-created_at']
-    
+
     def get_queryset(self):
-        queryset = super().get_queryset()
+        queryset = Product.objects.select_related(
+            'seller', 'category', 'collection'
+        ).prefetch_related(
+            'images', 'tags', 'variants'
+        ).filter(status='active')
         
-        # Filter by search query if provided
-        search_query = self.request.query_params.get('q')
-        if search_query:
+        # Search functionality
+        search = self.request.query_params.get('search')
+        if search:
             queryset = queryset.filter(
-                Q(name__icontains=search_query) |
-                Q(short_description__icontains=search_query) |
-                Q(long_description__icontains=search_query) |
-                Q(tags__name__icontains=search_query)
+                Q(name__icontains=search) |
+                Q(description__icontains=search) |
+                Q(seller__business_name__icontains=search) |
+                Q(tags__name__icontains=search)
             ).distinct()
         
-        # Filter by category
+        # Category filtering
         category = self.request.query_params.get('category')
         if category:
-            try:
-                # Try to get by ID first, then by slug
-                if category.isdigit():
-                    queryset = queryset.filter(category_id=category)
-                else:
-                    queryset = queryset.filter(category__slug=category)
-            except:
-                pass
+            queryset = queryset.filter(category__slug=category)
         
-        # Filter by seller
-        seller = self.request.query_params.get('seller')
-        if seller:
-            queryset = queryset.filter(seller_id=seller)
+        # BUSINESS TYPE FILTERING (Main homepage categories)
+        business_type = self.request.query_params.get('business_type')
+        if business_type:
+            queryset = queryset.filter(seller__business_type=business_type)
         
-        # Price range filtering
+        # Price filtering
         min_price = self.request.query_params.get('min_price')
         max_price = self.request.query_params.get('max_price')
+        
         if min_price:
             queryset = queryset.filter(base_price__gte=min_price)
         if max_price:

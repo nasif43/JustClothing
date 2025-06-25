@@ -70,11 +70,18 @@ class SellerProfile(models.Model):
         ('rejected', 'Rejected'),
     )
     
+    BUSINESS_TYPES = (
+        ('General Clothing', 'General Clothing'),
+        ('Thrifted Clothing', 'Thrifted Clothing'),
+        ('Loose Fabric', 'Loose Fabric'),
+    )
+    
     # Basic seller info
     id = models.AutoField(primary_key=True)  # Frontend compatibility
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='seller_profile')
     business_name = models.CharField(max_length=200)
     business_description = models.TextField()
+    business_type = models.CharField(max_length=50, choices=BUSINESS_TYPES, default='General Clothing')
     phone_number = PhoneNumberField()
     business_address = models.TextField()
     business_license = models.CharField(max_length=100, blank=True, null=True)
@@ -120,10 +127,20 @@ class SellerProfile(models.Model):
         db_table = 'seller_profiles'
         indexes = [
             models.Index(fields=['status']),
+            models.Index(fields=['business_type']),
             models.Index(fields=['rating']),
             models.Index(fields=['created_at']),
             models.Index(fields=['verified']),
         ]
+    
+    @property
+    def category(self):
+        """Get the category corresponding to this seller's business type"""
+        try:
+            from apps.products.models import Category
+            return Category.objects.get(name=self.business_type)
+        except Category.DoesNotExist:
+            return None
     
     def save(self, *args, **kwargs):
         # Sync fields for frontend compatibility
@@ -143,10 +160,31 @@ class SellerProfile(models.Model):
         if self.pk:
             self.productsCount = self.products.filter(status='active').count()
         
+        # Ensure corresponding category exists
+        if self.business_type:
+            self._ensure_business_category_exists()
+        
         super().save(*args, **kwargs)
     
+    def _ensure_business_category_exists(self):
+        """Ensure the business type category exists"""
+        try:
+            from apps.products.models import Category
+            Category.objects.get_or_create(
+                name=self.business_type,
+                defaults={
+                    'description': f'Products from {self.business_type} sellers',
+                    'is_active': True
+                }
+            )
+        except Exception as e:
+            # Don't fail the save if category creation fails
+            import logging
+            logger = logging.getLogger(__name__)
+            logger.warning(f"Failed to create category for business type {self.business_type}: {e}")
+    
     def __str__(self):
-        return f"Seller: {self.business_name}"
+        return f"Seller: {self.business_name} ({self.business_type})"
 
 
 class SellerFollower(models.Model):

@@ -103,6 +103,7 @@ class ProductListSerializer(serializers.ModelSerializer):
     category_name = serializers.CharField(source='category.name', read_only=True)
     collection_name = serializers.CharField(source='collection.name', read_only=True)
     tags_list = serializers.SerializerMethodField()
+    business_type = serializers.CharField(source='seller.business_type', read_only=True)
     
     # Offer fields - will be set after ProductOfferSerializer is defined
     discounted_price = serializers.ReadOnlyField()
@@ -118,7 +119,7 @@ class ProductListSerializer(serializers.ModelSerializer):
             'rating', 'review_count', 'sales_count',
             'category', 'category_name', 'collection', 'collection_name',
             'tags_list', 'availableSizes', 'availableColors', 'features',
-            'is_featured', 'status', 'storeId', 'store',
+            'is_featured', 'status', 'storeId', 'store', 'business_type',
             'image', 'created_at', 'updated_at',
             'stock_quantity', 'is_in_stock', 'is_low_stock', 'track_inventory'
         ]
@@ -231,7 +232,7 @@ class ProductCreateUpdateSerializer(serializers.ModelSerializer):
             'meta_title', 'meta_description',
             'images', 'uploaded_images'
         ]
-        read_only_fields = ('id',)
+        read_only_fields = ('id', 'category')
     
     def get_tags_list(self, obj):
         """Convert tags to list format for JSON serialization"""
@@ -244,6 +245,7 @@ class ProductCreateUpdateSerializer(serializers.ModelSerializer):
         # Set seller from context
         validated_data['seller'] = self.context['request'].user.seller_profile
         
+        # Category will be auto-assigned in Product.save() method
         product = Product.objects.create(**validated_data)
         
         # Add tags if provided

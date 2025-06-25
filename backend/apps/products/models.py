@@ -165,6 +165,10 @@ class Product(models.Model):
         if self.seller_id:
             self.storeId = self.seller_id
         
+        # AUTO-ASSIGN CATEGORY FROM SELLER'S BUSINESS TYPE
+        if self.seller and not self.category:
+            self.category = self.seller.category
+        
         super().save(*args, **kwargs)
     
     def __str__(self):
