@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useNavigate, Link, useLocation } from 'react-router-dom'
 import useUserStore from '../../store/useUserStore'
+import GoogleSignInButton from '../../components/GoogleSignInButton'
 import marbleBg from '../../assets/marble-bg.jpg'
 
 function LoginPage() {
@@ -46,6 +47,16 @@ function LoginPage() {
     }
   }
 
+  const handleGoogleSuccess = (data) => {
+    // Check if user was trying to access a specific page
+    const redirectTo = location.state?.from || '/home'
+    navigate(redirectTo)
+  }
+
+  const handleGoogleError = (error) => {
+    setError(error)
+  }
+
   return (
     <div 
       className="min-h-screen flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8"
@@ -68,7 +79,28 @@ function LoginPage() {
           </p>
         </div>
         
-        <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
+        {/* Google Sign In */}
+        <div className="mt-8">
+          <GoogleSignInButton 
+            text="Sign in with Google"
+            onSuccess={handleGoogleSuccess}
+            onError={handleGoogleError}
+          />
+        </div>
+
+        {/* Divider */}
+        <div className="mt-6">
+          <div className="relative">
+            <div className="absolute inset-0 flex items-center">
+              <div className="w-full border-t border-gray-300" />
+            </div>
+            <div className="relative flex justify-center text-sm">
+              <span className="px-2 bg-white text-gray-500">Or continue with email</span>
+            </div>
+          </div>
+        </div>
+        
+        <form className="mt-6 space-y-6" onSubmit={handleSubmit}>
           {successMessage && (
                     <div className="rounded-md bg-gray-100 p-4 border border-gray-300">
           <div className="text-sm text-black">{successMessage}</div>

@@ -25,6 +25,7 @@ from .views import (
     seller_homepage_products_view,
     store_homepage_products_view,
 )
+from .google_auth import google_auth, google_auth_web
 
 router = DefaultRouter()
 # No ViewSets needed for now, using APIViews
@@ -35,6 +36,10 @@ urlpatterns = [
     path('refresh/', TokenRefreshView.as_view(), name='token_refresh'),
     path('verify/', TokenVerifyView.as_view(), name='token_verify'),
     path('logout/', logout_view, name='logout'),
+    
+    # Google OAuth
+    path('google-auth/', google_auth, name='google_auth'),
+    path('google-auth-web/', google_auth_web, name='google_auth_web'),
     
     # User management
     path('register/', RegisterView.as_view(), name='register'),

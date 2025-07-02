@@ -5,6 +5,7 @@ import { useForm } from 'react-hook-form'
 import { yupResolver } from '@hookform/resolvers/yup'
 import * as yup from 'yup'
 import { register as registerAPI } from '../../services/api'
+import GoogleSignInButton from '../../components/GoogleSignInButton'
 import marbleBg from '../../assets/marble-bg.jpg'
 
 const signupSchema = yup.object().shape({
@@ -63,6 +64,15 @@ const SignUpPage = () => {
         }
     }
 
+    const handleGoogleSuccess = (data) => {
+        // For Google sign-up, redirect to home since account is created automatically
+        navigate('/home')
+    }
+
+    const handleGoogleError = (error) => {
+        setError(error)
+    }
+
     return (
         <div 
             className="min-h-screen flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8"
@@ -85,13 +95,34 @@ const SignUpPage = () => {
                     </p>
                 </div>
                 
+                {/* Google Sign Up */}
+                <div className="mt-8">
+                    <GoogleSignInButton 
+                        text="Sign up with Google"
+                        onSuccess={handleGoogleSuccess}
+                        onError={handleGoogleError}
+                    />
+                </div>
+
+                {/* Divider */}
+                <div className="mt-6">
+                    <div className="relative">
+                        <div className="absolute inset-0 flex items-center">
+                            <div className="w-full border-t border-gray-300" />
+                        </div>
+                        <div className="relative flex justify-center text-sm">
+                            <span className="px-2 bg-white text-gray-500">Or continue with email</span>
+                        </div>
+                    </div>
+                </div>
+                
                 {error && (
                             <div className="rounded-md bg-gray-100 p-4 border border-gray-300">
           <div className="text-sm text-black">{error}</div>
         </div>
                 )}
                 
-                <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+                <form onSubmit={handleSubmit(onSubmit)} className="mt-6 space-y-6">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>
                             <label htmlFor="firstName" className="block text-sm font-medium text-gray-900">First Name</label>

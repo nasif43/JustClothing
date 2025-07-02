@@ -773,3 +773,56 @@ export const fetchUserPreferences = async () => {
     throw new Error(error.message || 'Failed to fetch user preferences')
   }
 }
+
+// Google OAuth Authentication
+export const googleAuth = async (idToken) => {
+  try {
+    const response = await apiRequest('auth/google-auth/', {
+      method: 'POST',
+      body: JSON.stringify({ idToken }),
+      auth: false
+    })
+    
+    // Store tokens in localStorage
+    if (response.access) {
+      localStorage.setItem('access_token', response.access)
+      localStorage.setItem('refresh_token', response.refresh)
+    }
+    
+    return response
+  } catch (error) {
+    throw new Error(error.message || 'Google authentication failed')
+  }
+}
+
+// Seller Profile Management
+export const updateSellerProfile = async (profileData) => {
+  try {
+    const formData = new FormData()
+    
+    // Add all fields to FormData
+    Object.keys(profileData).forEach(key => {
+      if (profileData[key] !== null && profileData[key] !== undefined) {
+        formData.append(key, profileData[key])
+      }
+    })
+    
+    const response = await apiRequest('auth/seller/profile/', {
+      method: 'PATCH',
+      body: formData,
+      auth: true
+    })
+    
+    return response
+  } catch (error) {
+    throw new Error(error.message || 'Failed to update seller profile')
+  }
+}
+
+export const fetchSellerProfile = async () => {
+  try {
+    return await apiRequest('auth/seller/profile/')
+  } catch (error) {
+    throw new Error(error.message || 'Failed to fetch seller profile')
+  }
+}

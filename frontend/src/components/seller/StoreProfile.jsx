@@ -1,12 +1,14 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { Edit3, Upload, CheckCircle } from "lucide-react"
-import { fetchUserStatus, fetchSellerStats } from '../../services/api'
+import { fetchUserStatus, fetchSellerStats, updateSellerProfile } from '../../services/api'
 import StarRating from '../ui/StarRating'
 
 const StoreProfile = () => {
   const [sellerData, setSellerData] = useState(null)
   const [sellerStats, setSellerStats] = useState(null)
   const [loading, setLoading] = useState(true)
+  const [uploading, setUploading] = useState(false)
+  const fileInputRef = useRef(null)
 
   useEffect(() => {
     const loadSellerData = async () => {
@@ -37,6 +39,51 @@ const StoreProfile = () => {
     loadSellerData()
   }, [])
 
+  const handleCoverPhotoUpload = async (event) => {
+    const file = event.target.files[0]
+    if (!file) return
+
+    // Validate file type
+    if (!file.type.startsWith('image/')) {
+      alert('Please select an image file')
+      return
+    }
+
+    // Validate file size (max 5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      alert('File size must be less than 5MB')
+      return
+    }
+
+    try {
+      setUploading(true)
+      
+      // Update seller profile with new banner image
+      const response = await updateSellerProfile({ banner_image: file })
+      
+      // Update local state
+      setSellerData(prev => ({
+        ...prev,
+        banner_image: response.banner_image
+      }))
+
+      alert('Cover photo updated successfully!')
+    } catch (error) {
+      console.error('Failed to upload cover photo:', error)
+      alert('Failed to upload cover photo. Please try again.')
+    } finally {
+      setUploading(false)
+      // Reset file input
+      if (fileInputRef.current) {
+        fileInputRef.current.value = ''
+      }
+    }
+  }
+
+  const handleUploadClick = () => {
+    fileInputRef.current?.click()
+  }
+
   if (loading) {
     return (
       <div className="bg-white/90 rounded-lg p-6 mb-6">
@@ -56,13 +103,34 @@ const StoreProfile = () => {
     <div className="bg-white/90 rounded-lg overflow-hidden mb-6">
       {/* Cover photo area */}
       <div className="relative w-full h-48 bg-gray-200">
-        {/* Upload cover photo button */}
-        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2">
-          <button className="flex items-center gap-2 bg-black text-white px-4 py-2 rounded-full text-sm">
+        {sellerData.banner_image ? (
+          <img 
+            src={sellerData.banner_image} 
+            alt="Store banner"
+            className="w-full h-full object-cover"
+          />
+        ) : null}
+        
+        {/* Upload cover photo button - always visible */}
+        <div className="absolute top-4 right-4">
+          <button 
+            onClick={handleUploadClick}
+            disabled={uploading}
+            className="flex items-center gap-2 bg-black/80 hover:bg-black text-white px-4 py-2 rounded-full text-sm transition-colors disabled:opacity-50"
+          >
             <Upload className="h-4 w-4" />
-            Upload New Cover Photo
+            {uploading ? 'Uploading...' : (sellerData.banner_image ? 'Change Cover Photo' : 'Upload Cover Photo')}
           </button>
         </div>
+        
+        {/* Hidden file input */}
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept="image/*"
+          onChange={handleCoverPhotoUpload}
+          className="hidden"
+        />
       </div>
 
       {/* Profile info section */}

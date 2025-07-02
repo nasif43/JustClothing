@@ -2,6 +2,18 @@ from django.contrib.auth.models import AbstractUser
 from django.db import models
 from phonenumber_field.modelfields import PhoneNumberField
 from django.utils import timezone
+from django.conf import settings
+
+# Function to get private storage for sensitive documents
+def get_private_storage():
+    """Get private storage backend for sensitive files"""
+    try:
+        if getattr(settings, 'USE_S3', False):
+            from justclothing.storage_backends import PrivateMediaStorage
+            return PrivateMediaStorage()
+    except (AttributeError, ImportError):
+        pass
+    return None
 
 class User(AbstractUser):
     """Custom User model supporting customers, sellers, and site admins"""
@@ -109,7 +121,12 @@ class SellerProfile(models.Model):
     
     # Status and verification
     status = models.CharField(max_length=15, choices=SELLER_STATUS, default='pending')
-    verification_documents = models.FileField(upload_to='sellers/documents/', blank=True, null=True)
+    verification_documents = models.FileField(
+        upload_to='sellers/documents/', 
+        blank=True, 
+        null=True,
+        storage=get_private_storage()
+    )
     approved_at = models.DateTimeField(blank=True, null=True)
     approved_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='approved_sellers')
     
