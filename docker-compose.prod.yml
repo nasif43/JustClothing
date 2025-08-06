@@ -1,44 +1,101 @@
-version: '3.8'
-
 services:
+  # PostgreSQL Database
+  db:
+    image: postgres:15
+    volumes:
+      - postgres_data:/var/lib/postgresql/data/
+    environment:
+      - POSTGRES_DB=justclothing_db
+      - POSTGRES_USER=justclothing_user
+      - POSTGRES_PASSWORD=${DB_PASSWORD:-justclothing_password}
+    restart: unless-stopped
+
+  # Redis Cache
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+
+  # Django Backend
   backend:
+    build: ./backend
     environment:
       - DEBUG=False
       - SECRET_KEY=${SECRET_KEY}
       - ALLOWED_HOSTS=${ALLOWED_HOSTS}
+      - DB_ENGINE=django.db.backends.postgresql
+      - DB_NAME=justclothing_db
+      - DB_USER=justclothing_user
+      - DB_PASSWORD=${DB_PASSWORD:-justclothing_password}
+      - DB_HOST=db
+      - DB_PORT=5432
+      - REDIS_URL=redis://redis:6379/0
+      - CELERY_BROKER_URL=redis://redis:6379/0
+      - CELERY_RESULT_BACKEND=redis://redis:6379/0
     volumes:
       - media_volume:/app/media
       - static_volume:/app/staticfiles
+    depends_on:
+      - db
+      - redis
     restart: unless-stopped
     command: >
       sh -c "python manage.py migrate &&
              python manage.py collectstatic --noinput &&
              gunicorn justclothing.wsgi:application --bind 0.0.0.0:8000"
 
+  # Celery Worker
   celery:
+    build: ./backend
     environment:
       - DEBUG=False
       - SECRET_KEY=${SECRET_KEY}
-    restart: unless-stopped
-
-  celery-beat:
-    environment:
-      - DEBUG=False
-      - SECRET_KEY=${SECRET_KEY}
-    restart: unless-stopped
-
-  db:
-    restart: unless-stopped
+      - DB_ENGINE=django.db.backends.postgresql
+      - DB_NAME=justclothing_db
+      - DB_USER=justclothing_user
+      - DB_PASSWORD=${DB_PASSWORD:-justclothing_password}
+      - DB_HOST=db
+      - DB_PORT=5432
+      - REDIS_URL=redis://redis:6379/0
+      - CELERY_BROKER_URL=redis://redis:6379/0
+      - CELERY_RESULT_BACKEND=redis://redis:6379/0
     volumes:
-      - postgres_data:/var/lib/postgresql/data/
-
-  redis:
+      - media_volume:/app/media
+    depends_on:
+      - db
+      - redis
     restart: unless-stopped
+    command: celery -A justclothing worker -l info
 
-  nginx:
+  # Celery Beat (Scheduler)
+  celery-beat:
+    build: ./backend
+    environment:
+      - DEBUG=False
+      - SECRET_KEY=${SECRET_KEY}
+      - DB_ENGINE=django.db.backends.postgresql
+      - DB_NAME=justclothing_db
+      - DB_USER=justclothing_user
+      - DB_PASSWORD=${DB_PASSWORD:-justclothing_password}
+      - DB_HOST=db
+      - DB_PORT=5432
+      - REDIS_URL=redis://redis:6379/0
+      - CELERY_BROKER_URL=redis://redis:6379/0
+      - CELERY_RESULT_BACKEND=redis://redis:6379/0
+    depends_on:
+      - db
+      - redis
     restart: unless-stopped
+    command: celery -A justclothing beat -l info --scheduler django_celery_beat.schedulers:DatabaseScheduler
 
+  # React Frontend
   frontend:
     build:
       context: ./frontend
-      dockerfile: Dockerfile.prod 
+      dockerfile: Dockerfile.prod
+    restart: unless-stopped
+
+  # Nginx Reverse Proxy
+volumes:
+  postgres_data:
+  media_volume:
+  static_volume:
