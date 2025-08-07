@@ -164,40 +164,25 @@ USE_TZ = True
 STATIC_URL = '/static/'
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 
-# AWS S3 Settings
-USE_S3 = config('USE_S3', default=False, cast=bool)
+# MinIO Settings
+USE_MINIO = config('USE_MINIO', default=False, cast=bool)
 
-if USE_S3:
-    # AWS Settings
-    AWS_ACCESS_KEY_ID = config('AWS_ACCESS_KEY_ID')
-    AWS_SECRET_ACCESS_KEY = config('AWS_SECRET_ACCESS_KEY')
-    AWS_STORAGE_BUCKET_NAME = config('AWS_STORAGE_BUCKET_NAME')
-    AWS_S3_REGION_NAME = config('AWS_S3_REGION_NAME', default='us-east-1')
-    AWS_S3_CUSTOM_DOMAIN = f'{AWS_STORAGE_BUCKET_NAME}.s3.amazonaws.com'
-    AWS_DEFAULT_ACL = None
-    AWS_S3_OBJECT_PARAMETERS = {
-        'CacheControl': 'max-age=86400',
-    }
+if USE_MINIO:
+    # MinIO Configuration
+    MINIO_STORAGE_ENDPOINT = config('MINIO_STORAGE_ENDPOINT', default='minio:9000')
+    MINIO_STORAGE_ACCESS_KEY = config('MINIO_STORAGE_ACCESS_KEY', default='minioadmin')
+    MINIO_STORAGE_SECRET_KEY = config('MINIO_STORAGE_SECRET_KEY', default='minioadmin123')
+    MINIO_STORAGE_USE_HTTPS = config('MINIO_STORAGE_USE_HTTPS', default=False, cast=bool)
+    MINIO_STORAGE_BUCKET_NAME = config('MINIO_STORAGE_BUCKET_NAME', default='justclothing')
+    MINIO_STORAGE_MEDIA_BUCKET_NAME = config('MINIO_STORAGE_MEDIA_BUCKET_NAME', default='justclothing-media')
+    MINIO_STORAGE_STATIC_BUCKET_NAME = config('MINIO_STORAGE_STATIC_BUCKET_NAME', default='justclothing-static')
+    MINIO_STORAGE_MEDIA_URL = config('MINIO_STORAGE_MEDIA_URL', default='http://localhost:9000/justclothing-media/')
     
-    # S3 Security Settings
-    AWS_S3_FILE_OVERWRITE = False
-    AWS_S3_SECURE_URLS = True
-    AWS_QUERYSTRING_AUTH = False
-    AWS_S3_USE_SSL = True
+    # Use MinIO for file storage
+    DEFAULT_FILE_STORAGE = 'justclothing.minio_backends.MinIOMediaStorage'
+    STATICFILES_STORAGE = 'justclothing.minio_backends.MinIOStaticStorage'
+    MEDIA_URL = MINIO_STORAGE_MEDIA_URL
     
-    # S3 Static settings
-    AWS_LOCATION = 'static'
-    STATIC_URL = f'https://{AWS_S3_CUSTOM_DOMAIN}/{AWS_LOCATION}/'
-    STATICFILES_STORAGE = 'justclothing.storage_backends.StaticStorage'
-    
-    # S3 Media settings
-    DEFAULT_FILE_STORAGE = 'justclothing.storage_backends.MediaStorage'
-    MEDIA_URL = f'https://{AWS_S3_CUSTOM_DOMAIN}/media/'
-    
-    # Update CORS for S3 access
-    CORS_ALLOWED_ORIGINS.extend([
-        f"https://{AWS_S3_CUSTOM_DOMAIN}",
-    ])
 else:
     # Local storage (development)
     MEDIA_URL = '/media/'

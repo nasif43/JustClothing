@@ -94,8 +94,20 @@ services:
       dockerfile: Dockerfile.prod
     restart: unless-stopped
 
-  # Nginx Reverse Proxy
+  minio:
+    image: minio/minio:latest
+    command: server /data --console-address ":9001"
+    ports:
+      - "9000:9000"  # MinIO API
+      - "9001:9001"  # MinIO Console
+    environment:
+      - MINIO_ROOT_USER=minioadmin
+      - MINIO_ROOT_PASSWORD=minioadmin123
+    volumes:
+      - minio_data:/data
+    restart: unless-stopped
 volumes:
   postgres_data:
   media_volume:
   static_volume:
+  minio_data:
