@@ -179,30 +179,23 @@ USE_TZ = True
 STATIC_URL = '/static/'
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 
-# For production, disable MinIO for static files to use local serving
-USE_MINIO = config('USE_MINIO', default=False, cast=bool)
+# Always use local static file serving
+STATICFILES_STORAGE = 'django.contrib.staticfiles.storage.StaticFilesStorage'
 
-if not USE_MINIO:
-    # Use local static file serving
-    STATICFILES_STORAGE = 'django.contrib.staticfiles.storage.StaticFilesStorage'
+# MinIO Settings for media files only
+USE_MINIO_MEDIA = config('USE_MINIO_MEDIA', default=True, cast=bool)
 
-# MinIO Settings
-USE_MINIO = config('USE_MINIO', default=False, cast=bool)
-
-if USE_MINIO:
+if USE_MINIO_MEDIA:
     # MinIO Configuration
     MINIO_STORAGE_ENDPOINT = config('MINIO_STORAGE_ENDPOINT', default='minio:9000')
     MINIO_STORAGE_ACCESS_KEY = config('MINIO_STORAGE_ACCESS_KEY', default='minioadmin')
     MINIO_STORAGE_SECRET_KEY = config('MINIO_STORAGE_SECRET_KEY', default='minioadmin123')
     MINIO_STORAGE_USE_HTTPS = config('MINIO_STORAGE_USE_HTTPS', default=False, cast=bool)
-    MINIO_STORAGE_BUCKET_NAME = config('MINIO_STORAGE_BUCKET_NAME', default='justclothing')
     MINIO_STORAGE_MEDIA_BUCKET_NAME = config('MINIO_STORAGE_MEDIA_BUCKET_NAME', default='justclothing-media')
-    MINIO_STORAGE_STATIC_BUCKET_NAME = config('MINIO_STORAGE_STATIC_BUCKET_NAME', default='justclothing-static')
     MINIO_STORAGE_MEDIA_URL = config('MINIO_STORAGE_MEDIA_URL', default='http://localhost:9000/justclothing-media/')
     
-    # Use MinIO for file storage
+    # Use MinIO for media files only
     DEFAULT_FILE_STORAGE = 'justclothing.minio_backends.MinIOMediaStorage'
-    STATICFILES_STORAGE = 'justclothing.minio_backends.MinIOStaticStorage'
     MEDIA_URL = MINIO_STORAGE_MEDIA_URL
     
 else:
