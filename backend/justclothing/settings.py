@@ -30,15 +30,16 @@ SECRET_KEY = config('SECRET_KEY', default='django-insecure-your-secret-key-here'
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = config('DEBUG', default=True, cast=bool)
 
+# Ensure ALLOWED_HOSTS includes your domain
 ALLOWED_HOSTS = [
     'admin.justclothing.store',
-    'justclothing.store',
+    'justclothing.store', 
     'www.justclothing.store',
     'localhost',
     '127.0.0.1'
 ]
 
-# Add this for CSRF protection
+# Add CSRF trusted origins
 CSRF_TRUSTED_ORIGINS = [
     'https://admin.justclothing.store',
     'https://justclothing.store',
@@ -176,6 +177,13 @@ USE_TZ = True
 
 STATIC_URL = '/static/'
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
+
+# For production, disable MinIO for static files to use local serving
+USE_MINIO = config('USE_MINIO', default=False, cast=bool)
+
+if not USE_MINIO:
+    # Use local static file serving
+    STATICFILES_STORAGE = 'django.contrib.staticfiles.storage.StaticFilesStorage'
 
 # MinIO Settings
 USE_MINIO = config('USE_MINIO', default=False, cast=bool)
