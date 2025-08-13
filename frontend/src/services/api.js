@@ -286,6 +286,17 @@ export const updateProduct = async (productId, productData) => {
   }
 }
 
+export const updateProductStatus = async (productId, status) => {
+  try {
+    return await apiRequest(`products/seller/products/${productId}/update/`, {
+      method: 'PATCH',
+      body: JSON.stringify({ status })
+    })
+  } catch (error) {
+    throw new Error(error.message || 'Failed to update product status')
+  }
+}
+
 export const deleteProduct = async (productId) => {
   try {
     return await apiRequest(`products/seller/products/${productId}/delete/`, {

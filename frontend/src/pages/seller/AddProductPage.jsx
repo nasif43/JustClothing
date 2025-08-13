@@ -657,6 +657,11 @@ const AddProductPage = () => {
                     src={URL.createObjectURL(image)} 
                     alt={`Preview ${index + 1}`}
                     className="w-full h-full object-cover rounded"
+                    onLoad={(e) => console.log('Image loaded:', e.target.src)}
+                    onError={(e) => {
+                      console.error('Image load error:', e)
+                      e.target.style.display = 'none'
+                    }}
                   />
                   <button
                     type="button"
@@ -731,7 +736,12 @@ const AddProductPage = () => {
                   onChange={(e) => setCustomSizeInput(e.target.value)}
                   placeholder="Enter measurement name (e.g., Chest Size)"
                   className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-black focus:border-black"
-                  onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), addCustomSizeField())}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      e.preventDefault()
+                      addCustomSizeField()
+                    }
+                  }}
                 />
                 <button
                   type="button"
@@ -778,6 +788,12 @@ const AddProductPage = () => {
                 onChange={(e) => setColorInput(e.target.value)}
                 placeholder="Enter color name"
                 className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-black focus:border-black"
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    e.preventDefault()
+                    addColor()
+                  }
+                }}
               />
               <button
                 type="button"

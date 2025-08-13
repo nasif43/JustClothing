@@ -16,7 +16,7 @@ import {
   TrendingUp,
   TrendingDown
 } from 'lucide-react'
-import { fetchSellerProducts, deleteProduct, updateProduct } from '../../services/api'
+import { fetchSellerProducts, deleteProduct, updateProductStatus } from '../../services/api'
 
 const SellerProductsPage = () => {
   const navigate = useNavigate()
@@ -122,7 +122,7 @@ const SellerProductsPage = () => {
     const newStatus = currentStatus === 'active' ? 'inactive' : 'active'
     
     try {
-      await updateProduct(productId, { status: newStatus })
+      await updateProductStatus(productId, newStatus)
       setProducts(prev => prev.map(p => 
         p.id === productId ? { ...p, status: newStatus } : p
       ))
