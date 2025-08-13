@@ -120,12 +120,15 @@ const SellerProductsPage = () => {
 
   const handleToggleStatus = async (productId, currentStatus) => {
     const newStatus = currentStatus === 'active' ? 'inactive' : 'active'
+    console.log(`Toggling product ${productId} from ${currentStatus} to ${newStatus}`)
     
     try {
-      await updateProductStatus(productId, newStatus)
+      const response = await updateProductStatus(productId, newStatus)
+      console.log('Status update response:', response)
       setProducts(prev => prev.map(p => 
         p.id === productId ? { ...p, status: newStatus } : p
       ))
+      alert(`Product ${newStatus === 'active' ? 'activated' : 'deactivated'} successfully!`)
     } catch (error) {
       console.error('Failed to update product status:', error)
       alert('Failed to update product status: ' + error.message)

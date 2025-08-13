@@ -221,6 +221,11 @@ function AppContent() {
             <AddProductPage />
           </SellerProtectedRoute>
         } />
+        <Route path="/seller/products/:productId/edit" element={
+          <SellerProtectedRoute>
+            <AddProductPage />
+          </SellerProtectedRoute>
+        } />
       </Routes>
     </OnboardingCheck>
   );

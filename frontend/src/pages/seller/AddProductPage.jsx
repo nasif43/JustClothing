@@ -329,12 +329,18 @@ const AddProductPage = () => {
 
   const handleImageUpload = (e) => {
     const files = Array.from(e.target.files)
+    console.log('Files selected:', files)
     const totalImages = selectedImages.length + existingImages.length
     if (files.length + totalImages > 6) {
       alert('Maximum 6 images allowed')
       return
     }
-    setSelectedImages(prev => [...prev, ...files])
+    console.log('Adding files to selectedImages:', files)
+    setSelectedImages(prev => {
+      const newImages = [...prev, ...files]
+      console.log('New selectedImages:', newImages)
+      return newImages
+    })
   }
 
   const removeImage = (index) => {
@@ -651,6 +657,7 @@ const AddProductPage = () => {
               {isEditMode ? 'Add New Images' : 'Add Photos'} <span className="text-xs text-gray-500">(Max 6)</span>
             </label>
             <div className="border border-gray-300 rounded-lg p-4 min-h-[150px] flex items-start gap-4 flex-wrap">
+              {console.log('Rendering selectedImages:', selectedImages)}
               {selectedImages.map((image, index) => (
                 <div key={index} className="relative w-16 h-16">
                   <img 
