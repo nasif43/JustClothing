@@ -34,7 +34,7 @@ backup_current_state() {
     
     # Backup database
     print_status "Backing up database..."
-    docker-compose -f docker-compose.yml -f docker-compose.prod.yml exec -T db pg_dump -U justclothing_user justclothing_db > "backup_$(date +%Y%m%d_%H%M%S).sql"
+    docker compose -f docker-compose.yml -f docker-compose.prod.yml exec -T db pg_dump -U justclothing_user justclothing_db > "backup_$(date +%Y%m%d_%H%M%S).sql"
     
     # Backup current code
     print_status "Creating code backup..."
@@ -98,18 +98,18 @@ deploy_production() {
     
     # Stop current services (but keep database running)
     print_status "Stopping application services..."
-    docker-compose -f docker-compose.yml -f docker-compose.prod.yml stop backend frontend celery celery-beat
+    docker compose -f docker-compose.yml -f docker-compose.prod.yml stop backend frontend celery celery-beat
     
     # Rebuild and start services
     print_status "Rebuilding and starting services..."
-    docker-compose -f docker-compose.yml -f docker-compose.prod.yml up --build -d
+    docker compose -f docker-compose.yml -f docker-compose.prod.yml up --build -d
     
     # Wait for services to start
     print_status "Waiting for services to start..."
     sleep 30
     
     # Check if services are running
-    if ! docker-compose -f docker-compose.yml -f docker-compose.prod.yml ps | grep -q "Up"; then
+    if ! docker compose -f docker-compose.yml -f docker-compose.prod.yml ps | grep -q "Up"; then
         print_error "Some services failed to start!"
         print_error "Check logs with: docker-compose -f docker-compose.yml -f docker-compose.prod.yml logs"
         exit 1
@@ -132,8 +132,8 @@ verify_deployment() {
     
     # Show running containers
     print_status "Current container status:"
-    docker-compose -f docker-compose.yml -f docker-compose.prod.yml ps
-    
+    docker compose -f docker-compose.yml -f docker-compose.prod.yml ps
+
     print_status "Deployment verification completed!"
 }
 
@@ -145,8 +145,8 @@ rollback() {
     git stash pop
     
     # Rebuild with previous code
-    docker-compose -f docker-compose.yml -f docker-compose.prod.yml up --build -d
-    
+    docker compose -f docker-compose.yml -f docker-compose.prod.yml up --build -d
+
     print_status "Rollback completed!"
 }
 
