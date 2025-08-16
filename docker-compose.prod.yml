@@ -31,6 +31,9 @@ services:
       - REDIS_URL=redis://redis:6379/0
       - CELERY_BROKER_URL=redis://redis:6379/0
       - CELERY_RESULT_BACKEND=redis://redis:6379/0
+      - MINIO_STORAGE_ENDPOINT=minio.justclothing.store
+      - MINIO_STORAGE_USE_HTTPS=True
+      - MINIO_STORAGE_MEDIA_URL=https://minio.justclothing.store/justclothing-media/
     volumes:
       - media_volume:/app/media
       - static_volume:/app/staticfiles
