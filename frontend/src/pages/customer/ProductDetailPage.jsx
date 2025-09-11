@@ -88,8 +88,10 @@ function ProductDetailPage() {
     verified: false
   }
 
-  // Generate 4 thumbnail images (in a real app, you'd have multiple product images)
-  const thumbnails = Array(4).fill(product.image)
+  // Use actual product images if available, fallback to primary image
+  const thumbnails = product.images && product.images.length > 0 
+    ? product.images.map(img => img.image) 
+    : [product.image]
 
   const handlePrevImage = () => {
     setCurrentImageIndex((prev) => (prev === 0 ? thumbnails.length - 1 : prev - 1))

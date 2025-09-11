@@ -8,7 +8,9 @@ const StoreProfile = () => {
   const [sellerStats, setSellerStats] = useState(null)
   const [loading, setLoading] = useState(true)
   const [uploading, setUploading] = useState(false)
+  const [uploadingLogo, setUploadingLogo] = useState(false)
   const fileInputRef = useRef(null)
+  const logoInputRef = useRef(null)
 
   useEffect(() => {
     const loadSellerData = async () => {
@@ -84,6 +86,51 @@ const StoreProfile = () => {
     fileInputRef.current?.click()
   }
 
+  const handleLogoUpload = async (event) => {
+    const file = event.target.files[0]
+    if (!file) return
+
+    // Validate file type
+    if (!file.type.startsWith('image/')) {
+      alert('Please select an image file')
+      return
+    }
+
+    // Validate file size (max 5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      alert('File size must be less than 5MB')
+      return
+    }
+
+    try {
+      setUploadingLogo(true)
+      
+      // Update seller profile with new logo
+      const response = await updateSellerProfile({ logo: file })
+      
+      // Update local state
+      setSellerData(prev => ({
+        ...prev,
+        logo: response.logo
+      }))
+
+      alert('Logo updated successfully!')
+    } catch (error) {
+      console.error('Failed to upload logo:', error)
+      alert('Failed to upload logo. Please try again.')
+    } finally {
+      setUploadingLogo(false)
+      // Reset file input
+      if (logoInputRef.current) {
+        logoInputRef.current.value = ''
+      }
+    }
+  }
+
+  const handleLogoClick = () => {
+    logoInputRef.current?.click()
+  }
+
   if (loading) {
     return (
       <div className="bg-white/90 rounded-lg p-6 mb-6">
@@ -137,18 +184,38 @@ const StoreProfile = () => {
       <div className="relative px-6 pb-6">
         {/* Profile picture - positioned to overlap the cover photo */}
         <div className="absolute -top-16 left-8">
-          <div className="w-32 h-32 bg-gray-200 rounded-full border-4 border-white flex items-center justify-center overflow-hidden">
-            {sellerData.logo ? (
-              <img 
-                src={sellerData.logo} 
-                alt={sellerData.business_name}
-                className="w-full h-full object-cover"
-              />
-            ) : (
-              <div className="text-gray-600 text-xl font-medium">
-                {sellerData.business_name?.charAt(0) || 'S'}
+          <div className="relative">
+            <div className="w-32 h-32 bg-gray-200 rounded-full border-4 border-white flex items-center justify-center overflow-hidden cursor-pointer group" onClick={handleLogoClick}>
+              {sellerData.logo ? (
+                <img 
+                  src={sellerData.logo} 
+                  alt={sellerData.business_name}
+                  className="w-full h-full object-cover"
+                />
+              ) : (
+                <div className="text-gray-600 text-xl font-medium">
+                  {sellerData.business_name?.charAt(0) || 'S'}
+                </div>
+              )}
+              {/* Upload overlay */}
+              <div className="absolute inset-0 bg-black/50 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                <div className="text-white text-center">
+                  <Upload className="h-5 w-5 mx-auto mb-1" />
+                  <span className="text-xs">
+                    {uploadingLogo ? 'Uploading...' : (sellerData.logo ? 'Change' : 'Upload')}
+                  </span>
+                </div>
               </div>
-            )}
+            </div>
+            
+            {/* Hidden logo file input */}
+            <input
+              ref={logoInputRef}
+              type="file"
+              accept="image/*"
+              onChange={handleLogoUpload}
+              className="hidden"
+            />
           </div>
         </div>
 
