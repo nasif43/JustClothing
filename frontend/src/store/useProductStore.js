@@ -294,30 +294,48 @@ const useProductStore = create((set, get) => ({
     set({ clientSearchResults })
   },
 
-  // Get search results (combines server and client results)
-  getSearchResults: () => {
-    const { searchTerm, filteredProducts, clientSearchResults } = get()
+  // Get search results (combines server and client results) - memoized
+  getSearchResults: (() => {
+    let cachedResults = null
+    let lastSearchTerm = null
+    let lastFilteredProducts = null
+    let lastClientSearchResults = null
     
-    if (!searchTerm || searchTerm.length === 0) {
-      return filteredProducts
-    }
-    
-    // If we have client search results, prioritize them for instant feedback
-    if (clientSearchResults.length > 0) {
-      // Combine server results with client fuzzy results, removing duplicates
-      const combinedResults = [...filteredProducts]
+    return () => {
+      const { searchTerm, filteredProducts, clientSearchResults } = get()
       
-      clientSearchResults.forEach(clientResult => {
-        if (!combinedResults.find(product => product.id === clientResult.id)) {
-          combinedResults.push(clientResult)
-        }
-      })
+      // Return cached results if nothing changed
+      if (
+        cachedResults && 
+        lastSearchTerm === searchTerm && 
+        lastFilteredProducts === filteredProducts &&
+        lastClientSearchResults === clientSearchResults
+      ) {
+        return cachedResults
+      }
       
-      return combinedResults
+      if (!searchTerm || searchTerm.length === 0) {
+        cachedResults = filteredProducts
+      } else if (clientSearchResults.length > 0) {
+        const combinedResults = [...filteredProducts]
+        clientSearchResults.forEach(clientResult => {
+          if (!combinedResults.find(product => product.id === clientResult.id)) {
+            combinedResults.push(clientResult)
+          }
+        })
+        cachedResults = combinedResults
+      } else {
+        cachedResults = filteredProducts
+      }
+      
+      // Update cache keys
+      lastSearchTerm = searchTerm
+      lastFilteredProducts = filteredProducts
+      lastClientSearchResults = clientSearchResults
+      
+      return cachedResults
     }
-    
-    return filteredProducts
-  },
+  })(),
   
   fetchStores: async () => {
     try {

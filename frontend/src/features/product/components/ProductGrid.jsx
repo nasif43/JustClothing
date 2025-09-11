@@ -32,19 +32,19 @@ function ProductGrid({ storeId = null, showStoreInfo = true, className = "m-10" 
     }
   }, [products, loading, fetchProducts])
 
-  // Infinite scroll effect
-  useEffect(() => {
-    if (inView && hasMore && !isLoadingMore && !loading && !searchTerm) {
-      // Only load more if not searching (search results don't support infinite scroll)
-      const additionalParams = {}
+  // Temporarily disable infinite scroll to test
+  // useEffect(() => {
+  //   if (inView && hasMore && !isLoadingMore && !loading && !searchTerm) {
+  //     // Only load more if not searching (search results don't support infinite scroll)
+  //     const additionalParams = {}
       
-      if (currentBusinessType) {
-        additionalParams.business_type = currentBusinessType
-      }
+  //     if (currentBusinessType) {
+  //       additionalParams.business_type = currentBusinessType
+  //     }
       
-      loadMoreProducts(additionalParams)
-    }
-  }, [inView, hasMore, isLoadingMore, loading, searchTerm, currentBusinessType]) // Removed loadMoreProducts from deps
+  //     loadMoreProducts(additionalParams)
+  //   }
+  // }, [inView, hasMore, isLoadingMore, loading, searchTerm, currentBusinessType])
   
   useEffect(() => {
     let productsToShow = []

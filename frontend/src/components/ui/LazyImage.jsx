@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { useInView } from 'react-intersection-observer'
 
 function LazyImage({ 
@@ -21,10 +21,12 @@ function LazyImage({
     rootMargin: '50px' // Start loading 50px before the image comes into view
   })
 
-  // Load the image when it comes into view
-  if (inView && !currentSrc && !hasError) {
-    setCurrentSrc(src)
-  }
+  // Load the image when it comes into view - FIXED: moved to useEffect
+  useEffect(() => {
+    if (inView && !currentSrc && !hasError) {
+      setCurrentSrc(src)
+    }
+  }, [inView, currentSrc, hasError, src])
 
   const handleLoad = () => {
     setIsLoaded(true)
