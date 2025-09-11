@@ -187,7 +187,7 @@ USE_MINIO_MEDIA = config('USE_MINIO_MEDIA', default=True, cast=bool)
 
 if USE_MINIO_MEDIA:
     # MinIO Configuration
-    MINIO_STORAGE_ENDPOINT = config('MINIO_STORAGE_ENDPOINT', default='minio:9000')
+    MINIO_STORAGE_ENDPOINT = config('MINIO_STORAGE_ENDPOINT', default='https://minio.justclothing.store')
     MINIO_STORAGE_ACCESS_KEY = config('MINIO_STORAGE_ACCESS_KEY', default='minioadmin')
     MINIO_STORAGE_SECRET_KEY = config('MINIO_STORAGE_SECRET_KEY', default='minioadmin123')
     MINIO_STORAGE_USE_HTTPS = config('MINIO_STORAGE_USE_HTTPS', default=False, cast=bool)
