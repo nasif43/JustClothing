@@ -52,7 +52,13 @@ function SearchBar() {
   const handleInputChange = (e) => {
     const value = e.target.value
     setSearchTerm(value)
-    performSearch(value)
+    
+    // If user cleared the input, reset to show all products
+    if (value.trim().length === 0) {
+      clearSearch()
+    } else {
+      performSearch(value)
+    }
   }
 
   const handleSubmit = async (e) => {
@@ -66,13 +72,16 @@ function SearchBar() {
     }
   }
 
-  const clearSearch = () => {
+  const clearSearch = async () => {
     setSearchTerm("")
     setShowResults(false)
     setIsSearching(false)
     if (debounceTimer.current) {
       clearTimeout(debounceTimer.current)
     }
+    
+    // Reset store search state to show all products
+    await searchProducts("")
   }
 
   // Get current search results for dropdown

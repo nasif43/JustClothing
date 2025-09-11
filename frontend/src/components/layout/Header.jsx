@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect, Suspense } from "react"
 import { ShoppingCart, LayoutGrid } from "lucide-react"
-import { useCartStore, useUserStore } from "../../store"
+import { useCartStore, useUserStore, useProductStore } from "../../store"
 import { useNavigate } from "react-router-dom"
 import logo from "../../assets/logo.svg"
 import { HeaderSkeleton } from "../ui/SkeletonLoader"
@@ -18,6 +18,7 @@ function Header() {
   const cartItems = useCartStore(state => state.items)
   const itemCount = cartItems?.reduce((total, item) => total + item.quantity, 0) || 0
   const { isAuthenticated, user, logout } = useUserStore()
+  const { searchProducts } = useProductStore()
   const navigate = useNavigate()
 
   useEffect(() => {
@@ -91,7 +92,11 @@ function Header() {
   return (
     <header className="bg-black text-white p-4 relative sticky top-0 z-50">
       <div className="max-w-7xl mx-auto flex items-center justify-between">
-        <div className="flex" onClick={() => navigate("/home")}>
+        <div className="flex" onClick={async () => {
+          // Clear search when going home
+          await searchProducts("")
+          navigate("/home")
+        }}>
           <img src={logo} alt="logo" className="w-auto h-15 hover:cursor-pointer" />
         </div>
         <div className="w-xl flex justify-center">
@@ -142,7 +147,16 @@ function Header() {
                 ref={menuRef}
                 className="absolute right-0 mt-2 w-48 bg-black rounded-md shadow-lg py-1 z-10 text-white menu-font"
               >
-                <a href="/home" className="block px-4 py-2 text-sm hover:font-bold">
+                <a 
+                  href="/home" 
+                  className="block px-4 py-2 text-sm hover:font-bold"
+                  onClick={async (e) => {
+                    e.preventDefault()
+                    await searchProducts("")
+                    navigate("/home")
+                    setIsMenuOpen(false)
+                  }}
+                >
                   Home
                 </a>
                 {(isAuthenticated || user?.isGuest) && (
