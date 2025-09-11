@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { updateUserPreferences } from '../../services/api'
 import useUserStore from '../../store/useUserStore'
+import Header from '../../components/layout/Header'
 
 function PreferencePage() {
   const navigate = useNavigate()
@@ -92,16 +93,7 @@ function PreferencePage() {
   return (
     <div className="min-h-screen flex flex-col">
       {/* Header */}
-      <div className="bg-white shadow-sm border-b">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-16">
-            <div className="flex items-center">
-              <h1 className="text-xl font-bold text-black">JustClothing</h1>
-            </div>
-          </div>
-        </div>
-      </div>
-
+      <Header />
       {/* Main Content with Marble Background */}
       <div className="flex-grow flex items-center justify-center p-4" 
            style={{ 
@@ -132,13 +124,14 @@ function PreferencePage() {
               key={tag.id}
               onClick={() => handleTagClick(tag.id)}
               disabled={isPickForMe || (selectedTags.length >= 3 && !selectedTags.includes(tag.id))}
-              className={`py-4 px-6 rounded-full text-lg font-bold transition-all duration-200 ${
-                selectedTags.includes(tag.id)
-                  ? 'bg-black text-white shadow-lg transform scale-105'
-                  : isPickForMe || (selectedTags.length >= 3 && !selectedTags.includes(tag.id))
-                  ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                  : 'bg-black text-white hover:shadow-lg hover:transform hover:scale-105'
-              }`}
+              className={`py-4 px-6 rounded-full text-lg font-bold transition-all duration-200
+                ${
+                  selectedTags.includes(tag.id)
+                    ? 'bg-white text-black border-2 border-black shadow-lg transform scale-105'
+                    : isPickForMe || (selectedTags.length >= 3 && !selectedTags.includes(tag.id))
+                    ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                    : 'bg-black text-white hover:border-2 hover:border-black hover:shadow-lg hover:transform hover:scale-105'
+                }`}
             >
               {tag.name}
             </button>
@@ -148,13 +141,14 @@ function PreferencePage() {
           <button
             onClick={handlePickForMe}
             disabled={selectedTags.length > 0}
-            className={`py-4 px-6 rounded-full text-lg font-bold transition-all duration-200 ${
-              isPickForMe
-                ? 'bg-purple-600 text-white shadow-lg transform scale-105'
-                : selectedTags.length > 0
-                ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                : 'bg-black text-white hover:shadow-lg hover:transform hover:scale-105'
-            }`}
+            className={`py-4 px-6 rounded-full text-lg font-bold transition-all duration-200
+              ${
+                isPickForMe
+                  ? 'bg-white text-black border-2 border-black shadow-lg transform scale-105'
+                  : selectedTags.length > 0
+                  ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                  : 'bg-black text-white hover:border-2 hover:border-black hover:shadow-lg hover:transform hover:scale-105'
+              }`}
           >
             PICK FOR ME
           </button>
@@ -202,4 +196,4 @@ function PreferencePage() {
   )
 }
 
-export default PreferencePage 
+export default PreferencePage

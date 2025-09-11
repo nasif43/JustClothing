@@ -148,6 +148,41 @@ const useProductStore = create((set, get) => ({
       set({ error: error.message, loading: false })
     }
   },
+
+  // Search products by name or description
+  searchProducts: async (searchTerm) => {
+    try {
+      set({ loading: true, error: null })
+      
+      if (!searchTerm || searchTerm.trim().length === 0) {
+        // If search term is empty, fetch all products
+        const response = await fetchProducts()
+        const products = response.results || response || []
+        set({ 
+          products: products,
+          filteredProducts: products, 
+          currentBusinessType: null,
+          currentTags: [],
+          loading: false 
+        })
+        return
+      }
+      
+      // Search products using the search parameter
+      const params = { search: searchTerm.trim() }
+      const response = await fetchProducts(params)
+      const products = response.results || response || []
+      
+      set({ 
+        filteredProducts: products, 
+        currentBusinessType: null, // Clear business type when searching
+        currentTags: [], // Clear tags when searching
+        loading: false 
+      })
+    } catch (error) {
+      set({ error: error.message, loading: false })
+    }
+  },
   
   fetchStores: async () => {
     try {
@@ -185,7 +220,8 @@ const useProductStore = create((set, get) => ({
   // Get current products to display (filtered or all)
   getCurrentProducts: () => {
     const state = get()
-    return (state.currentBusinessType || state.currentTags.length > 0) ? state.filteredProducts : state.products
+    // Show filtered products if any filter is active (business type, tags, or search)
+    return (state.currentBusinessType || state.currentTags.length > 0 || state.filteredProducts.length !== state.products.length) ? state.filteredProducts : state.products
   },
   
   // Reset state

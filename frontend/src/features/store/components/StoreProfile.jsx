@@ -13,9 +13,9 @@ function StoreProfile({ storeId }) {
   return (
     <div className="bg-white/90 rounded-lg overflow-hidden mb-6">
       {/* Cover photo area */}
-      <div className="relative w-full h-48 bg-gray-200">
+      <div className="relative h-68 bg-gray-200">
         <img 
-          src={store.coverPhoto || placeholderImg} 
+          src={store.banner_image || placeholderImg} 
           alt={`${store.name} cover`} 
           className="w-full h-full object-cover"
           onError={(e) => {

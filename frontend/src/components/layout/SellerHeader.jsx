@@ -46,7 +46,7 @@ function SellerHeader() {
         </div>
         <div className="flex items-center gap-8">
           <span className="text-sm hover:underline">
-            Store Dashboard
+            <a href="/seller/dashboard">Store Dashboard</a>
           </span>
           <div className="relative">
             <button 
