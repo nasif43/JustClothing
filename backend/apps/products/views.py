@@ -102,7 +102,26 @@ class ProductListView(generics.ListAPIView):
         tags = self.request.query_params.get('tags')
         if tags:
             tag_list = [tag.strip() for tag in tags.split(',')]
-            queryset = queryset.filter(tags__name__in=tag_list).distinct()
+            print(f"DEBUG: Searching for tags: {tag_list}")
+            
+            # Handle both individual tags and JSON array tags
+            tag_queries = Q()
+            for tag in tag_list:
+                print(f"DEBUG: Building query for tag: '{tag}'")
+                # Search for exact match or JSON array containing the tag
+                tag_queries |= (
+                    Q(tags__name__iexact=tag) |  # Exact match (case insensitive)
+                    Q(tags__name__icontains=f'"{tag}"')  # JSON array contains the tag
+                )
+            
+            print(f"DEBUG: Final tag query: {tag_queries}")
+            queryset = queryset.filter(tag_queries).distinct()
+            print(f"DEBUG: Products found after tag filtering: {queryset.count()}")
+            
+            # Let's also see what tags actually exist
+            from taggit.models import Tag
+            all_tags = Tag.objects.all().values_list('name', flat=True)
+            print(f"DEBUG: All tags in database: {list(all_tags)}")
         
         return queryset
 
