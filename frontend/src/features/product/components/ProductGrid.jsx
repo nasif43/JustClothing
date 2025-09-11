@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { useInView } from 'react-intersection-observer'
 import { useProductStore } from '../../../store'
 import ProductCard from './ProductCard'
+import { ProductGridSkeleton } from '../../../components/ui/SkeletonLoader'
 
 function ProductGrid({ storeId = null, showStoreInfo = true, className = "m-10" }) {
   const { 
@@ -19,10 +20,10 @@ function ProductGrid({ storeId = null, showStoreInfo = true, className = "m-10" 
   } = useProductStore()
   const [displayProducts, setDisplayProducts] = useState([])
   
-  // Intersection observer for infinite scroll
+  // Intersection observer for infinite scroll - less aggressive
   const { ref: loadMoreRef, inView } = useInView({
-    threshold: 0.1,
-    rootMargin: '100px' // Trigger loading 100px before reaching the bottom
+    threshold: 0.3,
+    rootMargin: '20px' // Reduced from 100px to reduce premature loading
   })
   
   useEffect(() => {
@@ -32,19 +33,16 @@ function ProductGrid({ storeId = null, showStoreInfo = true, className = "m-10" 
     }
   }, [products, loading, fetchProducts])
 
-  // Infinite scroll effect
-  useEffect(() => {
-    if (inView && hasMore && !isLoadingMore && !loading && !searchTerm) {
-      // Only load more if not searching (search results don't support infinite scroll)
-      const additionalParams = {}
-      
-      if (currentBusinessType) {
-        additionalParams.business_type = currentBusinessType
-      }
-      
-      loadMoreProducts(additionalParams)
-    }
-  }, [inView, hasMore, isLoadingMore, loading, searchTerm, currentBusinessType])
+  // Disable infinite scroll to improve performance
+  // useEffect(() => {
+  //   if (inView && hasMore && !isLoadingMore && !loading && !searchTerm) {
+  //     const additionalParams = {}
+  //     if (currentBusinessType) {
+  //       additionalParams.business_type = currentBusinessType
+  //     }
+  //     loadMoreProducts(additionalParams)
+  //   }
+  // }, [inView, hasMore, isLoadingMore, loading, searchTerm, currentBusinessType])
   
   useEffect(() => {
     let productsToShow = []
@@ -62,7 +60,7 @@ function ProductGrid({ storeId = null, showStoreInfo = true, className = "m-10" 
     setDisplayProducts(productsToShow)
   }, [products, filteredProducts, currentBusinessType, storeId, getCurrentProducts])
   
-  if (loading) return <div className="text-center py-8">Loading products...</div>
+  if (loading && displayProducts.length === 0) return <ProductGridSkeleton count={6} />
   if (error) return <div className="text-center py-8 text-gray-700">Error: {error}</div>
   
   if (!displayProducts.length) {

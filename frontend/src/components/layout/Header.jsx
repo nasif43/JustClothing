@@ -1,18 +1,29 @@
+import React, { useState, useRef, useEffect, Suspense } from "react"
 import { ShoppingCart, LayoutGrid } from "lucide-react"
-import { useState, useRef, useEffect } from "react"
 import { useCartStore, useUserStore } from "../../store"
 import { useNavigate } from "react-router-dom"
 import logo from "../../assets/logo.svg"
-import SearchBar from "../ui/SearchBar"
+import { HeaderSkeleton } from "../ui/SkeletonLoader"
+
+// Lazy load SearchBar for faster initial header render
+const SearchBar = React.lazy(() => import("../ui/SearchBar"))
 
 function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
+  const [isLoaded, setIsLoaded] = useState(false)
   const menuRef = useRef(null)
   const buttonRef = useRef(null)
+  
+  // Use lazy selectors to avoid blocking render
   const cartItems = useCartStore(state => state.items)
-  const itemCount = cartItems.reduce((total, item) => total + item.quantity, 0)
+  const itemCount = cartItems?.reduce((total, item) => total + item.quantity, 0) || 0
   const { isAuthenticated, user, logout } = useUserStore()
   const navigate = useNavigate()
+
+  useEffect(() => {
+    // Mark as loaded after initial render
+    setIsLoaded(true)
+  }, [])
 
   // Handle click outside to close menu
   useEffect(() => {
@@ -84,7 +95,13 @@ function Header() {
           <img src={logo} alt="logo" className="w-auto h-15 hover:cursor-pointer" />
         </div>
         <div className="w-xl flex justify-center">
-          <SearchBar />
+          <Suspense fallback={
+            <div className="w-full max-w-2xl">
+              <div className="animate-pulse bg-gray-700 h-12 rounded-full"></div>
+            </div>
+          }>
+            <SearchBar />
+          </Suspense>
         </div>
         <div className="flex items-center gap-8">
           {isAuthenticated ? (

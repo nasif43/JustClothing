@@ -17,8 +17,8 @@ function LazyImage({
   
   const { ref, inView } = useInView({
     triggerOnce: true,
-    threshold: 0.1,
-    rootMargin: '50px' // Start loading 50px before the image comes into view
+    threshold: 0.2,
+    rootMargin: '20px' // Reduced from 50px for better performance
   })
 
   // Load the image when it comes into view - FIXED: moved to useEffect

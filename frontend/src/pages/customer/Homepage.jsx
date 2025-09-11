@@ -2,6 +2,7 @@ import { CategoryPills, CategoryLinks } from "../../features/category/components
 import { ProductGrid } from "../../features/product/components"
 import useProductStore from "../../store/useProductStore"
 import TagsDisplay from "../../components/TagsDisplay"
+import { CategoryPillsSkeleton, ProductGridSkeleton } from "../../components/ui/SkeletonLoader"
 
 function Homepage() {
     const { currentBusinessType, currentTags, clearBusinessTypeFilter, loading } = useProductStore()
@@ -19,7 +20,7 @@ function Homepage() {
     return(
         <div className="mt-10">
             <div className="flex justify-center gap-4 mb-12">
-                <CategoryPills />
+                {loading ? <CategoryPillsSkeleton /> : <CategoryPills />}
             </div>
 
             {/* Filter Status Indicator */}

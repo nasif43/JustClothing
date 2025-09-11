@@ -37,19 +37,21 @@ const useProductStore = create((set, get) => ({
   setSearchTerm: (searchTerm) => set({ searchTerm }),
   setIsLoadingMore: (isLoadingMore) => set({ isLoadingMore }),
   
-  // Initialize Fuse.js for client-side fuzzy search
+  // Initialize optimized Fuse.js for fast fuzzy search
   initializeFuse: () => {
     const { products, fuse } = get()
     if (products.length > 0 && !fuse) {
       const newFuse = new Fuse(products, {
         keys: [
-          { name: 'name', weight: 0.7 },
-          { name: 'description', weight: 0.3 },
-          { name: 'tags', weight: 0.4 },
-          { name: 'business_type', weight: 0.2 }
+          { name: 'name', weight: 0.8 },
+          { name: 'tags', weight: 0.3 },
+          { name: 'description', weight: 0.2 }
         ],
-        threshold: 0.3, // Adjust fuzzy search sensitivity
-        includeScore: true
+        threshold: 0.4, // Balanced sensitivity
+        includeScore: true,
+        ignoreLocation: true,
+        findAllMatches: false,
+        minMatchCharLength: 2
       })
       set({ fuse: newFuse })
     }
@@ -242,13 +244,12 @@ const useProductStore = create((set, get) => ({
     }
   },
 
-  // Hybrid search: server-side + client-side fuzzy search
+  // Smart hybrid search: server + client fuzzy search
   searchProducts: async (searchTerm) => {
     try {
       set({ loading: true, error: null, searchTerm })
       
       if (!searchTerm || searchTerm.trim().length === 0) {
-        // If search term is empty, fetch all products and clear client search
         await get().fetchProducts({}, true)
         set({ 
           currentBusinessType: null,
@@ -259,37 +260,52 @@ const useProductStore = create((set, get) => ({
         return
       }
       
-      // 1. Server-side search first (gets comprehensive results)
+      // Server search for comprehensive results
       const params = { search: searchTerm.trim() }
       const response = await fetchProducts(params)
-      const serverProducts = response.results || response || []
+      const searchResults = response.results || response || []
       
       set({ 
-        filteredProducts: serverProducts, 
+        filteredProducts: searchResults, 
         currentBusinessType: null,
         currentTags: [],
         loading: false 
       })
       
-      // 2. Client-side fuzzy search on loaded products (instant filtering)
-      get().performClientSearch(searchTerm.trim())
+      // Re-initialize fuzzy search if needed
+      get().initializeFuse()
       
     } catch (error) {
       set({ error: error.message, loading: false })
     }
   },
 
-  // Client-side fuzzy search on loaded products
+  // Fast client-side fuzzy search for instant feedback
   performClientSearch: (searchTerm) => {
     const { fuse, products } = get()
     
-    if (!fuse || !searchTerm || searchTerm.length === 0) {
+    if (!searchTerm || searchTerm.length < 2) {
       set({ clientSearchResults: [] })
       return
     }
     
+    // Fallback to simple filter if Fuse.js not ready
+    if (!fuse) {
+      const simpleResults = products.filter(product => 
+        product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        product.description?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        product.tags?.toLowerCase().includes(searchTerm.toLowerCase())
+      ).slice(0, 10)
+      
+      set({ clientSearchResults: simpleResults })
+      return
+    }
+    
+    // Use fuzzy search for better matching
     const results = fuse.search(searchTerm)
-    const clientSearchResults = results.map(result => result.item)
+    const clientSearchResults = results
+      .map(result => result.item)
+      .slice(0, 10) // Limit for performance
     
     set({ clientSearchResults })
   },
