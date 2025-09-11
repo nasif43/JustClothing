@@ -91,114 +91,242 @@ function Header() {
 
   return (
     <header className="bg-black text-white p-4 relative sticky top-0 z-50">
-      <div className="max-w-7xl mx-auto flex items-center justify-between">
-        <div className="flex" onClick={async () => {
-          // Clear search when going home
-          await searchProducts("")
-          navigate("/home")
-        }}>
-          <img src={logo} alt="logo" className="w-auto h-15 hover:cursor-pointer" />
-        </div>
-        <div className="w-xl flex justify-center">
-          <Suspense fallback={
-            <div className="w-full max-w-2xl">
-              <div className="animate-pulse bg-gray-700 h-12 rounded-full"></div>
+      <div className="max-w-7xl mx-auto">
+        {/* Mobile Layout */}
+        <div className="lg:hidden">
+          {/* Top row - Logo, Cart, Menu */}
+          <div className="flex items-center justify-between mb-3">
+            <div className="flex" onClick={async () => {
+              await searchProducts("")
+              navigate("/home")
+            }}>
+              <img src={logo} alt="logo" className="w-auto h-12 hover:cursor-pointer" />
             </div>
-          }>
-            <SearchBar />
-          </Suspense>
-        </div>
-        <div className="flex items-center gap-8">
-          {isAuthenticated ? (
-            <span className="text-sm">Hello, {user?.first_name || user?.username}</span>
-          ) : user?.isGuest ? (
-            <span className="text-sm">Hello, Guest</span>
-          ) : (
-            <a href="/login" className="text-sm hover:underline">
-              Log in/ Sign up
-            </a>
-          )}
-          <button 
-            onClick={handleSellerButtonClick} 
-            className="text-sm hover:underline"
-          >
-            {getSellerButtonText()}
-          </button>
-          <a href="/cart" className="flex items-center relative">
-            <ShoppingCart className="h-7 w-7" />
-            {itemCount > 0 && (
-              <span className="absolute -top-1 -right-1 bg-black text-white text-xs rounded-full h-5 w-5 flex items-center justify-center border border-white">
-                {itemCount}
-              </span>
-            )}
-          </a>
-          <div className="relative">
-            <button 
-              ref={buttonRef}
-              onClick={toggleMenu} 
-              className="flex items-center focus:outline-none transition-transform duration-300"
-              style={{ transform: isMenuOpen ? 'rotate(45deg)' : 'rotate(0deg)' }}
-            >
-              <LayoutGrid className="h-7 w-7" />
-            </button>
-            
-            {isMenuOpen && (
-              <div 
-                ref={menuRef}
-                className="absolute right-0 mt-2 w-48 bg-black rounded-md shadow-lg py-1 z-10 text-white menu-font"
-              >
-                <a 
-                  href="/home" 
-                  className="block px-4 py-2 text-sm hover:font-bold"
-                  onClick={async (e) => {
-                    e.preventDefault()
-                    await searchProducts("")
-                    navigate("/home")
-                    setIsMenuOpen(false)
-                  }}
-                >
-                  Home
-                </a>
-                {(isAuthenticated || user?.isGuest) && (
-                  <>
-                    <a href="/orders" className="block px-4 py-2 text-sm hover:font-bold">
-                      Orders
-                    </a>
-                    <a href="/cart" className="block px-4 py-2 text-sm hover:font-bold">
-                      Cart {itemCount > 0 && `(${itemCount})`}
-                    </a>
-                  </>
+            <div className="flex items-center gap-4">
+              <a href="/cart" className="flex items-center relative">
+                <ShoppingCart className="h-6 w-6" />
+                {itemCount > 0 && (
+                  <span className="absolute -top-1 -right-1 bg-black text-white text-xs rounded-full h-4 w-4 flex items-center justify-center border border-white">
+                    {itemCount}
+                  </span>
                 )}
-                <a href="/trending" className="block px-4 py-2 text-sm hover:font-bold">
-                  Trending
-                </a>
-                <a href="/offers" className="block px-4 py-2 text-sm hover:font-bold">
-                  Offers
-                </a>
-                <a href="/blog" className="block px-4 py-2 text-sm hover:font-bold">
-                  Blog
-                </a>
-                {isAuthenticated ? (
-                  <button 
-                    onClick={logout} 
-                    className="block w-full text-left px-4 py-2 text-sm hover:font-bold"
+              </a>
+              <div className="relative">
+                <button 
+                  ref={buttonRef}
+                  onClick={toggleMenu} 
+                  className="flex items-center focus:outline-none transition-transform duration-300 p-2"
+                  style={{ transform: isMenuOpen ? 'rotate(45deg)' : 'rotate(0deg)' }}
+                >
+                  <LayoutGrid className="h-6 w-6" />
+                </button>
+                
+                {isMenuOpen && (
+                  <div 
+                    ref={menuRef}
+                    className="absolute right-0 mt-2 w-48 sm:w-48 max-w-xs bg-black rounded-md shadow-lg py-1 z-50 text-white menu-font border border-gray-700"
+                    style={{ 
+                      minWidth: '200px',
+                      maxWidth: 'calc(100vw - 2rem)'
+                    }}
                   >
-                    Sign Out
-                  </button>
-                ) : user?.isGuest ? (
-                  <button 
-                    onClick={() => navigate('/welcome')} 
-                    className="block w-full text-left px-4 py-2 text-sm hover:font-bold"
-                  >
-                    Sign In
-                  </button>
-                ) : (
-                  <a href="/signout" className="block px-4 py-2 text-sm hover:font-bold">
-                    Sign Out
-                  </a>
+                    <a 
+                      href="/home" 
+                      className="block px-4 py-2 text-sm hover:font-bold"
+                      onClick={async (e) => {
+                        e.preventDefault()
+                        await searchProducts("")
+                        navigate("/home")
+                        setIsMenuOpen(false)
+                      }}
+                    >
+                      Home
+                    </a>
+                    {!isAuthenticated && !user?.isGuest && (
+                      <a href="/login" className="block px-4 py-2 text-sm hover:font-bold">
+                        Log in/ Sign up
+                      </a>
+                    )}
+                    {isAuthenticated && (
+                      <div className="block px-4 py-2 text-xs text-gray-400 border-b border-gray-700">
+                        Hello, {user?.first_name || user?.username}
+                      </div>
+                    )}
+                    {user?.isGuest && (
+                      <div className="block px-4 py-2 text-xs text-gray-400 border-b border-gray-700">
+                        Hello, Guest
+                      </div>
+                    )}
+                    <button 
+                      onClick={handleSellerButtonClick} 
+                      className="block w-full text-left px-4 py-2 text-sm hover:font-bold"
+                    >
+                      {getSellerButtonText()}
+                    </button>
+                    {(isAuthenticated || user?.isGuest) && (
+                      <>
+                        <a href="/orders" className="block px-4 py-2 text-sm hover:font-bold">
+                          Orders
+                        </a>
+                        <a href="/cart" className="block px-4 py-2 text-sm hover:font-bold">
+                          Cart {itemCount > 0 && `(${itemCount})`}
+                        </a>
+                      </>
+                    )}
+                    <a href="/trending" className="block px-4 py-2 text-sm hover:font-bold">
+                      Trending
+                    </a>
+                    <a href="/offers" className="block px-4 py-2 text-sm hover:font-bold">
+                      Offers
+                    </a>
+                    <a href="/blog" className="block px-4 py-2 text-sm hover:font-bold">
+                      Blog
+                    </a>
+                    {isAuthenticated ? (
+                      <button 
+                        onClick={logout} 
+                        className="block w-full text-left px-4 py-2 text-sm hover:font-bold"
+                      >
+                        Sign Out
+                      </button>
+                    ) : user?.isGuest ? (
+                      <button 
+                        onClick={() => navigate('/welcome')} 
+                        className="block w-full text-left px-4 py-2 text-sm hover:font-bold"
+                      >
+                        Sign In
+                      </button>
+                    ) : (
+                      <a href="/signout" className="block px-4 py-2 text-sm hover:font-bold">
+                        Sign Out
+                      </a>
+                    )}
+                  </div>
                 )}
               </div>
+            </div>
+          </div>
+          {/* Bottom row - Search bar */}
+          <div className="w-full">
+            <Suspense fallback={
+              <div className="w-full">
+                <div className="animate-pulse bg-gray-700 h-10 rounded-full"></div>
+              </div>
+            }>
+              <SearchBar />
+            </Suspense>
+          </div>
+        </div>
+
+        {/* Desktop Layout */}
+        <div className="hidden lg:flex items-center justify-between">
+          <div className="flex" onClick={async () => {
+            await searchProducts("")
+            navigate("/home")
+          }}>
+            <img src={logo} alt="logo" className="w-auto h-15 hover:cursor-pointer" />
+          </div>
+          <div className="w-xl flex justify-center">
+            <Suspense fallback={
+              <div className="w-full max-w-2xl">
+                <div className="animate-pulse bg-gray-700 h-12 rounded-full"></div>
+              </div>
+            }>
+              <SearchBar />
+            </Suspense>
+          </div>
+          <div className="flex items-center gap-8">
+            {isAuthenticated ? (
+              <span className="text-sm">Hello, {user?.first_name || user?.username}</span>
+            ) : user?.isGuest ? (
+              <span className="text-sm">Hello, Guest</span>
+            ) : (
+              <a href="/login" className="text-sm hover:underline">
+                Log in/ Sign up
+              </a>
             )}
+            <button 
+              onClick={handleSellerButtonClick} 
+              className="text-sm hover:underline"
+            >
+              {getSellerButtonText()}
+            </button>
+            <a href="/cart" className="flex items-center relative">
+              <ShoppingCart className="h-7 w-7" />
+              {itemCount > 0 && (
+                <span className="absolute -top-1 -right-1 bg-black text-white text-xs rounded-full h-5 w-5 flex items-center justify-center border border-white">
+                  {itemCount}
+                </span>
+              )}
+            </a>
+            <div className="relative">
+              <button 
+                ref={buttonRef}
+                onClick={toggleMenu} 
+                className="flex items-center focus:outline-none transition-transform duration-300"
+                style={{ transform: isMenuOpen ? 'rotate(45deg)' : 'rotate(0deg)' }}
+              >
+                <LayoutGrid className="h-7 w-7" />
+              </button>
+              
+              {isMenuOpen && (
+                <div 
+                  ref={menuRef}
+                  className="absolute right-0 mt-2 w-48 bg-black rounded-md shadow-lg py-1 z-50 text-white menu-font"
+                >
+                  <a 
+                    href="/home" 
+                    className="block px-4 py-2 text-sm hover:font-bold"
+                    onClick={async (e) => {
+                      e.preventDefault()
+                      await searchProducts("")
+                      navigate("/home")
+                      setIsMenuOpen(false)
+                    }}
+                  >
+                    Home
+                  </a>
+                  {(isAuthenticated || user?.isGuest) && (
+                    <>
+                      <a href="/orders" className="block px-4 py-2 text-sm hover:font-bold">
+                        Orders
+                      </a>
+                      <a href="/cart" className="block px-4 py-2 text-sm hover:font-bold">
+                        Cart {itemCount > 0 && `(${itemCount})`}
+                      </a>
+                    </>
+                  )}
+                  <a href="/trending" className="block px-4 py-2 text-sm hover:font-bold">
+                    Trending
+                  </a>
+                  <a href="/offers" className="block px-4 py-2 text-sm hover:font-bold">
+                    Offers
+                  </a>
+                  <a href="/blog" className="block px-4 py-2 text-sm hover:font-bold">
+                    Blog
+                  </a>
+                  {isAuthenticated ? (
+                    <button 
+                      onClick={logout} 
+                      className="block w-full text-left px-4 py-2 text-sm hover:font-bold"
+                    >
+                      Sign Out
+                    </button>
+                  ) : user?.isGuest ? (
+                    <button 
+                      onClick={() => navigate('/welcome')} 
+                      className="block w-full text-left px-4 py-2 text-sm hover:font-bold"
+                    >
+                      Sign In
+                    </button>
+                  ) : (
+                    <a href="/signout" className="block px-4 py-2 text-sm hover:font-bold">
+                      Sign Out
+                    </a>
+                  )}
+                </div>
+              )}
+            </div>
           </div>
         </div>
       </div>

@@ -47,8 +47,15 @@ const MainLayout = ({ children }) => {
   return (
     <>
       <Header />
-      <div className="flex-grow w-full" style={{ backgroundImage: `url(${marbleBg})`, backgroundSize: "cover" }}>
-        {children}
+      <div className="flex-grow w-full min-h-screen" style={{ 
+        backgroundImage: `url(${marbleBg})`, 
+        backgroundSize: "cover", 
+        backgroundPosition: "center",
+        backgroundAttachment: "fixed"
+      }}>
+        <div className="w-full min-h-full">
+          {children}
+        </div>
       </div>
       <Footer />
       <Notification 

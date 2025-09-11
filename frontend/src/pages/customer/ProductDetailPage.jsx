@@ -9,7 +9,7 @@ import Alert from "../../components/Alert"
 
 function ProductDetailPage() {
   const { id } = useParams()
-  const { products, selectedProduct, getStoreById, fetchProducts, loading, error } = useProductStore()
+  const { products, selectedProduct, getStoreById, fetchProducts, loading, error, currentTags, currentBusinessType } = useProductStore()
   const { addItem } = useCartStore()
   // Use selectedProduct from store for detailed data, fallback to products list
   const product = selectedProduct || products.find((p) => p.id === Number(id))
@@ -226,45 +226,17 @@ function ProductDetailPage() {
   ]
 
   return (
-    <div className="max-w-7xl mx-auto px-4 py-8">
+    <div className="max-w-7xl mx-auto px-4 py-4 sm:py-8">
       <Alert 
         message={alertMessage} 
         isOpen={isAlertOpen} 
         onClose={() => setIsAlertOpen(false)} 
       />
       
-      <div className="grid grid-cols-12 gap-8">
-        {/* Thumbnails and navigation - 2 columns */}
-        <div className="col-span-1 flex flex-col items-center">
-          <button onClick={handlePrevImage} className="p-2 mb-2" aria-label="Previous image">
-            <ChevronUp className="h-6 w-6" />
-          </button>
-
-          <div className="space-y-3">
-            {thumbnails.map((thumb, index) => (
-              <div
-                key={index}
-                className={`w-full aspect-square border-2 rounded-lg overflow-hidden cursor-pointer ${
-                  index === currentImageIndex ? "border-black" : "border-gray-200"
-                }`}
-                onClick={() => setCurrentImageIndex(index)}
-              >
-                <img
-                  src={thumb}
-                  alt={`${product.name} thumbnail ${index + 1}`}
-                  className="w-full h-full object-cover"
-                />
-              </div>
-            ))}
-          </div>
-
-          <button onClick={handleNextImage} className="p-2 mt-2" aria-label="Next image">
-            <ChevronDown className="h-6 w-6" />
-          </button>
-        </div>
-
-        {/* Main product image - 6 columns (3x the thumbnails) */}
-        <div className="col-span-6 bg-white rounded-lg p-4 shadow-sm">
+      {/* Mobile Layout */}
+      <div className="lg:hidden">
+        {/* Main product image */}
+        <div className="bg-white rounded-lg p-4 shadow-sm mb-4">
           <img
             src={thumbnails[currentImageIndex]}
             alt={product.name}
@@ -272,10 +244,67 @@ function ProductDetailPage() {
           />
         </div>
 
-        {/* Product details - 4 columns */}
-        <div className="col-span-4">
-          <h1 className="text-3xl font-bold mb-1">{product.name}</h1>
-          <p className="text-sm text-gray-500 mb-2">TAGS: {product.tags}</p>
+        {/* Thumbnails navigation - horizontal on mobile */}
+        {thumbnails.length > 1 && (
+          <div className="mb-6">
+            <div className="flex items-center justify-center gap-2">
+              <button onClick={handlePrevImage} className="p-2" aria-label="Previous image">
+                <ChevronUp className="h-4 w-4 rotate-90" />
+              </button>
+              
+              <div className="flex gap-2 overflow-x-auto">
+                {thumbnails.map((thumb, index) => (
+                  <div
+                    key={index}
+                    className={`w-12 h-12 flex-shrink-0 border-2 rounded-lg overflow-hidden cursor-pointer ${
+                      index === currentImageIndex ? "border-black" : "border-gray-200"
+                    }`}
+                    onClick={() => setCurrentImageIndex(index)}
+                  >
+                    <img
+                      src={thumb}
+                      alt={`${product.name} thumbnail ${index + 1}`}
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
+                ))}
+              </div>
+
+              <button onClick={handleNextImage} className="p-2" aria-label="Next image">
+                <ChevronDown className="h-4 w-4 -rotate-90" />
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* Product details */}
+        <div className="space-y-4">
+          <h1 className="text-2xl sm:text-3xl font-bold mb-1">{product.name}</h1>
+          <div className="mb-2">
+            {/* Show business type if available */}
+            {product.business_type && (
+              <span className="text-xs bg-gray-100 px-2 py-1 rounded-full border mr-2">
+                {product.business_type}
+              </span>
+            )}
+            {/* Show current active tags */}
+            {currentTags.length > 0 && currentTags.map((tag, index) => (
+              <span key={index} className="text-xs bg-gray-100 px-2 py-1 rounded-full border mr-2">
+                {tag}
+              </span>
+            ))}
+            {/* Show product's own tags if they exist and are different */}
+            {product.tags && typeof product.tags === 'string' && (
+              <span className="text-xs bg-gray-100 px-2 py-1 rounded-full border mr-2">
+                {product.tags}
+              </span>
+            )}
+            {product.tags && Array.isArray(product.tags) && product.tags.map((tag, index) => (
+              <span key={`product-${index}`} className="text-xs bg-gray-100 px-2 py-1 rounded-full border mr-2">
+                {tag}
+              </span>
+            ))}
+          </div>
           
           {/* Price Display */}
           <div className="mb-4">
@@ -283,7 +312,7 @@ function ProductDetailPage() {
               <div className="space-y-1">
                 <div className="flex items-center space-x-3">
                   <span className="text-gray-500 line-through text-lg">৳{product.original_price}</span>
-                  <span className="text-3xl font-bold text-black">৳{product.discounted_price}</span>
+                  <span className="text-2xl sm:text-3xl font-bold text-black">৳{product.discounted_price}</span>
                 </div>
                 <div className="flex items-center space-x-2">
                   <span className="bg-black text-white px-2 py-1 rounded text-sm font-medium">
@@ -295,7 +324,7 @@ function ProductDetailPage() {
                 </div>
               </div>
             ) : (
-              <div className="text-3xl font-bold text-black">৳{product.price}</div>
+              <div className="text-2xl sm:text-3xl font-bold text-black">৳{product.price}</div>
             )}
           </div>
 
@@ -304,21 +333,20 @@ function ProductDetailPage() {
             <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
               <div className="flex items-center">
                 <span className="font-bold">⚠️ OUT OF STOCK</span>
-                <span className="ml-2">This item is currently unavailable</span>
+                <span className="ml-2 text-sm">This item is currently unavailable</span>
               </div>
             </div>
           )}
 
-
           {/* Size Selection - only show if not custom sizing */}
           {!product.offers_custom_sizes && (
             <div className="mb-6">
-              <h2 className="text-lg font-medium mb-2">SIZE</h2>
+              <h2 className="text-lg font-medium mb-3">SIZE</h2>
               <div className="flex flex-wrap gap-2">
                 {product.availableSizes.map((size) => (
                   <button
                     key={size}
-                    className={`w-10 h-10 border ${
+                    className={`w-12 h-12 border ${
                       selectedSize === size ? "border-black bg-black text-white" : "border-gray-300 hover:border-gray-500"
                     }`}
                     onClick={() => setSelectedSize(size)}
@@ -333,7 +361,7 @@ function ProductDetailPage() {
           {/* Custom Measurements - only show if custom sizing is offered */}
           {product.offers_custom_sizes && product.custom_size_fields?.length > 0 && (
             <div className="mb-6">
-              <h2 className="text-lg font-medium mb-2">CUSTOM MEASUREMENTS</h2>
+              <h2 className="text-lg font-medium mb-3">CUSTOM MEASUREMENTS</h2>
               <div className="bg-gray-50 p-4 rounded-lg">
                 <p className="text-sm text-gray-600 mb-4">
                   Please provide your measurements below. Our team will use these to create your custom-sized product.
@@ -362,12 +390,12 @@ function ProductDetailPage() {
           )}
 
           <div className="mb-6">
-            <h2 className="text-lg font-medium mb-2">COLOR</h2>
+            <h2 className="text-lg font-medium mb-3">COLOR</h2>
             <div className="flex flex-wrap gap-2">
               {product.availableColors?.map((color) => (
                 <button
                   key={color}
-                  className={`px-3 py-2 border ${
+                  className={`px-4 py-2 border ${
                     selectedColor === color ? "border-black bg-black text-white" : "border-gray-300 hover:border-gray-500"
                   }`}
                   onClick={() => setSelectedColor(color)}
@@ -377,7 +405,7 @@ function ProductDetailPage() {
               )) || availableColors.map((color) => (
                 <button
                   key={color.name}
-                  className={`px-3 py-2 border ${
+                  className={`px-4 py-2 border ${
                     selectedColor === color.name ? "border-black bg-black text-white" : "border-gray-300 hover:border-gray-500"
                   }`}
                   onClick={() => setSelectedColor(color.name)}
@@ -392,7 +420,7 @@ function ProductDetailPage() {
             <button
               onClick={handleAddToCart}
               disabled={addedToCart || isOutOfStock || isAddingToCart}
-              className={`w-full py-3 border border-black rounded-full font-medium flex items-center justify-center gap-2 
+              className={`w-full py-4 border border-black rounded-full font-medium flex items-center justify-center gap-2 
                 ${addedToCart 
                   ? 'bg-gray-200 text-black border-black' 
                   : isOutOfStock
@@ -424,7 +452,8 @@ function ProductDetailPage() {
 
             <button
               onClick={handleQuickCheckout}
-              className="w-full py-3 bg-white border border-black rounded-full font-medium flex items-center justify-center gap-2 hover:bg-gray-100"
+              disabled={isOutOfStock}
+              className="w-full py-4 bg-white border border-black rounded-full font-medium flex items-center justify-center gap-2 hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <CreditCard className="h-5 w-5" />
               QUICK CHECKOUT
@@ -434,7 +463,7 @@ function ProductDetailPage() {
           {/* Store information */}
           <div className="bg-gray-50 p-4 rounded-lg mb-4">
             <div className="flex items-center gap-2 mb-2">
-              <User className="h-6 w-6" />
+              <User className="h-5 w-5" />
               <Link to={`/store/${store.id}`} className="font-medium hover:underline">
                 {store.name}
               </Link>
@@ -446,7 +475,7 @@ function ProductDetailPage() {
             </Link>
 
             <div className="flex items-center gap-2">
-              <span className="font-medium">RATING</span>
+              <span className="font-medium text-sm">RATING</span>
               <span className="font-medium">{store.rating}</span>
               <div className="flex">
                 {Array(5)
@@ -454,7 +483,7 @@ function ProductDetailPage() {
                   .map((_, i) => (
                     <Star
                       key={i}
-                      className={`h-5 w-5 ${
+                      className={`h-4 w-4 ${
                         i < Math.floor(store.rating) ? "text-black fill-black" : "text-gray-300"
                       }`}
                     />
@@ -465,12 +494,272 @@ function ProductDetailPage() {
         </div>
       </div>
 
-      <div className="mt-12">
+      {/* Desktop Layout */}
+      <div className="hidden lg:block">
+        <div className="grid grid-cols-12 gap-8">
+          {/* Thumbnails and navigation - 2 columns */}
+          <div className="col-span-1 flex flex-col items-center">
+            <button onClick={handlePrevImage} className="p-2 mb-2" aria-label="Previous image">
+              <ChevronUp className="h-6 w-6" />
+            </button>
+
+            <div className="space-y-3">
+              {thumbnails.map((thumb, index) => (
+                <div
+                  key={index}
+                  className={`w-full aspect-square border-2 rounded-lg overflow-hidden cursor-pointer ${
+                    index === currentImageIndex ? "border-black" : "border-gray-200"
+                  }`}
+                  onClick={() => setCurrentImageIndex(index)}
+                >
+                  <img
+                    src={thumb}
+                    alt={`${product.name} thumbnail ${index + 1}`}
+                    className="w-full h-full object-cover"
+                  />
+                </div>
+              ))}
+            </div>
+
+            <button onClick={handleNextImage} className="p-2 mt-2" aria-label="Next image">
+              <ChevronDown className="h-6 w-6" />
+            </button>
+          </div>
+
+          {/* Main product image - 6 columns */}
+          <div className="col-span-6 bg-white rounded-lg p-4 shadow-sm">
+            <img
+              src={thumbnails[currentImageIndex]}
+              alt={product.name}
+              className="w-full h-auto object-contain aspect-square"
+            />
+          </div>
+
+          {/* Product details - 4 columns */}
+          <div className="col-span-4">
+            <h1 className="text-3xl font-bold mb-1">{product.name}</h1>
+            <div className="mb-2">
+              {/* Show business type if available */}
+              {product.business_type && (
+                <span className="text-xs bg-gray-100 px-2 py-1 rounded-full border mr-2">
+                  {product.business_type}
+                </span>
+              )}
+              {/* Show current active tags */}
+              {currentTags.length > 0 && currentTags.map((tag, index) => (
+                <span key={index} className="text-xs bg-gray-100 px-2 py-1 rounded-full border mr-2">
+                  {tag}
+                </span>
+              ))}
+              {/* Show product's own tags if they exist and are different */}
+              {product.tags && typeof product.tags === 'string' && (
+                <span className="text-xs bg-gray-100 px-2 py-1 rounded-full border mr-2">
+                  {product.tags}
+                </span>
+              )}
+              {product.tags && Array.isArray(product.tags) && product.tags.map((tag, index) => (
+                <span key={`product-${index}`} className="text-xs bg-gray-100 px-2 py-1 rounded-full border mr-2">
+                  {tag}
+                </span>
+              ))}
+            </div>
+            
+            {/* Price Display */}
+            <div className="mb-4">
+              {product.has_active_offer ? (
+                <div className="space-y-1">
+                  <div className="flex items-center space-x-3">
+                    <span className="text-gray-500 line-through text-lg">৳{product.original_price}</span>
+                    <span className="text-3xl font-bold text-black">৳{product.discounted_price}</span>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <span className="bg-black text-white px-2 py-1 rounded text-sm font-medium">
+                      SALE
+                    </span>
+                    <span className="text-sm text-gray-600">
+                      Save ৳{product.savings_amount}
+                    </span>
+                  </div>
+                </div>
+              ) : (
+                <div className="text-3xl font-bold text-black">৳{product.price}</div>
+              )}
+            </div>
+
+            {/* Out of Stock Banner */}
+            {isOutOfStock && (
+              <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
+                <div className="flex items-center">
+                  <span className="font-bold">⚠️ OUT OF STOCK</span>
+                  <span className="ml-2">This item is currently unavailable</span>
+                </div>
+              </div>
+            )}
+
+            {/* Size Selection - only show if not custom sizing */}
+            {!product.offers_custom_sizes && (
+              <div className="mb-6">
+                <h2 className="text-lg font-medium mb-2">SIZE</h2>
+                <div className="flex flex-wrap gap-2">
+                  {product.availableSizes.map((size) => (
+                    <button
+                      key={size}
+                      className={`w-10 h-10 border ${
+                        selectedSize === size ? "border-black bg-black text-white" : "border-gray-300 hover:border-gray-500"
+                      }`}
+                      onClick={() => setSelectedSize(size)}
+                    >
+                      {size}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Custom Measurements - only show if custom sizing is offered */}
+            {product.offers_custom_sizes && product.custom_size_fields?.length > 0 && (
+              <div className="mb-6">
+                <h2 className="text-lg font-medium mb-2">CUSTOM MEASUREMENTS</h2>
+                <div className="bg-gray-50 p-4 rounded-lg">
+                  <p className="text-sm text-gray-600 mb-4">
+                    Please provide your measurements below. Our team will use these to create your custom-sized product.
+                  </p>
+                  <div className="space-y-3">
+                    {product.custom_size_fields.map((field, index) => (
+                      <div key={index}>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                          {field} <span className="text-red-500">*</span>
+                        </label>
+                        <input
+                          type="text"
+                          value={customMeasurements[field] || ''}
+                          onChange={(e) => handleCustomMeasurementChange(field, e.target.value)}
+                          placeholder={`Enter your ${field.toLowerCase()} (e.g., 32 inches, 81 cm)`}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-black focus:border-black"
+                        />
+                      </div>
+                    ))}
+                  </div>
+                  <p className="text-xs text-gray-500 mt-3">
+                    💡 Tip: Include units in your measurements (inches, cm, etc.) for best results
+                  </p>
+                </div>
+              </div>
+            )}
+
+            <div className="mb-6">
+              <h2 className="text-lg font-medium mb-2">COLOR</h2>
+              <div className="flex flex-wrap gap-2">
+                {product.availableColors?.map((color) => (
+                  <button
+                    key={color}
+                    className={`px-3 py-2 border ${
+                      selectedColor === color ? "border-black bg-black text-white" : "border-gray-300 hover:border-gray-500"
+                    }`}
+                    onClick={() => setSelectedColor(color)}
+                  >
+                    {color}
+                  </button>
+                )) || availableColors.map((color) => (
+                  <button
+                    key={color.name}
+                    className={`px-3 py-2 border ${
+                      selectedColor === color.name ? "border-black bg-black text-white" : "border-gray-300 hover:border-gray-500"
+                    }`}
+                    onClick={() => setSelectedColor(color.name)}
+                  >
+                    {color.name}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div className="space-y-3 mb-6">
+              <button
+                onClick={handleAddToCart}
+                disabled={addedToCart || isOutOfStock || isAddingToCart}
+                className={`w-full py-3 border border-black rounded-full font-medium flex items-center justify-center gap-2 
+                  ${addedToCart 
+                    ? 'bg-gray-200 text-black border-black' 
+                    : isOutOfStock
+                    ? 'bg-gray-300 text-gray-500 border-gray-300 cursor-not-allowed'
+                    : isAddingToCart
+                    ? 'bg-gray-100 text-gray-600 cursor-not-allowed'
+                    : 'bg-white hover:bg-gray-100'}`}
+              >
+                {addedToCart ? (
+                  <>
+                    <Check className="h-5 w-5" />
+                    ADDED TO CART
+                  </>
+                ) : isOutOfStock ? (
+                  <>
+                    OUT OF STOCK
+                  </>
+                ) : isAddingToCart ? (
+                  <>
+                    ADDING...
+                  </>
+                ) : (
+                  <>
+                    <ShoppingCart className="h-5 w-5" />
+                    ADD TO CART
+                  </>
+                )}
+              </button>
+
+              <button
+                onClick={handleQuickCheckout}
+                disabled={isOutOfStock}
+                className="w-full py-3 bg-white border border-black rounded-full font-medium flex items-center justify-center gap-2 hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                <CreditCard className="h-5 w-5" />
+                QUICK CHECKOUT
+              </button>
+            </div>
+
+            {/* Store information */}
+            <div className="bg-gray-50 p-4 rounded-lg mb-4">
+              <div className="flex items-center gap-2 mb-2">
+                <User className="h-6 w-6" />
+                <Link to={`/store/${store.id}`} className="font-medium hover:underline">
+                  {store.name}
+                </Link>
+                {store.verified && <CheckCircle className="h-4 w-4 text-black" />}
+              </div>
+
+              <Link to={`/store/${store.id}`} className="block hover:underline">
+                <p className="text-sm text-gray-600 mb-4">{store.bio}</p>
+              </Link>
+
+              <div className="flex items-center gap-2">
+                <span className="font-medium">RATING</span>
+                <span className="font-medium">{store.rating}</span>
+                <div className="flex">
+                  {Array(5)
+                    .fill(0)
+                    .map((_, i) => (
+                      <Star
+                        key={i}
+                        className={`h-5 w-5 ${
+                          i < Math.floor(store.rating) ? "text-black fill-black" : "text-gray-300"
+                        }`}
+                      />
+                    ))}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Product Details Section */}
+      <div className="mt-8 sm:mt-12">
         <h2 className="text-xl font-bold mb-4">PRODUCT DETAILS</h2>
-        <div className="grid grid-cols-2 gap-8">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-8">
           <div>
             <h3 className="font-medium mb-2">Why Choose Us for Your Wardrobe Needs</h3>
-            <ul className="list-disc pl-5 space-y-1">
+            <ul className="list-disc pl-5 space-y-1 text-sm sm:text-base">
               {product.features.map((feature, index) => (
                 <li key={index}>{feature}</li>
               ))}
@@ -479,7 +768,7 @@ function ProductDetailPage() {
 
           <div>
             <h3 className="font-medium mb-2">Product Description:</h3>
-            <p>{product.description}</p>
+            <p className="text-sm sm:text-base">{product.description}</p>
           </div>
         </div>
       </div>

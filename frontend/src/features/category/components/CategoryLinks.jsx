@@ -54,8 +54,8 @@ function CategoryLinks() {
   }
 
   return (
-    <div className="flex justify-center">
-      <div className={`grid gap-4 text-center ${
+    <div className="flex justify-center px-4">
+      <div className={`grid gap-3 sm:gap-4 text-center w-full max-w-4xl ${
         mainTags.length === 4 ? 'grid-cols-4' : 
         mainTags.length === 3 ? 'grid-cols-3' : 
         mainTags.length === 2 ? 'grid-cols-2' : 
@@ -67,7 +67,7 @@ function CategoryLinks() {
             <button
               key={tag.id}
               onClick={() => handleTagClick(tag.name)}
-              className={`text-lg font-medium transition-all duration-200 py-2 px-4 ${
+              className={`text-xs sm:text-lg font-medium transition-all duration-200 py-2 px-2 sm:px-4 ${
                 isSelected
                   ? 'bg-black text-white shadow-md rounded-lg'
                   : 'text-black underline decoration-1 underline-offset-4 hover:underline-offset-2'

@@ -26,7 +26,7 @@ function CategoryPills() {
   }
 
   return (
-    <div className="flex gap-8">
+    <div className="flex flex-col sm:flex-row gap-3 sm:gap-8 items-center">
       {categories.map((category) => {
         const isActive = currentBusinessType === category.businessType
         return (
@@ -34,7 +34,7 @@ function CategoryPills() {
             key={category.id}
             onClick={() => handleCategoryClick(category)}
             disabled={loading}
-            className={`px-10 py-4 border-1 rounded-full font-medium text-base transition-all delay-50 ${
+            className={`w-full sm:w-auto px-6 sm:px-10 py-3 sm:py-4 border-1 rounded-full font-medium text-sm sm:text-base transition-all delay-50 whitespace-nowrap ${
               isActive
                 ? 'bg-white text-black border-black' // Active style
                 : 'bg-black text-white hover:bg-white hover:text-black hover:border-black' // Inactive style
