@@ -1,14 +1,12 @@
 "use client"
 
 import { createContext, useState, useContext } from "react"
-import storesData from "../data/stores"
-import productsData from "../data/products"
 
 const ProductContext = createContext()
 
 export function ProductProvider({ children }) {
-  const [products] = useState(productsData)
-  const [stores] = useState(storesData)
+  const [products] = useState([]) // TODO: Replace with API call to fetchProducts()
+  const [stores] = useState([]) // TODO: Replace with API call to fetchStores()
   const [cart, setCart] = useState([])
   const [notification, setNotification] = useState({ message: "", isVisible: false })
 

@@ -95,6 +95,28 @@ function App() {
   )
 }
 
+// Protected Welcome component that redirects authenticated users
+function ProtectedWelcome() {
+  const { isAuthenticated } = useUserStore()
+  
+  if (isAuthenticated) {
+    return <Navigate to="/home" replace />
+  }
+  
+  return <WelcomePage />
+}
+
+// Protected Root component that handles initial routing
+function ProtectedRoot() {
+  const { isAuthenticated } = useUserStore()
+  
+  if (isAuthenticated) {
+    return <Navigate to="/home" replace />
+  }
+  
+  return <Navigate to="/welcome" replace />
+}
+
 // Separate component to access context
 function AppContent() {
   const { notification, dismissNotification } = useProducts();
@@ -102,12 +124,12 @@ function AppContent() {
   return (
     <OnboardingCheck>
       <Routes>
-        {/* Redirect root to welcome page */}
-        <Route path="/" element={<Navigate to="/welcome" replace />} />
+        {/* Redirect root based on authentication status */}
+        <Route path="/" element={<ProtectedRoot />} />
         
         {/* Public routes */}
         <Route path="/login" element={<LoginPage />} />
-        <Route path="/welcome" element={<WelcomePage />} />
+        <Route path="/welcome" element={<ProtectedWelcome />} />
         <Route path="/signup" element={<SignUpPage />} />
         
         {/* Preference/Onboarding Page */}

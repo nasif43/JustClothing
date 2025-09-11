@@ -70,7 +70,7 @@ function CategoryLinks() {
               className={`text-lg font-medium transition-all duration-200 py-2 px-4 ${
                 isSelected
                   ? 'bg-black text-white shadow-md rounded-lg'
-                  : 'text-black hover:underline'
+                  : 'text-black underline decoration-1 underline-offset-4 hover:underline-offset-2'
               }`}
             >
               {tag.name}

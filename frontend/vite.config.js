@@ -11,9 +11,11 @@ export default defineConfig({
   server: {
     port: 3000,
     host: true,
+    allowedHosts: ['justclothing.store', 'localhost', '127.0.0.1']
   },
   define: {
-    // Make sure environment variables are available
-    'process.env': process.env
+    // Only expose specific environment variables needed by the frontend
+    'process.env.VITE_API_URL': JSON.stringify(process.env.VITE_API_URL),
+    'process.env.NODE_ENV': JSON.stringify(process.env.NODE_ENV)
   }
 })

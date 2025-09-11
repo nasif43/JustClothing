@@ -31,7 +31,11 @@ function Homepage() {
                             {currentTags.length > 0 && (
                                 <span className="font-medium">
                                     {currentBusinessType ? ' + ' : ''}
-                                    Tags: {currentTags.join(', ')}
+                                    Tags: {currentTags.map((tag, index) => (
+                                        <span key={index} className="underline decoration-1 underline-offset-2 mr-2">
+                                            {tag}
+                                        </span>
+                                    ))}
                                 </span>
                             )}
                         </span>

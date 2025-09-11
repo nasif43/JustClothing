@@ -87,18 +87,45 @@ const useProductStore = create((set, get) => ({
   // New method to fetch products by tags
   fetchProductsByTags: async (tags) => {
     try {
-      set({ loading: true, error: null, currentTags: tags })
+      set({ loading: true, error: null, currentTags: tags, currentBusinessType: null })
       
-      const params = tags.length > 0 ? { tags: tags.join(',') } : {}
+      // Clean tags before sending to API (remove extra spaces, normalize)
+      const cleanedTags = tags.map(tag => tag.trim()).filter(tag => tag.length > 0)
+      const params = cleanedTags.length > 0 ? { tags: cleanedTags.join(',') } : {}
+      
+      console.log('Searching for products with tags:', cleanedTags, 'params:', params)
+      
       const response = await fetchProducts(params)
       const products = response.results || response || []
+      
+      console.log('Found products:', products.length)
+      
+      // Also log a few sample products to see their tags
+      if (products.length === 0) {
+        console.log('No products found. Let\'s check what products exist without filters...')
+        try {
+          const allProductsResponse = await fetchProducts({})
+          const allProducts = allProductsResponse.results || allProductsResponse || []
+          console.log('Total products in database:', allProducts.length)
+          if (allProducts.length > 0) {
+            console.log('Sample product tags:', allProducts.slice(0, 3).map(p => ({
+              name: p.name,
+              tags: p.tags
+            })))
+          }
+        } catch (e) {
+          console.log('Failed to fetch all products:', e)
+        }
+      }
       
       set({ 
         filteredProducts: products, 
         currentTags: tags,
+        currentBusinessType: null, // Clear business type when filtering by tags
         loading: false 
       })
     } catch (error) {
+      console.error('Tag search error:', error)
       set({ error: error.message, loading: false })
     }
   },
