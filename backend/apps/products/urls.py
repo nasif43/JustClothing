@@ -11,7 +11,8 @@ from .views import (
     featured_products_view, trending_products_view, 
     related_products_view, bulk_update_products_view,
     ProductOfferListCreateView, ProductOfferDetailView,
-    seller_products_for_offers_view, seller_active_offers_view, store_active_offers_view
+    seller_products_for_offers_view, seller_active_offers_view, store_active_offers_view,
+    search_suggestions, trending_searches
 )
 
 router = DefaultRouter()
@@ -24,6 +25,10 @@ urlpatterns = [
     
     # Tags (must come before product detail to avoid conflict)
     path('tags/', TagListView.as_view(), name='tag_list'),
+    
+    # Search endpoints
+    path('search/suggestions/', search_suggestions, name='search_suggestions'),
+    path('search/trending/', trending_searches, name='trending_searches'),
     
     # Products - Public
     path('', ProductListView.as_view(), name='product_list'),

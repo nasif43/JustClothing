@@ -1,20 +1,31 @@
+import React, { useState, useCallback, useRef, useEffect } from "react"
 import { Search } from "lucide-react"
-import { useState, useCallback, useRef } from "react"
 import { useNavigate } from "react-router-dom"
 import { useProductStore } from "../../store"
 
 function SearchBar() {
   const [searchTerm, setSearchTerm] = useState("")
   const navigate = useNavigate()
-  const { searchProducts } = useProductStore()
+  const { searchProducts, performClientSearch, searchTerm: storeSearchTerm } = useProductStore()
   const debounceTimer = useRef(null)
 
-  // Simple debounce function to avoid too many API calls
+  // Sync with store search term
+  useEffect(() => {
+    if (storeSearchTerm !== searchTerm) {
+      setSearchTerm(storeSearchTerm || '')
+    }
+  }, [storeSearchTerm])
+
+  // Debounced server search + instant client search
   const debouncedSearch = useCallback(async (term) => {
     if (debounceTimer.current) {
       clearTimeout(debounceTimer.current)
     }
     
+    // Instant client-side fuzzy search for immediate feedback
+    performClientSearch(term)
+    
+    // Debounced server search for comprehensive results
     debounceTimer.current = setTimeout(async () => {
       await searchProducts(term)
       // Navigate to homepage to show search results
@@ -22,7 +33,7 @@ function SearchBar() {
         navigate('/')
       }
     }, 800)
-  }, [searchProducts, navigate])
+  }, [searchProducts, performClientSearch, navigate])
 
   const handleInputChange = (e) => {
     const value = e.target.value

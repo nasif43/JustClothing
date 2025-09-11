@@ -238,8 +238,33 @@ export const refreshToken = async () => {
 // Products API
 export const fetchProducts = async (params = {}) => {
   try {
-    const queryString = new URLSearchParams(params).toString()
+    // Set default pagination if not provided
+    const paginationParams = {
+      page: 1,
+      limit: 20,
+      ...params
+    }
+    
+    const queryString = new URLSearchParams(paginationParams).toString()
     const endpoint = queryString ? `products/?${queryString}` : 'products/'
+    
+    return await apiRequest(endpoint)
+  } catch (error) {
+    throw new Error(error.message || 'Failed to fetch products')
+  }
+}
+
+// Fetch products with pagination support
+export const fetchProductsPaginated = async (page = 1, limit = 20, additionalParams = {}) => {
+  try {
+    const params = {
+      page,
+      limit,
+      ...additionalParams
+    }
+    
+    const queryString = new URLSearchParams(params).toString()
+    const endpoint = `products/?${queryString}`
     
     return await apiRequest(endpoint)
   } catch (error) {

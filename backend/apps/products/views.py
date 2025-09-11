@@ -6,6 +6,8 @@ from rest_framework.views import APIView
 from django_filters.rest_framework import DjangoFilterBackend
 from django.db.models import Q, F, Count
 from django.shortcuts import get_object_or_404
+from django.contrib.postgres.search import SearchVector, SearchQuery, SearchRank, TrigramSimilarity
+from django.db.models import Case, When, FloatField, IntegerField
 
 from .models import Category, Product, ProductAttributeType, ProductImage, ProductVideo, ProductOffer
 from .serializers import (
@@ -16,6 +18,7 @@ from .serializers import (
     ProductWithOfferSerializer
 )
 from .filters import ProductFilter
+from .pagination import ProductPageNumberPagination, SearchResultsPagination
 from taggit.models import Tag
 
 
@@ -43,14 +46,14 @@ class CategoryDetailView(generics.RetrieveAPIView):
 
 
 class ProductListView(generics.ListAPIView):
-    """List products with comprehensive filtering"""
+    """List products with comprehensive filtering and enhanced search"""
     serializer_class = ProductListSerializer
     permission_classes = [permissions.AllowAny]
-    filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
+    filter_backends = [DjangoFilterBackend, filters.OrderingFilter]
     filterset_class = ProductFilter
-    search_fields = ['name', 'description', 'seller__business_name']
     ordering_fields = ['price', 'created_at', 'rating', 'sales_count']
     ordering = ['-created_at']
+    pagination_class = ProductPageNumberPagination
 
     def get_queryset(self):
         queryset = Product.objects.select_related(
@@ -59,15 +62,55 @@ class ProductListView(generics.ListAPIView):
             'images', 'tags', 'variants'
         ).filter(status='active')
         
-        # Search functionality
+        # Enhanced search functionality with PostgreSQL full-text search
         search = self.request.query_params.get('search')
         if search:
-            queryset = queryset.filter(
-                Q(name__icontains=search) |
-                Q(description__icontains=search) |
-                Q(seller__business_name__icontains=search) |
-                Q(tags__name__icontains=search)
-            ).distinct()
+            # Use custom pagination for search results
+            self.pagination_class = SearchResultsPagination
+            
+            search_query = SearchQuery(search)
+            
+            # Create search vector with weighted fields
+            search_vector = (
+                SearchVector('name', weight='A') +
+                SearchVector('description', weight='B') +
+                SearchVector('seller__business_name', weight='C') +
+                SearchVector('tags__name', weight='D')
+            )
+            
+            # Apply search with ranking
+            queryset = queryset.annotate(
+                search=search_vector,
+                rank=SearchRank(search_vector, search_query),
+                # Add trigram similarity for fuzzy matching
+                similarity=TrigramSimilarity('name', search)
+            ).filter(
+                Q(search=search_query) | Q(similarity__gt=0.1)
+            ).distinct().order_by('-rank', '-similarity', '-created_at')
+            
+            # If no results found with full-text search, fall back to basic search
+            if not queryset.exists():
+                queryset = Product.objects.select_related(
+                    'seller', 'category', 'collection'
+                ).prefetch_related(
+                    'images', 'tags', 'variants'
+                ).filter(
+                    status='active'
+                ).filter(
+                    Q(name__icontains=search) |
+                    Q(description__icontains=search) |
+                    Q(seller__business_name__icontains=search) |
+                    Q(tags__name__icontains=search)
+                ).distinct().annotate(
+                    rank=Case(
+                        When(name__icontains=search, then=1.0),
+                        When(description__icontains=search, then=0.8),
+                        When(seller__business_name__icontains=search, then=0.6),
+                        When(tags__name__icontains=search, then=0.4),
+                        default=0.0,
+                        output_field=FloatField()
+                    )
+                ).order_by('-rank', '-created_at')
         
         # Category filtering
         category = self.request.query_params.get('category')
@@ -466,3 +509,92 @@ class TagListView(APIView):
             'results': tag_data,
             'count': len(tag_data)
         })
+
+
+@api_view(['GET'])
+@permission_classes([permissions.AllowAny])
+def search_suggestions(request):
+    """
+    API endpoint for search suggestions/autocomplete
+    Returns suggested products, categories, tags, and sellers based on query
+    """
+    query = request.GET.get('q', '').strip()
+    limit = int(request.GET.get('limit', 5))
+    
+    if len(query) < 2:
+        return Response({'suggestions': []})
+    
+    suggestions = {
+        'products': [],
+        'tags': [],
+        'categories': [],
+        'sellers': []
+    }
+    
+    # Product name suggestions using trigram similarity
+    product_suggestions = Product.objects.filter(
+        status='active'
+    ).annotate(
+        similarity=TrigramSimilarity('name', query)
+    ).filter(
+        Q(name__icontains=query) | Q(similarity__gt=0.3)
+    ).order_by('-similarity', '-created_at').values_list('name', flat=True)[:limit]
+    
+    suggestions['products'] = list(product_suggestions)
+    
+    # Tag suggestions
+    tag_suggestions = Tag.objects.filter(
+        name__icontains=query
+    ).annotate(
+        usage_count=Count('taggit_taggeditem_items')
+    ).order_by('-usage_count', 'name').values_list('name', flat=True)[:limit]
+    
+    suggestions['tags'] = list(tag_suggestions)
+    
+    # Category suggestions
+    category_suggestions = Category.objects.filter(
+        name__icontains=query
+    ).values_list('name', flat=True)[:limit]
+    
+    suggestions['categories'] = list(category_suggestions)
+    
+    # Seller/business suggestions
+    try:
+        from apps.users.models import SellerProfile
+        seller_suggestions = SellerProfile.objects.filter(
+            business_name__icontains=query,
+            is_active=True
+        ).values_list('business_name', flat=True)[:limit]
+        
+        suggestions['sellers'] = list(seller_suggestions)
+    except ImportError:
+        suggestions['sellers'] = []
+    
+    return Response({'suggestions': suggestions})
+
+
+@api_view(['GET'])
+@permission_classes([permissions.AllowAny])
+def trending_searches(request):
+    """
+    API endpoint for trending search terms
+    Returns popular search terms based on product names and tags
+    """
+    limit = int(request.GET.get('limit', 10))
+    
+    # Get trending product names (most viewed/popular products)
+    trending_products = Product.objects.filter(
+        status='active'
+    ).order_by('-views_count', '-sales_count')[:limit].values_list('name', flat=True)
+    
+    # Get trending tags (most used tags)
+    trending_tags = Tag.objects.annotate(
+        usage_count=Count('taggit_taggeditem_items')
+    ).order_by('-usage_count')[:limit].values_list('name', flat=True)
+    
+    return Response({
+        'trending': {
+            'products': list(trending_products),
+            'tags': list(trending_tags),
+        }
+    })

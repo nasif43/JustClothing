@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom'
 import { useProductStore } from '../../../store'
 import StarRating from '../../../components/ui/StarRating'
+import LazyImage from '../../../components/ui/LazyImage'
 
 function ProductCard({ product, showStoreInfo = true }) {
   if (!product) return null
@@ -24,13 +25,12 @@ function ProductCard({ product, showStoreInfo = true }) {
     <div className="group">
       <div className="bg-white rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-shadow">
         <Link to={`/product/${product.id}`} className="block">
-          <div className="aspect-square relative">
-            <img
-              src={product.image}
-              alt={product.name}
-              className="w-full h-full object-cover"
-            />
-          </div>
+          <LazyImage
+            src={product.image}
+            alt={product.name}
+            className="aspect-square"
+            fallback="/placeholder-image.jpg" // Add a placeholder image in public folder
+          />
           <div className="p-3 text-center">
             <h3 className="text-sm font-medium uppercase">{product.name}</h3>
             <p className="text-xs text-gray-500">

@@ -1,5 +1,6 @@
 import { create } from 'zustand'
-import { fetchProducts, fetchProductById, fetchStores } from '../services/api'
+import { fetchProducts, fetchProductById, fetchStores, fetchProductsPaginated } from '../services/api'
+import Fuse from 'fuse.js'
 
 // Create the product store
 const useProductStore = create((set, get) => ({
@@ -13,6 +14,17 @@ const useProductStore = create((set, get) => ({
   currentBusinessType: null, // Track current business type filter
   currentTags: [], // Track current tag filters
   
+  // Pagination state
+  currentPage: 1,
+  totalPages: 1,
+  hasMore: true,
+  isLoadingMore: false,
+  
+  // Search state
+  searchTerm: '',
+  clientSearchResults: [],
+  fuse: null, // Fuse.js instance for client-side fuzzy search
+  
   // Actions
   setProducts: (products) => set({ products }),
   setFilteredProducts: (filteredProducts) => set({ filteredProducts }),
@@ -22,27 +34,108 @@ const useProductStore = create((set, get) => ({
   setError: (error) => set({ error }),
   setCurrentBusinessType: (businessType) => set({ currentBusinessType: businessType }),
   setCurrentTags: (tags) => set({ currentTags: tags }),
+  setSearchTerm: (searchTerm) => set({ searchTerm }),
+  setIsLoadingMore: (isLoadingMore) => set({ isLoadingMore }),
   
-  // Async actions
-  fetchProducts: async (params = {}) => {
+  // Initialize Fuse.js for client-side fuzzy search
+  initializeFuse: () => {
+    const { products } = get()
+    if (products.length > 0) {
+      const fuse = new Fuse(products, {
+        keys: [
+          { name: 'name', weight: 0.7 },
+          { name: 'description', weight: 0.3 },
+          { name: 'tags', weight: 0.4 },
+          { name: 'business_type', weight: 0.2 }
+        ],
+        threshold: 0.3, // Adjust fuzzy search sensitivity
+        includeScore: true
+      })
+      set({ fuse })
+    }
+  },
+  
+  // Async actions - Updated for pagination
+  fetchProducts: async (params = {}, reset = true) => {
     try {
       set({ loading: true, error: null })
       const response = await fetchProducts(params)
+      
       // Handle paginated response from backend
-      const products = response.results || response || []
+      const newProducts = response.results || response || []
+      const totalPages = response.total_pages || 1
+      const currentPage = response.current_page || 1
+      const hasMore = response.has_next || false
       
       // Also fetch stores whenever products are fetched
       const storeResponse = await fetchStores()
       const stores = storeResponse.results || storeResponse || []
       
-      set({ products, stores, loading: false })
-      
-      // If no filter is applied, show all products
-      if (!get().currentBusinessType) {
-        set({ filteredProducts: products })
+      if (reset) {
+        set({ 
+          products: newProducts, 
+          stores, 
+          loading: false,
+          currentPage,
+          totalPages,
+          hasMore,
+          filteredProducts: newProducts 
+        })
+        // Initialize Fuse.js with new products
+        get().initializeFuse()
+      } else {
+        // Append products for infinite scroll
+        const existingProducts = get().products
+        const allProducts = [...existingProducts, ...newProducts]
+        set({ 
+          products: allProducts, 
+          stores, 
+          loading: false,
+          currentPage,
+          totalPages,
+          hasMore,
+          filteredProducts: allProducts 
+        })
+        // Re-initialize Fuse.js with all products
+        get().initializeFuse()
       }
     } catch (error) {
       set({ error: error.message, loading: false })
+    }
+  },
+
+  // Load more products for infinite scroll
+  loadMoreProducts: async (additionalParams = {}) => {
+    const { currentPage, hasMore, isLoadingMore } = get()
+    
+    if (!hasMore || isLoadingMore) return
+    
+    try {
+      set({ isLoadingMore: true, error: null })
+      const nextPage = currentPage + 1
+      
+      const response = await fetchProductsPaginated(nextPage, 20, additionalParams)
+      const newProducts = response.results || response || []
+      const totalPages = response.total_pages || 1
+      const hasMorePages = response.has_next || false
+      
+      const existingProducts = get().products
+      const allProducts = [...existingProducts, ...newProducts]
+      
+      set({
+        products: allProducts,
+        filteredProducts: allProducts,
+        currentPage: nextPage,
+        totalPages,
+        hasMore: hasMorePages,
+        isLoadingMore: false
+      })
+      
+      // Re-initialize Fuse.js with all products
+      get().initializeFuse()
+      
+    } catch (error) {
+      set({ error: error.message, isLoadingMore: false })
     }
   },
   
@@ -149,39 +242,81 @@ const useProductStore = create((set, get) => ({
     }
   },
 
-  // Search products by name or description
+  // Hybrid search: server-side + client-side fuzzy search
   searchProducts: async (searchTerm) => {
     try {
-      set({ loading: true, error: null })
+      set({ loading: true, error: null, searchTerm })
       
       if (!searchTerm || searchTerm.trim().length === 0) {
-        // If search term is empty, fetch all products
-        const response = await fetchProducts()
-        const products = response.results || response || []
+        // If search term is empty, fetch all products and clear client search
+        await get().fetchProducts({}, true)
         set({ 
-          products: products,
-          filteredProducts: products, 
           currentBusinessType: null,
           currentTags: [],
+          clientSearchResults: [],
           loading: false 
         })
         return
       }
       
-      // Search products using the search parameter
+      // 1. Server-side search first (gets comprehensive results)
       const params = { search: searchTerm.trim() }
       const response = await fetchProducts(params)
-      const products = response.results || response || []
+      const serverProducts = response.results || response || []
       
       set({ 
-        filteredProducts: products, 
-        currentBusinessType: null, // Clear business type when searching
-        currentTags: [], // Clear tags when searching
+        filteredProducts: serverProducts, 
+        currentBusinessType: null,
+        currentTags: [],
         loading: false 
       })
+      
+      // 2. Client-side fuzzy search on loaded products (instant filtering)
+      get().performClientSearch(searchTerm.trim())
+      
     } catch (error) {
       set({ error: error.message, loading: false })
     }
+  },
+
+  // Client-side fuzzy search on loaded products
+  performClientSearch: (searchTerm) => {
+    const { fuse, products } = get()
+    
+    if (!fuse || !searchTerm || searchTerm.length === 0) {
+      set({ clientSearchResults: [] })
+      return
+    }
+    
+    const results = fuse.search(searchTerm)
+    const clientSearchResults = results.map(result => result.item)
+    
+    set({ clientSearchResults })
+  },
+
+  // Get search results (combines server and client results)
+  getSearchResults: () => {
+    const { searchTerm, filteredProducts, clientSearchResults } = get()
+    
+    if (!searchTerm || searchTerm.length === 0) {
+      return filteredProducts
+    }
+    
+    // If we have client search results, prioritize them for instant feedback
+    if (clientSearchResults.length > 0) {
+      // Combine server results with client fuzzy results, removing duplicates
+      const combinedResults = [...filteredProducts]
+      
+      clientSearchResults.forEach(clientResult => {
+        if (!combinedResults.find(product => product.id === clientResult.id)) {
+          combinedResults.push(clientResult)
+        }
+      })
+      
+      return combinedResults
+    }
+    
+    return filteredProducts
   },
   
   fetchStores: async () => {
@@ -217,11 +352,22 @@ const useProductStore = create((set, get) => ({
     return get().products.find(product => product.id === Number(id))
   },
   
-  // Get current products to display (filtered or all)
+  // Get current products to display (includes search results, filters, etc.)
   getCurrentProducts: () => {
     const state = get()
-    // Show filtered products if any filter is active (business type, tags, or search)
-    return (state.currentBusinessType || state.currentTags.length > 0 || state.filteredProducts.length !== state.products.length) ? state.filteredProducts : state.products
+    
+    // If searching, return search results (hybrid server + client)
+    if (state.searchTerm && state.searchTerm.length > 0) {
+      return state.getSearchResults()
+    }
+    
+    // Show filtered products if any filter is active
+    if (state.currentBusinessType || state.currentTags.length > 0) {
+      return state.filteredProducts
+    }
+    
+    // Default to all products
+    return state.products
   },
   
   // Reset state
@@ -233,7 +379,16 @@ const useProductStore = create((set, get) => ({
     loading: false, 
     error: null,
     currentBusinessType: null,
-    currentTags: []
+    currentTags: [],
+    // Reset pagination
+    currentPage: 1,
+    totalPages: 1,
+    hasMore: true,
+    isLoadingMore: false,
+    // Reset search
+    searchTerm: '',
+    clientSearchResults: [],
+    fuse: null
   })
 }))
 
