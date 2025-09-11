@@ -39,9 +39,9 @@ const useProductStore = create((set, get) => ({
   
   // Initialize Fuse.js for client-side fuzzy search
   initializeFuse: () => {
-    const { products } = get()
-    if (products.length > 0) {
-      const fuse = new Fuse(products, {
+    const { products, fuse } = get()
+    if (products.length > 0 && !fuse) {
+      const newFuse = new Fuse(products, {
         keys: [
           { name: 'name', weight: 0.7 },
           { name: 'description', weight: 0.3 },
@@ -51,7 +51,7 @@ const useProductStore = create((set, get) => ({
         threshold: 0.3, // Adjust fuzzy search sensitivity
         includeScore: true
       })
-      set({ fuse })
+      set({ fuse: newFuse })
     }
   },
   

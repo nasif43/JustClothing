@@ -44,7 +44,7 @@ function ProductGrid({ storeId = null, showStoreInfo = true, className = "m-10" 
       
       loadMoreProducts(additionalParams)
     }
-  }, [inView, hasMore, isLoadingMore, loading, searchTerm, currentBusinessType, loadMoreProducts])
+  }, [inView, hasMore, isLoadingMore, loading, searchTerm, currentBusinessType]) // Removed loadMoreProducts from deps
   
   useEffect(() => {
     let productsToShow = []

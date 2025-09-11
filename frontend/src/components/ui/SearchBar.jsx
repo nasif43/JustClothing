@@ -14,7 +14,7 @@ function SearchBar() {
     if (storeSearchTerm !== searchTerm) {
       setSearchTerm(storeSearchTerm || '')
     }
-  }, [storeSearchTerm])
+  }, [storeSearchTerm, searchTerm])
 
   // Debounced server search + instant client search
   const debouncedSearch = useCallback(async (term) => {
