@@ -9,12 +9,12 @@ function SearchBar() {
   const { searchProducts, performClientSearch, searchTerm: storeSearchTerm } = useProductStore()
   const debounceTimer = useRef(null)
 
-  // Temporarily disable sync to test
-  // useEffect(() => {
-  //   if (storeSearchTerm !== searchTerm) {
-  //     setSearchTerm(storeSearchTerm || '')
-  //   }
-  // }, [storeSearchTerm, searchTerm])
+  // Sync search term with store state
+  useEffect(() => {
+    if (storeSearchTerm !== searchTerm) {
+      setSearchTerm(storeSearchTerm || '')
+    }
+  }, [storeSearchTerm, searchTerm])
 
   // Debounced server search + instant client search
   const debouncedSearch = useCallback(async (term) => {
