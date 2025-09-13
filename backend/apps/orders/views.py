@@ -158,9 +158,13 @@ class OrderListView(APIView):
     permission_classes = [permissions.IsAuthenticated]
     
     def get(self, request):
-        orders = Order.objects.filter(user=request.user).prefetch_related('items').order_by('-created_at')
-        serializer = OrderSerializer(orders, many=True, context={'request': request})
-        return Response(serializer.data)
+        try:
+            orders = Order.objects.filter(user=request.user).prefetch_related('items').order_by('-created_at')
+            serializer = OrderSerializer(orders, many=True, context={'request': request})
+            return Response(serializer.data)
+        except Exception as e:
+            print(f"Error fetching orders: {str(e)}")
+            return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
 class OrderDetailView(APIView):
@@ -174,6 +178,9 @@ class OrderDetailView(APIView):
             return Response(serializer.data)
         except Order.DoesNotExist:
             return Response({'error': 'Order not found'}, status=status.HTTP_404_NOT_FOUND)
+        except Exception as e:
+            print(f"Error fetching order {pk}: {str(e)}")
+            return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
 class CreateOrderView(APIView):
