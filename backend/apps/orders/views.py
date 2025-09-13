@@ -191,39 +191,101 @@ class CreateOrderView(APIView):
                 
             # Get only the selected items from request data
             selected_items = request.data.get('selected_items', [])
+            print(f"DEBUG - Selected items: {selected_items}")
             if not selected_items:
                 return Response({"error": "No items selected"}, status=400)
                 
-            # Create order with only the selected items
-            order = Order.objects.create(
-                user=request.user,
-                payment_method=request.data.get('payment_method'),
-                customer_phone=request.data.get('customer_phone'),
-                customer_address=request.data.get('customer_address'),
-                # Other fields...
-            )
+            # Calculate total amount for selected items
+            total_amount = 0
+            filtered_cart_items = []
             
-            # Add only selected items to the order
+            # Filter cart items based on selected items
             for item_data in selected_items:
                 cart_item = CartItem.objects.filter(
                     cart=cart,
                     product_id=item_data['item_id'],
-                    selected_size=item_data['size'],
-                    selected_color=item_data['color']
+                    size=item_data['size'],
+                    color=item_data['color']
                 ).first()
                 
                 if cart_item:
-                    # Add this item to the order
+                    filtered_cart_items.append(cart_item)
+                    total_amount += cart_item.total_price
+            
+            # Group selected cart items by seller
+            seller_items = {}
+            for item in filtered_cart_items:
+                seller = item.product.seller
+                if seller not in seller_items:
+                    seller_items[seller] = []
+                seller_items[seller].append(item)
+            
+            # Process each seller's items as a separate order
+            orders = []
+            for seller, items in seller_items.items():
+                # Calculate total amount for this seller's items
+                seller_total = sum(item.total_price for item in items)
+                
+                # Create order for this seller
+                order = Order.objects.create(
+                    user=request.user,
+                    seller=seller,
+                    customer_name=request.user.get_full_name() or request.user.email,
+                    customer_email=request.user.email,
+                    customer_phone=serializer.validated_data.get('customer_phone', ''),
+                    customer_address=serializer.validated_data.get('customer_address', ''),
+                    payment_method=serializer.validated_data['payment_method'],
+                    total_amount=seller_total,
+                    bill=seller_total,
+                    status='pending'
+                )
+            
+                # Create order items for this seller's order
+                for cart_item in items:
                     OrderItem.objects.create(
                         order=order,
                         product=cart_item.product,
                         quantity=cart_item.quantity,
+                        title=cart_item.product.name,
+                        photo=cart_item.product.images.filter(is_primary=True).first().image if cart_item.product.images.filter(is_primary=True).exists() else None,
+                        unit_price=cart_item.product.price,
                         price=cart_item.product.price,
-                        selected_size=cart_item.selected_size,
-                        selected_color=cart_item.selected_color
+                        total_price=cart_item.total_price,
+                        size=cart_item.size,
+                        color=cart_item.color
                     )
                     
-            return Response(OrderSerializer(order).data)
+                    # Update product stock
+                    product = cart_item.product
+                    if product.track_inventory:
+                        product.stock_quantity = F('stock_quantity') - cart_item.quantity
+                        product.save()
+                
+                # Create order status history
+                OrderStatusHistory.objects.create(
+                    order=order,
+                    new_status='pending',
+                    changed_by=request.user,
+                )
+                
+                # Notify seller about new order
+                notify_sellers_about_new_order(order)
+                
+                orders.append(order)
+            
+            # Clear only the ordered items from cart
+            for cart_item in filtered_cart_items:
+                cart_item.delete()
+            
+            # Notify customer about orders
+            for order in orders:
+                notify_customer_about_order(order)
+            
+            # Return all created orders
+            return Response(
+                OrderSerializer(orders, many=True, context={'request': request}).data,
+                status=status.HTTP_201_CREATED
+            )
         
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
