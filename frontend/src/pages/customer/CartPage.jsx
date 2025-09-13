@@ -121,7 +121,20 @@ function CartPage() {
       // Don't clear the entire cart, as the backend only removes ordered items
       setTimeout(async () => {
         try {
-          // Only clear selected items from local state
+          // Remove only the ordered items from the local state
+          for (const key in selectedItems) {
+            if (selectedItems[key]) {
+              const [itemId, selectedSize, selectedColor] = key.split('-');
+              try {
+                // Remove each selected item individually
+                await removeItem(parseInt(itemId), selectedSize, selectedColor);
+              } catch (removeError) {
+                console.error('Failed to remove item:', removeError);
+              }
+            }
+          }
+          
+          // Clear selections
           setSelectedItems({})
           
           // Refresh cart to sync with backend state

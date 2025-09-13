@@ -287,13 +287,8 @@ class CreateOrderView(APIView):
                 
                 orders.append(order)
             
-            # Remove ONLY the ordered items from the cart
-            for cart_item in filtered_cart_items:
-                try:
-                    cart_item.delete()
-                    print(f"Deleted cart item: {cart_item.product.name}, size: {cart_item.size}, color: {cart_item.color}")
-                except Exception as e:
-                    print(f"Error deleting cart item: {e}")
+            # Don't delete cart items here - we'll handle it after order creation
+            # This is important to prevent the entire cart from being cleared
             
             # Notify customer about orders
             for order in orders:
