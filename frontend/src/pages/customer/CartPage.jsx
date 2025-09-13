@@ -178,9 +178,9 @@ function CartPage() {
 
       <h1 className="text-2xl font-bold mb-6">Shopping Cart</h1>
 
-      <div className="grid md:grid-cols-3 gap-8">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         {/* Cart Items - Left Side */}
-        <div className="md:col-span-2 space-y-4">
+        <div className="lg:col-span-2 space-y-4">
           <CartItemList
             items={items}
             selectedItems={selectedItems}
@@ -200,7 +200,7 @@ function CartPage() {
 
         {/* Cost Breakdown and Checkout - Right Side */}
         {items.length > 0 && (
-          <div className="md:col-span-1">
+          <div className="lg:col-span-1">
             <CostBreakdown
               items={items}
               selectedItems={selectedItems}

@@ -31,43 +31,100 @@ const OrderItem = ({ order, onClick }) => {
   return (
     <div 
       onClick={() => onClick(order.id)}
-      className="flex flex-col cursor-pointer hover:opacity-90 transition-opacity"
+      className="cursor-pointer hover:opacity-90 transition-opacity"
     >
-      {/* Order details - top */}
-      <div className="flex justify-between items-center mb-2">
-        <div className="bg-gray-200 bg-opacity-80 rounded-l-full p-4 w-52 flex items-center justify-center">
-          <h2 className="text-2xl font-bold">#{order.id}</h2>
+      {/* Mobile Layout */}
+      <div className="lg:hidden bg-white bg-opacity-90 rounded-lg p-4 space-y-3">
+        {/* Order Number and Status */}
+        <div className="flex items-center justify-between">
+          <div className="flex items-center space-x-3">
+            <h2 className="text-xl font-bold">#{order.id}</h2>
+            <div 
+              className={`
+                px-3 py-1 rounded-full text-xs font-bold
+                ${getStatusStyle(order.status)}
+              `}
+            >
+              {formatStatus(order.status)}
+            </div>
+          </div>
         </div>
         
-        <div className="bg-gray-200 bg-opacity-80 rounded-r-full p-4 flex-1 mr-4">
-          <p className="text-lg">
-            Total items : {order.totalItems} , Bill : {order.bill}tk.
-            <span className="ml-8">
-              Placed on : {order.placedOn}, Time : {order.time}
-            </span>
-          </p>
+        {/* Order Details */}
+        <div className="space-y-2 text-sm">
+          <div className="flex justify-between">
+            <span className="text-gray-600">Items:</span>
+            <span className="font-medium">{order.totalItems}</span>
+          </div>
+          <div className="flex justify-between">
+            <span className="text-gray-600">Total:</span>
+            <span className="font-bold">{order.bill}tk</span>
+          </div>
+          <div className="flex justify-between">
+            <span className="text-gray-600">Date:</span>
+            <span>{order.placedOn}</span>
+          </div>
+          <div className="flex justify-between">
+            <span className="text-gray-600">Time:</span>
+            <span>{order.time}</span>
+          </div>
         </div>
         
-        {/* Status */}
-        <div 
-          className={`
-            px-6 py-3 rounded-full text-center font-bold min-w-[160px]
-            ${getStatusStyle(order.status)}
-          `}
-        >
-          {formatStatus(order.status)}
-        </div>
+        {/* Seller Info */}
+        {order.seller && (
+          <div className="pt-2 border-t border-gray-200 text-sm">
+            <div className="flex justify-between">
+              <span className="text-gray-600">Seller:</span>
+              <span className="font-medium">{order.seller.business_name}</span>
+            </div>
+            {order.seller.phone_number && (
+              <div className="flex justify-between mt-1">
+                <span className="text-gray-600">Phone:</span>
+                <span>{order.seller.phone_number}</span>
+              </div>
+            )}
+          </div>
+        )}
       </div>
-      
-      {/* Seller info - bottom */}
-      {order.seller && (
-        <div className="ml-52 text-sm text-gray-600">
-          <strong>Seller:</strong> {order.seller.business_name}
-          {order.seller.phone_number && (
-            <span className="ml-4">Phone: {order.seller.phone_number}</span>
-          )}
+
+      {/* Desktop Layout - Preserved */}
+      <div className="hidden lg:flex lg:flex-col">
+        {/* Order details - top */}
+        <div className="flex justify-between items-center mb-2">
+          <div className="bg-gray-200 bg-opacity-80 rounded-l-full p-4 w-52 flex items-center justify-center">
+            <h2 className="text-2xl font-bold">#{order.id}</h2>
+          </div>
+          
+          <div className="bg-gray-200 bg-opacity-80 rounded-r-full p-4 flex-1 mr-4">
+            <p className="text-lg">
+              Total items : {order.totalItems} , Bill : {order.bill}tk.
+              <span className="ml-8">
+                Placed on : {order.placedOn}, Time : {order.time}
+              </span>
+            </p>
+          </div>
+          
+          {/* Status */}
+          <div 
+            className={`
+              px-6 py-3 rounded-full text-center font-bold min-w-[160px]
+              ${getStatusStyle(order.status)}
+            `}
+          >
+            {formatStatus(order.status)}
+          </div>
         </div>
-      )}
+        
+        {/* Seller info - bottom */}
+        {order.seller && (
+          <div className="ml-52 text-sm text-gray-600">
+            <strong>Seller:</strong> {order.seller.business_name}
+            {order.seller.phone_number && (
+              <span className="ml-4">Phone: {order.seller.phone_number}</span>
+            )}
+          </div>
+        )}
+      </div>
     </div>
   );
 };

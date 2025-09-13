@@ -26,6 +26,21 @@ function Header() {
     setIsLoaded(true)
   }, [])
 
+
+  // Disable all page interactions when mobile menu is open
+  useEffect(() => {
+    if (isMenuOpen) {
+      // Disable all page interactions except header
+      document.body.classList.add('mobile-menu-open')
+    } else {
+      document.body.classList.remove('mobile-menu-open')
+    }
+    
+    return () => {
+      document.body.classList.remove('mobile-menu-open')
+    }
+  }, [isMenuOpen])
+
   // Handle click outside to close menu
   useEffect(() => {
     function handleClickOutside(event) {
@@ -40,6 +55,7 @@ function Header() {
     }
 
     document.addEventListener("mousedown", handleClickOutside)
+    
     return () => {
       document.removeEventListener("mousedown", handleClickOutside)
     }
@@ -51,6 +67,7 @@ function Header() {
 
   const handleSellerButtonClick = (e) => {
     e.preventDefault()
+    setIsMenuOpen(false) // Close menu on mobile
     
     if (!isAuthenticated) {
       // Redirect to login with seller signup intent
@@ -114,8 +131,8 @@ function Header() {
               <div className="relative">
                 <button 
                   ref={buttonRef}
-                  onClick={toggleMenu} 
-                  className="flex items-center focus:outline-none transition-transform duration-300 p-2"
+                  onClick={toggleMenu}
+                  className="flex items-center focus:outline-none transition-transform duration-300"
                   style={{ transform: isMenuOpen ? 'rotate(45deg)' : 'rotate(0deg)' }}
                 >
                   <LayoutGrid className="h-6 w-6" />
@@ -124,11 +141,7 @@ function Header() {
                 {isMenuOpen && (
                   <div 
                     ref={menuRef}
-                    className="absolute right-0 mt-2 w-48 sm:w-48 max-w-xs bg-black rounded-md shadow-lg py-1 z-50 text-white menu-font border border-gray-700"
-                    style={{ 
-                      minWidth: '200px',
-                      maxWidth: 'calc(100vw - 2rem)'
-                    }}
+                    className="absolute right-0 mt-2 w-48 bg-black rounded-md shadow-lg py-1 z-50 text-white menu-font"
                   >
                     <a 
                       href="/home" 
@@ -143,9 +156,15 @@ function Header() {
                       Home
                     </a>
                     {!isAuthenticated && !user?.isGuest && (
-                      <a href="/login" className="block px-4 py-2 text-sm hover:font-bold">
+                      <button 
+                        onClick={() => {
+                          navigate('/login')
+                          setIsMenuOpen(false)
+                        }}
+                        className="block w-full text-left px-4 py-3 text-sm hover:font-bold active:bg-gray-800 transition-colors"
+                      >
                         Log in/ Sign up
-                      </a>
+                      </button>
                     )}
                     {isAuthenticated && (
                       <div className="block px-4 py-2 text-xs text-gray-400 border-b border-gray-700">
@@ -158,48 +177,116 @@ function Header() {
                       </div>
                     )}
                     <button 
-                      onClick={handleSellerButtonClick} 
-                      className="block w-full text-left px-4 py-2 text-sm hover:font-bold"
+                      onClick={handleSellerButtonClick}
+                      onTouchEnd={handleSellerButtonClick}
+                      className="block w-full text-left px-4 py-3 text-sm hover:font-bold active:bg-gray-800 transition-colors"
+                      style={{ touchAction: 'manipulation' }}
+                      data-menu-item="true"
                     >
                       {getSellerButtonText()}
                     </button>
+                    
                     {(isAuthenticated || user?.isGuest) && (
                       <>
-                        <a href="/orders" className="block px-4 py-2 text-sm hover:font-bold">
+                        <button 
+                          onClick={() => {
+                            navigate('/orders')
+                            setIsMenuOpen(false)
+                          }}
+                          onTouchEnd={() => {
+                            navigate('/orders')
+                            setIsMenuOpen(false)
+                          }}
+                          className="block w-full text-left px-4 py-2 text-sm hover:font-bold"
+                          style={{ touchAction: 'manipulation' }}
+                          data-menu-item="true"
+                        >
                           Orders
-                        </a>
-                        <a href="/cart" className="block px-4 py-2 text-sm hover:font-bold">
+                        </button>
+                        <button 
+                          onClick={() => {
+                            navigate('/cart')
+                            setIsMenuOpen(false)
+                          }}
+                          onTouchEnd={() => {
+                            navigate('/cart')
+                            setIsMenuOpen(false)
+                          }}
+                          className="block w-full text-left px-4 py-3 text-sm hover:font-bold active:bg-gray-800 transition-colors"
+                          style={{ touchAction: 'manipulation' }}
+                          data-menu-item="true"
+                        >
                           Cart {itemCount > 0 && `(${itemCount})`}
-                        </a>
+                        </button>
                       </>
                     )}
-                    <a href="/trending" className="block px-4 py-2 text-sm hover:font-bold">
+                    
+                    <button 
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        navigate('/trending')
+                        setIsMenuOpen(false)
+                      }}
+                      className="block w-full text-left px-4 py-3 text-sm hover:font-bold active:bg-gray-800 transition-colors"
+                    >
                       Trending
-                    </a>
-                    <a href="/offers" className="block px-4 py-2 text-sm hover:font-bold">
+                    </button>
+                    <button 
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        navigate('/offers')
+                        setIsMenuOpen(false)
+                      }}
+                      className="block w-full text-left px-4 py-3 text-sm hover:font-bold active:bg-gray-800 transition-colors"
+                    >
                       Offers
-                    </a>
-                    <a href="/blog" className="block px-4 py-2 text-sm hover:font-bold">
+                    </button>
+                    <button 
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        navigate('/blog')
+                        setIsMenuOpen(false)
+                      }}
+                      className="block w-full text-left px-4 py-3 text-sm hover:font-bold active:bg-gray-800 transition-colors"
+                    >
                       Blog
-                    </a>
+                    </button>
                     {isAuthenticated ? (
                       <button 
-                        onClick={logout} 
-                        className="block w-full text-left px-4 py-2 text-sm hover:font-bold"
+                        onClick={() => {
+                          logout()
+                          setIsMenuOpen(false)
+                        }}
+                        onTouchEnd={() => {
+                          logout()
+                          setIsMenuOpen(false)
+                        }}
+                        className="block w-full text-left px-4 py-3 text-sm hover:font-bold active:bg-gray-800 transition-colors"
+                        style={{ touchAction: 'manipulation' }}
+                        data-menu-item="true"
                       >
                         Sign Out
                       </button>
                     ) : user?.isGuest ? (
                       <button 
-                        onClick={() => navigate('/welcome')} 
-                        className="block w-full text-left px-4 py-2 text-sm hover:font-bold"
+                        onClick={() => {
+                          navigate('/welcome')
+                          setIsMenuOpen(false)
+                        }} 
+                        className="block w-full text-left px-4 py-3 text-sm hover:font-bold active:bg-gray-800 transition-colors"
                       >
                         Sign In
                       </button>
                     ) : (
-                      <a href="/signout" className="block px-4 py-2 text-sm hover:font-bold">
+                      <button 
+                        onClick={() => {
+                          logout()
+                          setIsMenuOpen(false)
+                        }}
+                        className="block w-full text-left px-4 py-3 text-sm hover:font-bold active:bg-gray-800 transition-colors"
+                      >
                         Sign Out
-                      </a>
+                      </button>
                     )}
                   </div>
                 )}
@@ -210,7 +297,7 @@ function Header() {
           <div className="w-full">
             <Suspense fallback={
               <div className="w-full">
-                <div className="animate-pulse bg-gray-700 h-10 rounded-full"></div>
+                <div className="animate-pulse bg-gray-300 h-10 rounded-full"></div>
               </div>
             }>
               <SearchBar />
@@ -229,7 +316,7 @@ function Header() {
           <div className="w-xl flex justify-center">
             <Suspense fallback={
               <div className="w-full max-w-2xl">
-                <div className="animate-pulse bg-gray-700 h-12 rounded-full"></div>
+                <div className="animate-pulse bg-gray-300 h-12 rounded-full"></div>
               </div>
             }>
               <SearchBar />
@@ -241,9 +328,12 @@ function Header() {
             ) : user?.isGuest ? (
               <span className="text-sm">Hello, Guest</span>
             ) : (
-              <a href="/login" className="text-sm hover:underline">
+              <button 
+                onClick={() => navigate('/login')}
+                className="text-sm hover:underline"
+              >
                 Log in/ Sign up
-              </a>
+              </button>
             )}
             <button 
               onClick={handleSellerButtonClick} 
@@ -288,23 +378,53 @@ function Header() {
                   </a>
                   {(isAuthenticated || user?.isGuest) && (
                     <>
-                      <a href="/orders" className="block px-4 py-2 text-sm hover:font-bold">
+                      <button 
+                        onClick={() => {
+                          navigate('/orders')
+                          setIsMenuOpen(false)
+                        }}
+                        className="block w-full text-left px-4 py-2 text-sm hover:font-bold"
+                      >
                         Orders
-                      </a>
-                      <a href="/cart" className="block px-4 py-2 text-sm hover:font-bold">
+                      </button>
+                      <button 
+                        onClick={() => {
+                          navigate('/cart')
+                          setIsMenuOpen(false)
+                        }}
+                        className="block w-full text-left px-4 py-2 text-sm hover:font-bold"
+                      >
                         Cart {itemCount > 0 && `(${itemCount})`}
-                      </a>
+                      </button>
                     </>
                   )}
-                  <a href="/trending" className="block px-4 py-2 text-sm hover:font-bold">
+                  <button 
+                    onClick={() => {
+                      navigate('/trending')
+                      setIsMenuOpen(false)
+                    }}
+                    className="block w-full text-left px-4 py-2 text-sm hover:font-bold"
+                  >
                     Trending
-                  </a>
-                  <a href="/offers" className="block px-4 py-2 text-sm hover:font-bold">
+                  </button>
+                  <button 
+                    onClick={() => {
+                      navigate('/offers')
+                      setIsMenuOpen(false)
+                    }}
+                    className="block w-full text-left px-4 py-2 text-sm hover:font-bold"
+                  >
                     Offers
-                  </a>
-                  <a href="/blog" className="block px-4 py-2 text-sm hover:font-bold">
+                  </button>
+                  <button 
+                    onClick={() => {
+                      navigate('/blog')
+                      setIsMenuOpen(false)
+                    }}
+                    className="block w-full text-left px-4 py-2 text-sm hover:font-bold"
+                  >
                     Blog
-                  </a>
+                  </button>
                   {isAuthenticated ? (
                     <button 
                       onClick={logout} 
@@ -320,9 +440,15 @@ function Header() {
                       Sign In
                     </button>
                   ) : (
-                    <a href="/signout" className="block px-4 py-2 text-sm hover:font-bold">
+                    <button 
+                      onClick={() => {
+                        logout()
+                        setIsMenuOpen(false)
+                      }}
+                      className="block w-full text-left px-4 py-2 text-sm hover:font-bold"
+                    >
                       Sign Out
-                    </a>
+                    </button>
                   )}
                 </div>
               )}

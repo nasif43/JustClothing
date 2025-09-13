@@ -1,0 +1,25 @@
+/* Mobile menu pointer-events solution */
+body.mobile-menu-open * {
+  pointer-events: none !important;
+  touch-action: none !important;
+  user-select: none !important;
+  -webkit-user-select: none !important;
+  -webkit-touch-callout: none !important;
+}
+
+body.mobile-menu-open header,
+body.mobile-menu-open header * {
+  pointer-events: auto !important;
+  touch-action: manipulation !important;
+}
+
+/* Additional safety - disable all interactions on main content areas */
+body.mobile-menu-open main,
+body.mobile-menu-open main *,
+body.mobile-menu-open .category-pills,
+body.mobile-menu-open .category-pills *,
+body.mobile-menu-open .product-grid,
+body.mobile-menu-open .product-grid * {
+  pointer-events: none !important;
+  touch-action: none !important;
+}
