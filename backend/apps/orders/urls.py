@@ -1,10 +1,14 @@
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
 from . import views
+from . import debug_views
 
 router = DefaultRouter()
 
 urlpatterns = [
+    # Debug endpoints - remove in production
+    path('debug/cart-info/', debug_views.debug_cart_info, name='debug_cart_info'),
+    
     # Cart endpoints
     path('cart/', views.CartView.as_view(), name='cart'),
     path('cart/add/', views.AddToCartView.as_view(), name='add_to_cart'),
