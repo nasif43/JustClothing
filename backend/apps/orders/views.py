@@ -184,35 +184,45 @@ class CreateOrderView(APIView):
     def post(self, request):
         serializer = CreateOrderSerializer(data=request.data, context={'request': request})
         if serializer.is_valid():
-            # Get the user's cart
-            cart = Cart.objects.filter(user=request.user).first()
-            if not cart:
-                return Response({"error": "Cart is empty"}, status=400)
-                
+            # Get user's cart
+            try:
+                cart = Cart.objects.get(user=request.user)
+                if not cart.items.exists():
+                    return Response(
+                        {'error': 'Cart is empty'},
+                        status=status.HTTP_400_BAD_REQUEST
+                    )
+            except Cart.DoesNotExist:
+                return Response(
+                    {'error': 'Cart not found'},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+            
             # Get only the selected items from request data
             selected_items = request.data.get('selected_items', [])
-            print(f"DEBUG - Selected items: {selected_items}")
             if not selected_items:
-                return Response({"error": "No items selected"}, status=400)
-                
-            # Calculate total amount for selected items
-            total_amount = 0
-            filtered_cart_items = []
+                return Response(
+                    {'error': 'No items selected'},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
             
             # Filter cart items based on selected items
-            for item_data in selected_items:
-                cart_item = CartItem.objects.filter(
-                    cart=cart,
-                    product_id=item_data['item_id'],
-                    size=item_data['size'],
-                    color=item_data['color']
+            filtered_cart_items = []
+            for selected_item in selected_items:
+                item_id = selected_item.get('item_id')
+                size = selected_item.get('size', '')
+                color = selected_item.get('color', '')
+                
+                cart_item = cart.items.filter(
+                    product_id=item_id,
+                    size=size,
+                    color=color
                 ).first()
                 
                 if cart_item:
                     filtered_cart_items.append(cart_item)
-                    total_amount += cart_item.total_price
             
-            # Group selected cart items by seller
+            # Group cart items by seller
             seller_items = {}
             for item in filtered_cart_items:
                 seller = item.product.seller
@@ -220,11 +230,11 @@ class CreateOrderView(APIView):
                     seller_items[seller] = []
                 seller_items[seller].append(item)
             
-            # Process each seller's items as a separate order
+            # Create separate orders for each seller
             orders = []
             for seller, items in seller_items.items():
                 # Calculate total amount for this seller's items
-                seller_total = sum(item.total_price for item in items)
+                total_amount = sum(item.total_price for item in items)
                 
                 # Create order for this seller
                 order = Order.objects.create(
@@ -235,24 +245,21 @@ class CreateOrderView(APIView):
                     customer_phone=serializer.validated_data.get('customer_phone', ''),
                     customer_address=serializer.validated_data.get('customer_address', ''),
                     payment_method=serializer.validated_data['payment_method'],
-                    total_amount=seller_total,
-                    bill=seller_total,
-                    status='pending'
+                    total_amount=total_amount,
                 )
-            
-                # Create order items for this seller's order
+                
+                # Create order items
                 for cart_item in items:
                     OrderItem.objects.create(
                         order=order,
                         product=cart_item.product,
-                        quantity=cart_item.quantity,
                         title=cart_item.product.name,
                         photo=cart_item.product.images.filter(is_primary=True).first().image if cart_item.product.images.filter(is_primary=True).exists() else None,
-                        unit_price=cart_item.product.price,
-                        price=cart_item.product.price,
-                        total_price=cart_item.total_price,
                         size=cart_item.size,
-                        color=cart_item.color
+                        color=cart_item.color,
+                        quantity=cart_item.quantity,
+                        unit_price=cart_item.product.price,
+                        total_price=cart_item.total_price,
                     )
                     
                     # Update product stock
@@ -273,7 +280,7 @@ class CreateOrderView(APIView):
                 
                 orders.append(order)
             
-            # Clear only the ordered items from cart
+            # Remove ordered items from the cart
             for cart_item in filtered_cart_items:
                 cart_item.delete()
             
@@ -288,8 +295,6 @@ class CreateOrderView(APIView):
             )
         
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-
 class CreateQuickOrderView(APIView):
     """Create order for single product (from product detail page)"""
     permission_classes = [permissions.IsAuthenticated]
