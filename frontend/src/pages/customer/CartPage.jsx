@@ -97,7 +97,18 @@ function CartPage() {
       const orderData = {
         payment_method: paymentMethod === "cash" ? "cod" : "card",
         customer_phone: shippingData.phone,
-        customer_address: shippingData.address
+        customer_address: shippingData.address,
+        // Add selected items info
+        selected_items: Object.entries(selectedItems)
+          .filter(([_, isSelected]) => isSelected)
+          .map(([key]) => {
+            const [itemId, selectedSize, selectedColor] = key.split('-');
+            return {
+              item_id: parseInt(itemId),
+              size: selectedSize,
+              color: selectedColor
+            };
+          })
       }
 
       // Create order via API
@@ -241,4 +252,4 @@ function CartPage() {
   )
 }
 
-export default CartPage 
+export default CartPage
