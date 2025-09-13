@@ -118,11 +118,14 @@ function CartPage() {
       setIsAlertOpen(true)
       setIsShippingModalOpen(false)
       
-      // Clear the entire cart after successful order creation
+      // Don't clear the entire cart, as the backend only removes ordered items
       setTimeout(async () => {
         try {
-          await clearCart() // Clear the entire cart
+          // Only clear selected items from local state
           setSelectedItems({})
+          
+          // Refresh cart to sync with backend state
+          await refreshCart()
           
           // Handle response - it's an array of orders
           const orders = Array.isArray(response) ? response : [response]
