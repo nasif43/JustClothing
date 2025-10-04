@@ -159,8 +159,14 @@ class OrderListView(APIView):
     
     def get(self, request):
         try:
+            print(f"DEBUG: Fetching orders for user: {request.user}")
             orders = Order.objects.filter(user=request.user).prefetch_related('items').order_by('-created_at')
+            print(f"DEBUG: Found {orders.count()} orders in database")
+            for order in orders:
+                print(f"DEBUG: Order {order.id} - Status: {order.status}, Items: {order.items.count()}, Bill: {order.bill}")
+            
             serializer = OrderSerializer(orders, many=True, context={'request': request})
+            print(f"DEBUG: Serialized {len(serializer.data)} orders")
             return Response(serializer.data)
         except Exception as e:
             print(f"Error fetching orders: {str(e)}")
@@ -189,6 +195,9 @@ class CreateOrderView(APIView):
     
     @transaction.atomic
     def post(self, request):
+        print(f"DEBUG: Full request data: {request.data}")
+        print(f"DEBUG: Request user: {request.user}")
+        
         serializer = CreateOrderSerializer(data=request.data, context={'request': request})
         if serializer.is_valid():
             # Get user's cart
@@ -214,6 +223,11 @@ class CreateOrderView(APIView):
                     status=status.HTTP_400_BAD_REQUEST
                 )
             
+            # Debug: Print all cart items
+            print(f"DEBUG: Cart has {cart.items.count()} items")
+            for cart_item in cart.items.all():
+                print(f"DEBUG: Cart item - Product ID: {cart_item.product.id}, Size: '{cart_item.size}', Color: '{cart_item.color}'")
+            
             # Filter cart items based on selected items
             filtered_cart_items = []
             for selected_item in selected_items:
@@ -221,11 +235,15 @@ class CreateOrderView(APIView):
                 size = selected_item.get('size', '')
                 color = selected_item.get('color', '')
                 
+                print(f"DEBUG: Looking for - Product ID: {item_id}, Size: '{size}', Color: '{color}'")
+                
                 cart_item = cart.items.filter(
                     product__id=item_id,
                     size=size,
                     color=color
                 ).first()
+                
+                print(f"DEBUG: Cart item found: {cart_item}")
                 
                 if cart_item:
                     filtered_cart_items.append(cart_item)
@@ -251,6 +269,8 @@ class CreateOrderView(APIView):
                 # Calculate total amount for this seller's items
                 total_amount = sum(item.total_price for item in items)
                 
+                print(f"DEBUG: Creating order for seller {seller} with amount {total_amount}")
+                
                 # Create order for this seller
                 order = Order.objects.create(
                     user=request.user,
@@ -263,6 +283,8 @@ class CreateOrderView(APIView):
                     total_amount=total_amount,
                     bill=total_amount,
                 )
+                
+                print(f"DEBUG: Created order with ID: {order.id}")
                 
                 # Create order items
                 for cart_item in items:
