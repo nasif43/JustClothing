@@ -41,7 +41,7 @@ class CartItemSerializer(serializers.ModelSerializer):
     def get_product_image(self, obj):
         """Get product primary image"""
         image = obj.product.images.filter(is_primary=True).first()
-        if image and hasattr(image, 'image'):
+        if image and hasattr(image, 'image') and image.image:
             request = self.context.get('request')
             if request:
                 return request.build_absolute_uri(image.image.url)
@@ -126,7 +126,7 @@ class OrderItemSerializer(serializers.ModelSerializer):
     def get_product_image(self, obj):
         """Get product primary image"""
         image = obj.product.images.filter(is_primary=True).first()
-        if image and hasattr(image, 'image'):
+        if image and hasattr(image, 'image') and image.image:
             request = self.context.get('request')
             if request:
                 return request.build_absolute_uri(image.image.url)

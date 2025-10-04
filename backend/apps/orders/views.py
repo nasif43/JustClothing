@@ -195,11 +195,12 @@ class CreateOrderView(APIView):
     
     @transaction.atomic
     def post(self, request):
-        print(f"DEBUG: Full request data: {request.data}")
-        print(f"DEBUG: Request user: {request.user}")
-        
-        serializer = CreateOrderSerializer(data=request.data, context={'request': request})
-        if serializer.is_valid():
+        try:
+            print(f"DEBUG: Full request data: {request.data}")
+            print(f"DEBUG: Request user: {request.user}")
+            
+            serializer = CreateOrderSerializer(data=request.data, context={'request': request})
+            if serializer.is_valid():
             # Get user's cart
             try:
                 cart = Cart.objects.get(user=request.user)
@@ -288,11 +289,15 @@ class CreateOrderView(APIView):
                 
                 # Create order items
                 for cart_item in items:
+                    # Safely get primary image
+                    primary_image = cart_item.product.images.filter(is_primary=True).first()
+                    photo = primary_image.image if primary_image else None
+                    
                     OrderItem.objects.create(
                         order=order,
                         product=cart_item.product,
                         title=cart_item.product.name,
-                        photo=cart_item.product.images.filter(is_primary=True).first().image if cart_item.product.images.filter(is_primary=True).exists() else None,
+                        photo=photo,
                         size=cart_item.size,
                         color=cart_item.color,
                         quantity=cart_item.quantity,
@@ -359,7 +364,16 @@ class CreateOrderView(APIView):
                 status=status.HTTP_201_CREATED
             )
         
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        
+        except Exception as e:
+            print(f"ERROR: Order creation failed: {str(e)}")
+            import traceback
+            traceback.print_exc()
+            return Response(
+                {'error': f'Order creation failed: {str(e)}'},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
 class CreateQuickOrderView(APIView):
     """Create order for single product (from product detail page)"""
     permission_classes = [permissions.IsAuthenticated]
