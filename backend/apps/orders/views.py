@@ -222,7 +222,7 @@ class CreateOrderView(APIView):
                 color = selected_item.get('color', '')
                 
                 cart_item = cart.items.filter(
-                    product_id=item_id,
+                    product__id=item_id,
                     size=size,
                     color=color
                 ).first()
@@ -321,7 +321,7 @@ class CreateOrderView(APIView):
                 
                 try:
                     cart_item = cart.items.filter(
-                        product_id=item_id,
+                        product__id=item_id,
                         size=size,
                         color=color
                     ).first()
