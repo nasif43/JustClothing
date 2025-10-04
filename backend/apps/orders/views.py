@@ -201,168 +201,168 @@ class CreateOrderView(APIView):
             
             serializer = CreateOrderSerializer(data=request.data, context={'request': request})
             if serializer.is_valid():
-            # Get user's cart
-            try:
-                cart = Cart.objects.get(user=request.user)
-                if not cart.items.exists():
+                # Get user's cart
+                try:
+                    cart = Cart.objects.get(user=request.user)
+                    if not cart.items.exists():
+                        return Response(
+                            {'error': 'Cart is empty'},
+                            status=status.HTTP_400_BAD_REQUEST
+                        )
+                except Cart.DoesNotExist:
                     return Response(
-                        {'error': 'Cart is empty'},
+                        {'error': 'Cart not found'},
                         status=status.HTTP_400_BAD_REQUEST
                     )
-            except Cart.DoesNotExist:
-                return Response(
-                    {'error': 'Cart not found'},
-                    status=status.HTTP_400_BAD_REQUEST
-                )
-            
-            # Get only the selected items from request data
-            selected_items = request.data.get('selected_items', [])
-            print(f"DEBUG: Received selected_items: {selected_items}")
-            if not selected_items:
-                return Response(
-                    {'error': 'No items selected'},
-                    status=status.HTTP_400_BAD_REQUEST
-                )
-            
-            # Debug: Print all cart items
-            print(f"DEBUG: Cart has {cart.items.count()} items")
-            for cart_item in cart.items.all():
-                print(f"DEBUG: Cart item - Product ID: {cart_item.product.id}, Size: '{cart_item.size}', Color: '{cart_item.color}'")
-            
-            # Filter cart items based on selected items
-            filtered_cart_items = []
-            for selected_item in selected_items:
-                item_id = selected_item.get('item_id')
-                size = selected_item.get('size', '')
-                color = selected_item.get('color', '')
                 
-                print(f"DEBUG: Looking for - Product ID: {item_id}, Size: '{size}', Color: '{color}'")
-                
-                cart_item = cart.items.filter(
-                    product__id=item_id,
-                    size=size,
-                    color=color
-                ).first()
-                
-                print(f"DEBUG: Cart item found: {cart_item}")
-                
-                if cart_item:
-                    filtered_cart_items.append(cart_item)
-            
-            # Debug: Check filtered cart items
-            print(f"DEBUG: Found {len(filtered_cart_items)} filtered cart items")
-            for item in filtered_cart_items:
-                print(f"DEBUG: Cart item {item.id} - Product: {item.product.name}, Seller: {item.product.seller}")
-            
-            # Group cart items by seller
-            seller_items = {}
-            for item in filtered_cart_items:
-                seller = item.product.seller
-                if seller not in seller_items:
-                    seller_items[seller] = []
-                seller_items[seller].append(item)
-            
-            print(f"DEBUG: Grouped items into {len(seller_items)} seller groups")
-            
-            # Create separate orders for each seller
-            orders = []
-            for seller, items in seller_items.items():
-                # Calculate total amount for this seller's items
-                total_amount = sum(item.total_price for item in items)
-                
-                print(f"DEBUG: Creating order for seller {seller} with amount {total_amount}")
-                
-                # Create order for this seller
-                order = Order.objects.create(
-                    user=request.user,
-                    seller=seller,
-                    customer_name=request.user.get_full_name() or request.user.email,
-                    customer_email=request.user.email,
-                    customer_phone=serializer.validated_data.get('customer_phone', ''),
-                    customer_address=serializer.validated_data.get('customer_address', ''),
-                    payment_method=serializer.validated_data['payment_method'],
-                    total_amount=total_amount,
-                    bill=total_amount,
-                )
-                
-                print(f"DEBUG: Created order with ID: {order.id}")
-                
-                # Create order items
-                for cart_item in items:
-                    # Safely get primary image
-                    primary_image = cart_item.product.images.filter(is_primary=True).first()
-                    photo = primary_image.image if primary_image else None
-                    
-                    OrderItem.objects.create(
-                        order=order,
-                        product=cart_item.product,
-                        title=cart_item.product.name,
-                        photo=photo,
-                        size=cart_item.size,
-                        color=cart_item.color,
-                        quantity=cart_item.quantity,
-                        unit_price=cart_item.product.price,
-                        total_price=cart_item.total_price,
+                # Get only the selected items from request data
+                selected_items = request.data.get('selected_items', [])
+                print(f"DEBUG: Received selected_items: {selected_items}")
+                if not selected_items:
+                    return Response(
+                        {'error': 'No items selected'},
+                        status=status.HTTP_400_BAD_REQUEST
                     )
+                
+                # Debug: Print all cart items
+                print(f"DEBUG: Cart has {cart.items.count()} items")
+                for cart_item in cart.items.all():
+                    print(f"DEBUG: Cart item - Product ID: {cart_item.product.id}, Size: '{cart_item.size}', Color: '{cart_item.color}'")
+                
+                # Filter cart items based on selected items
+                filtered_cart_items = []
+                for selected_item in selected_items:
+                    item_id = selected_item.get('item_id')
+                    size = selected_item.get('size', '')
+                    color = selected_item.get('color', '')
                     
-                    # Update product stock
-                    product = cart_item.product
-                    if product.track_inventory:
-                        product.stock_quantity = F('stock_quantity') - cart_item.quantity
-                        product.save()
-                
-                # Create order status history
-                OrderStatusHistory.objects.create(
-                    order=order,
-                    new_status='pending',
-                    changed_by=request.user,
-                )
-                
-                # Notify seller about new order
-                notify_sellers_about_new_order(order)
-                
-                orders.append(order)
-            
-            # Don't delete cart items here - we'll handle it after order creation
-            # This is important to prevent the entire cart from being cleared
-            
-            # Notify customer about orders
-            for order in orders:
-                notify_customer_about_order(order)
-            
-            # Debug logging
-            print(f"DEBUG: Created {len(orders)} orders")
-            for order in orders:
-                print(f"DEBUG: Order {order.id} - Status: {order.status}, Items: {order.items.count()}")
-            
-            # Serialize the orders
-            serialized_data = OrderSerializer(orders, many=True, context={'request': request}).data
-            print(f"DEBUG: Serialized data length: {len(serialized_data)}")
-            print(f"DEBUG: Serialized data: {serialized_data}")
-            
-            # Remove cart items for the ordered items
-            for selected_item in selected_items:
-                item_id = selected_item.get('item_id')
-                size = selected_item.get('size', '')
-                color = selected_item.get('color', '')
-                
-                try:
+                    print(f"DEBUG: Looking for - Product ID: {item_id}, Size: '{size}', Color: '{color}'")
+                    
                     cart_item = cart.items.filter(
                         product__id=item_id,
                         size=size,
                         color=color
                     ).first()
+                    
+                    print(f"DEBUG: Cart item found: {cart_item}")
+                    
                     if cart_item:
-                        cart_item.delete()
-                        print(f"DEBUG: Deleted cart item {cart_item.id} for product {item_id}")
-                except Exception as e:
-                    print(f"DEBUG: Error deleting cart item: {e}")
-            
-            # Return all created orders
-            return Response(
-                serialized_data,
-                status=status.HTTP_201_CREATED
-            )
+                        filtered_cart_items.append(cart_item)
+                
+                # Debug: Check filtered cart items
+                print(f"DEBUG: Found {len(filtered_cart_items)} filtered cart items")
+                for item in filtered_cart_items:
+                    print(f"DEBUG: Cart item {item.id} - Product: {item.product.name}, Seller: {item.product.seller}")
+                
+                # Group cart items by seller
+                seller_items = {}
+                for item in filtered_cart_items:
+                    seller = item.product.seller
+                    if seller not in seller_items:
+                        seller_items[seller] = []
+                    seller_items[seller].append(item)
+                
+                print(f"DEBUG: Grouped items into {len(seller_items)} seller groups")
+                
+                # Create separate orders for each seller
+                orders = []
+                for seller, items in seller_items.items():
+                    # Calculate total amount for this seller's items
+                    total_amount = sum(item.total_price for item in items)
+                    
+                    print(f"DEBUG: Creating order for seller {seller} with amount {total_amount}")
+                    
+                    # Create order for this seller
+                    order = Order.objects.create(
+                        user=request.user,
+                        seller=seller,
+                        customer_name=request.user.get_full_name() or request.user.email,
+                        customer_email=request.user.email,
+                        customer_phone=serializer.validated_data.get('customer_phone', ''),
+                        customer_address=serializer.validated_data.get('customer_address', ''),
+                        payment_method=serializer.validated_data['payment_method'],
+                        total_amount=total_amount,
+                        bill=total_amount,
+                    )
+                    
+                    print(f"DEBUG: Created order with ID: {order.id}")
+                    
+                    # Create order items
+                    for cart_item in items:
+                        # Safely get primary image
+                        primary_image = cart_item.product.images.filter(is_primary=True).first()
+                        photo = primary_image.image if primary_image else None
+                        
+                        OrderItem.objects.create(
+                            order=order,
+                            product=cart_item.product,
+                            title=cart_item.product.name,
+                            photo=photo,
+                            size=cart_item.size,
+                            color=cart_item.color,
+                            quantity=cart_item.quantity,
+                            unit_price=cart_item.product.price,
+                            total_price=cart_item.total_price,
+                        )
+                        
+                        # Update product stock
+                        product = cart_item.product
+                        if product.track_inventory:
+                            product.stock_quantity = F('stock_quantity') - cart_item.quantity
+                            product.save()
+                    
+                    # Create order status history
+                    OrderStatusHistory.objects.create(
+                        order=order,
+                        new_status='pending',
+                        changed_by=request.user,
+                    )
+                    
+                    # Notify seller about new order
+                    notify_sellers_about_new_order(order)
+                    
+                    orders.append(order)
+                
+                # Don't delete cart items here - we'll handle it after order creation
+                # This is important to prevent the entire cart from being cleared
+                
+                # Notify customer about orders
+                for order in orders:
+                    notify_customer_about_order(order)
+                
+                # Debug logging
+                print(f"DEBUG: Created {len(orders)} orders")
+                for order in orders:
+                    print(f"DEBUG: Order {order.id} - Status: {order.status}, Items: {order.items.count()}")
+                
+                # Serialize the orders
+                serialized_data = OrderSerializer(orders, many=True, context={'request': request}).data
+                print(f"DEBUG: Serialized data length: {len(serialized_data)}")
+                print(f"DEBUG: Serialized data: {serialized_data}")
+                
+                # Remove cart items for the ordered items
+                for selected_item in selected_items:
+                    item_id = selected_item.get('item_id')
+                    size = selected_item.get('size', '')
+                    color = selected_item.get('color', '')
+                    
+                    try:
+                        cart_item = cart.items.filter(
+                            product__id=item_id,
+                            size=size,
+                            color=color
+                        ).first()
+                        if cart_item:
+                            cart_item.delete()
+                            print(f"DEBUG: Deleted cart item {cart_item.id} for product {item_id}")
+                    except Exception as e:
+                        print(f"DEBUG: Error deleting cart item: {e}")
+                
+                # Return all created orders
+                return Response(
+                    serialized_data,
+                    status=status.HTTP_201_CREATED
+                )
         
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
         
