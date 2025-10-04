@@ -183,11 +183,6 @@ const SellerOffersPage = () => {
   }
 
   const handleCreateOffer = async () => {
-    if (!offerName.trim()) {
-      alert('Please enter an offer name')
-      return
-    }
-    
     if (selectedProducts.length === 0) {
       alert('Please select at least one product')
       return
@@ -290,7 +285,7 @@ const SellerOffersPage = () => {
                 <div className="space-y-4">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Offer Name *
+                      Offer Name (Optional)
                     </label>
                     <input
                       type="text"

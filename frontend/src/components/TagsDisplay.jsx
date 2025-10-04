@@ -9,6 +9,14 @@ function TagsDisplay() {
   const [showMoreTags, setShowMoreTags] = useState(false)
   const { fetchProductsByTags, clearTagFilter, currentTags } = useProductStore()
 
+  const formatTagName = (tag) => {
+    // Convert snake_case to Title Case
+    return tag.replace(/_/g, ' ')
+             .split(' ')
+             .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+             .join(' ')
+  }
+
   useEffect(() => {
     const loadTags = async () => {
       try {
@@ -193,7 +201,7 @@ function TagsDisplay() {
                     : 'bg-white text-gray-700 border border-gray-300 hover:underline-offset-1'
                 }`}
               >
-                {tag.name}
+                {formatTagName(tag.name)}
                 {tag.usage_count > 0 && (
                   <span className="ml-1 text-xs opacity-70">
                     ({tag.usage_count})

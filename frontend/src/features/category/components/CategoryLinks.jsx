@@ -4,6 +4,14 @@ import useUserStore from "../../../store/useUserStore"
 function CategoryLinks() {
   const { fetchProductsByTags, clearTagFilter, currentTags } = useProductStore()
   const { user } = useUserStore()
+
+  const formatTagName = (tag) => {
+    // Convert snake_case to Title Case
+    return tag.replace(/_/g, ' ')
+             .split(' ')
+             .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+             .join(' ')
+  }
   
   // Default tags if user hasn't completed onboarding
   const defaultTags = [
@@ -28,7 +36,7 @@ function CategoryLinks() {
       // Convert user's preferred tags to display format
       return user.preferred_tags.map((prefTag, index) => ({
         id: index + 1,
-        name: preferenceToDisplayMap[prefTag] || prefTag
+        name: preferenceToDisplayMap[prefTag] || formatTagName(prefTag)
       }))
     }
     return defaultTags

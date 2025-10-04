@@ -23,15 +23,15 @@ function ProductCard({ product, showStoreInfo = true }) {
 
   return (
     <div className="group">
-      <div className="bg-white rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-shadow">
-        <Link to={`/product/${product.id}`} className="block">
+      <div className="bg-white rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-shadow h-full flex flex-col">
+        <Link to={`/product/${product.id}`} className="block flex-1">
           <LazyImage
             src={product.image}
             alt={product.name}
             className="aspect-square"
             fallback="/placeholder-image.jpg" // Add a placeholder image in public folder
           />
-          <div className="p-3 text-center">
+          <div className="p-4 text-center">
             <h3 className="text-sm font-medium uppercase">{product.name}</h3>
             <p className="text-xs text-gray-500">
               {product.tags}
@@ -39,7 +39,7 @@ function ProductCard({ product, showStoreInfo = true }) {
           </div>
         </Link>
         
-        <div className="px-3 pb-3">
+        <div className="px-4 pb-4 mt-auto">
           {showStoreInfo && store ? (
             <div className="flex justify-between items-center">
               <div className="flex flex-col">
@@ -50,18 +50,20 @@ function ProductCard({ product, showStoreInfo = true }) {
                 ) : (
                   <p className="text-xs text-gray-500">{store.name}</p>
                 )}
-                {store.rating > 0 && (
+                {store.rating > 0 ? (
                   <StarRating 
                     rating={store.rating} 
                     size="small" 
                     showValue={true}
                     className="mt-1"
                   />
+                ) : (
+                  <span className="text-xs text-gray-400 mt-1">No ratings yet</span>
                 )}
               </div>
-              <div>
+              <div className="text-right">
                 {product.has_active_offer ? (
-                  <div className="text-right">
+                  <div className="h-12 flex flex-col justify-center">
                     <div className="flex items-center justify-end space-x-2">
                       <span className="text-gray-500 line-through text-sm">৳{product.original_price}</span>
                       <span className="text-xl font-medium text-black">৳{product.discounted_price}</span>
@@ -71,14 +73,16 @@ function ProductCard({ product, showStoreInfo = true }) {
                     </div>
                   </div>
                 ) : (
-                  <p className="text-xl font-medium">৳{product.price}</p>
+                  <div className="h-12 flex items-center justify-end">
+                    <p className="text-xl font-medium">৳{product.price}</p>
+                  </div>
                 )}
               </div>
             </div>
           ) : (
-            <div className="text-center mt-1 mb-2">
+            <div className="text-center">
               {product.has_active_offer ? (
-                <div className="space-y-1">
+                <div className="h-12 flex flex-col justify-center space-y-1">
                   <div className="flex items-center justify-center space-x-2">
                     <span className="text-gray-500 line-through text-sm">৳{product.original_price}</span>
                     <span className="text-xl font-medium text-black">৳{product.discounted_price}</span>
@@ -88,7 +92,9 @@ function ProductCard({ product, showStoreInfo = true }) {
                   </div>
                 </div>
               ) : (
-                <p className="text-xl font-medium">৳{product.price}</p>
+                <div className="h-12 flex items-center justify-center">
+                  <p className="text-xl font-medium">৳{product.price}</p>
+                </div>
               )}
             </div>
           )}

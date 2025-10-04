@@ -17,6 +17,14 @@ function Homepage() {
         }
     }
 
+    const formatTagName = (tag) => {
+        // Convert snake_case to Title Case
+        return tag.replace(/_/g, ' ')
+                 .split(' ')
+                 .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+                 .join(' ')
+    }
+
     return(
         <div className="mt-6 sm:mt-10 px-4 sm:px-0">
             <div className="flex justify-center gap-4 mb-8 sm:mb-12">
@@ -38,7 +46,7 @@ function Homepage() {
                                     <div className="flex flex-wrap gap-1">
                                         {currentTags.map((tag, index) => (
                                             <span key={index} className="text-xs sm:text-sm font-medium bg-gray-100 px-2 py-1 rounded-full border">
-                                                {tag}
+                                                {formatTagName(tag)}
                                             </span>
                                         ))}
                                     </div>

@@ -476,19 +476,25 @@ function ProductDetailPage() {
 
             <div className="flex items-center gap-2">
               <span className="font-medium text-sm">RATING</span>
-              <span className="font-medium">{store.rating}</span>
-              <div className="flex">
-                {Array(5)
-                  .fill(0)
-                  .map((_, i) => (
-                    <Star
-                      key={i}
-                      className={`h-4 w-4 ${
-                        i < Math.floor(store.rating) ? "text-black fill-black" : "text-gray-300"
-                      }`}
-                    />
-                  ))}
-              </div>
+              {store.rating > 0 ? (
+                <>
+                  <span className="font-medium">{store.rating}</span>
+                  <div className="flex">
+                    {Array(5)
+                      .fill(0)
+                      .map((_, i) => (
+                        <Star
+                          key={i}
+                          className={`h-4 w-4 ${
+                            i < Math.floor(store.rating) ? "text-black fill-black" : "text-gray-300"
+                          }`}
+                        />
+                      ))}
+                  </div>
+                </>
+              ) : (
+                <span className="text-gray-500 text-sm">No ratings yet</span>
+              )}
             </div>
           </div>
         </div>
@@ -734,19 +740,25 @@ function ProductDetailPage() {
 
               <div className="flex items-center gap-2">
                 <span className="font-medium">RATING</span>
-                <span className="font-medium">{store.rating}</span>
-                <div className="flex">
-                  {Array(5)
-                    .fill(0)
-                    .map((_, i) => (
-                      <Star
-                        key={i}
-                        className={`h-5 w-5 ${
-                          i < Math.floor(store.rating) ? "text-black fill-black" : "text-gray-300"
-                        }`}
-                      />
-                    ))}
-                </div>
+                {store.rating > 0 ? (
+                  <>
+                    <span className="font-medium">{store.rating}</span>
+                    <div className="flex">
+                      {Array(5)
+                        .fill(0)
+                        .map((_, i) => (
+                          <Star
+                            key={i}
+                            className={`h-5 w-5 ${
+                              i < Math.floor(store.rating) ? "text-black fill-black" : "text-gray-300"
+                            }`}
+                          />
+                        ))}
+                    </div>
+                  </>
+                ) : (
+                  <span className="text-gray-500">No ratings yet</span>
+                )}
               </div>
             </div>
           </div>

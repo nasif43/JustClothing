@@ -15,16 +15,20 @@ function CheckoutPaymentMethod({ paymentMethod, setPaymentMethod }) {
           <span>Cash on Delivery</span>
         </label>
         
-        <label className="flex items-center space-x-2 cursor-pointer">
+        <label className="flex items-center space-x-2 cursor-not-allowed opacity-50">
           <input
             type="radio"
             name="payment"
             value="mobile"
             checked={paymentMethod === "mobile"}
             onChange={() => setPaymentMethod("mobile")}
-            className="w-4 h-4 accent-black cursor-pointer"
+            className="w-4 h-4 accent-gray-400 cursor-not-allowed"
+            disabled
           />
-          <span>Mobile Payment (Card/Bkash/Nagad)</span>
+          <div className="flex flex-col">
+            <span className="text-gray-500">Mobile Payment (Card/Bkash/Nagad)</span>
+            <span className="text-xs text-gray-400">Coming Soon</span>
+          </div>
         </label>
       </div>
     </div>

@@ -121,7 +121,7 @@ function SellerHeader() {
                   <button 
                     onClick={() => {
                       logout();
-                      navigate('/');
+                      navigate('/welcome');
                       setIsMenuOpen(false)
                     }} 
                     className="block w-full text-left px-4 py-2 text-sm hover:font-bold"
@@ -225,7 +225,7 @@ function SellerHeader() {
                   <button 
                     onClick={() => {
                       logout();
-                      navigate('/');
+                      navigate('/welcome');
                       setIsMenuOpen(false)
                     }} 
                     className="block w-full text-left px-4 py-2 text-sm hover:font-bold"

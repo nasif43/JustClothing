@@ -66,11 +66,23 @@ function StoreReviews({ storeId }) {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
         {/* Average rating */}
         <div className="flex flex-col items-center justify-center">
-          <div className="flex items-center mb-1">
-          <div className="text-9xl font-bold">{averageRating}</div>
-            <Star className="h-20 w-20 text-black border-black" />
-          </div>
-          <div className="text-gray-500 text-sm">BASED ON {totalReviews} REVIEWS</div>
+          {totalReviews > 0 ? (
+            <>
+              <div className="flex items-center mb-1">
+                <div className="text-9xl font-bold">{averageRating}</div>
+                <Star className="h-20 w-20 text-black border-black" />
+              </div>
+              <div className="text-gray-500 text-sm">BASED ON {totalReviews} REVIEWS</div>
+            </>
+          ) : (
+            <>
+              <div className="flex items-center mb-1">
+                <div className="text-6xl font-bold text-gray-400">–</div>
+                <Star className="h-20 w-20 text-gray-300" />
+              </div>
+              <div className="text-gray-500 text-sm">NO RATINGS YET</div>
+            </>
+          )}
         </div>
         
         {/* Rating distribution */}

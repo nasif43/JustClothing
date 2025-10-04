@@ -256,10 +256,12 @@ function Header() {
                         onClick={() => {
                           logout()
                           setIsMenuOpen(false)
+                          navigate('/welcome')
                         }}
                         onTouchEnd={() => {
                           logout()
                           setIsMenuOpen(false)
+                          navigate('/welcome')
                         }}
                         className="block w-full text-left px-4 py-3 text-sm hover:font-bold active:bg-gray-800 transition-colors"
                         style={{ touchAction: 'manipulation' }}
@@ -280,12 +282,12 @@ function Header() {
                     ) : (
                       <button 
                         onClick={() => {
-                          logout()
+                          navigate('/welcome')
                           setIsMenuOpen(false)
                         }}
                         className="block w-full text-left px-4 py-3 text-sm hover:font-bold active:bg-gray-800 transition-colors"
                       >
-                        Sign Out
+                        Sign In
                       </button>
                     )}
                   </div>
@@ -427,7 +429,10 @@ function Header() {
                   </button>
                   {isAuthenticated ? (
                     <button 
-                      onClick={logout} 
+                      onClick={() => {
+                        logout()
+                        navigate('/welcome')
+                      }} 
                       className="block w-full text-left px-4 py-2 text-sm hover:font-bold"
                     >
                       Sign Out
@@ -442,12 +447,12 @@ function Header() {
                   ) : (
                     <button 
                       onClick={() => {
-                        logout()
+                        navigate('/welcome')
                         setIsMenuOpen(false)
                       }}
                       className="block w-full text-left px-4 py-2 text-sm hover:font-bold"
                     >
-                      Sign Out
+                      Sign In
                     </button>
                   )}
                 </div>
