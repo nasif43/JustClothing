@@ -441,6 +441,22 @@ def seller_products_for_offers_view(request):
 
 @api_view(['GET'])
 @permission_classes([permissions.IsAuthenticated])
+def seller_products_for_offers_view(request):
+    """Get seller's products available for creating offers"""
+    if not hasattr(request.user, 'seller_profile'):
+        return Response({'error': 'Only sellers can access this endpoint'}, status=403)
+    
+    products = Product.objects.filter(
+        seller=request.user.seller_profile,
+        status='active'
+    ).select_related('seller', 'category').prefetch_related('images', 'tags')
+    
+    serializer = ProductListSerializer(products, many=True, context={'request': request})
+    return Response({'products': serializer.data})
+
+
+@api_view(['GET'])
+@permission_classes([permissions.IsAuthenticated])
 def seller_active_offers_view(request):
     """Get seller's currently active offers"""
     if not hasattr(request.user, 'seller_profile'):

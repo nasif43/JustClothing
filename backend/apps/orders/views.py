@@ -207,6 +207,7 @@ class CreateOrderView(APIView):
             
             # Get only the selected items from request data
             selected_items = request.data.get('selected_items', [])
+            print(f"DEBUG: Received selected_items: {selected_items}")
             if not selected_items:
                 return Response(
                     {'error': 'No items selected'},
@@ -229,6 +230,11 @@ class CreateOrderView(APIView):
                 if cart_item:
                     filtered_cart_items.append(cart_item)
             
+            # Debug: Check filtered cart items
+            print(f"DEBUG: Found {len(filtered_cart_items)} filtered cart items")
+            for item in filtered_cart_items:
+                print(f"DEBUG: Cart item {item.id} - Product: {item.product.name}, Seller: {item.product.seller}")
+            
             # Group cart items by seller
             seller_items = {}
             for item in filtered_cart_items:
@@ -236,6 +242,8 @@ class CreateOrderView(APIView):
                 if seller not in seller_items:
                     seller_items[seller] = []
                 seller_items[seller].append(item)
+            
+            print(f"DEBUG: Grouped items into {len(seller_items)} seller groups")
             
             # Create separate orders for each seller
             orders = []
@@ -253,6 +261,7 @@ class CreateOrderView(APIView):
                     customer_address=serializer.validated_data.get('customer_address', ''),
                     payment_method=serializer.validated_data['payment_method'],
                     total_amount=total_amount,
+                    bill=total_amount,
                 )
                 
                 # Create order items
@@ -294,9 +303,37 @@ class CreateOrderView(APIView):
             for order in orders:
                 notify_customer_about_order(order)
             
+            # Debug logging
+            print(f"DEBUG: Created {len(orders)} orders")
+            for order in orders:
+                print(f"DEBUG: Order {order.id} - Status: {order.status}, Items: {order.items.count()}")
+            
+            # Serialize the orders
+            serialized_data = OrderSerializer(orders, many=True, context={'request': request}).data
+            print(f"DEBUG: Serialized data length: {len(serialized_data)}")
+            print(f"DEBUG: Serialized data: {serialized_data}")
+            
+            # Remove cart items for the ordered items
+            for selected_item in selected_items:
+                item_id = selected_item.get('item_id')
+                size = selected_item.get('size', '')
+                color = selected_item.get('color', '')
+                
+                try:
+                    cart_item = cart.items.filter(
+                        product_id=item_id,
+                        size=size,
+                        color=color
+                    ).first()
+                    if cart_item:
+                        cart_item.delete()
+                        print(f"DEBUG: Deleted cart item {cart_item.id} for product {item_id}")
+                except Exception as e:
+                    print(f"DEBUG: Error deleting cart item: {e}")
+            
             # Return all created orders
             return Response(
-                OrderSerializer(orders, many=True, context={'request': request}).data,
+                serialized_data,
                 status=status.HTTP_201_CREATED
             )
         
@@ -359,8 +396,15 @@ class CreateQuickOrderView(APIView):
             notify_sellers_about_new_order(order)
             notify_customer_about_order(order)
             
+            # Debug logging
+            print(f"DEBUG QUICK ORDER: Created order {order.id} - Status: {order.status}, Items: {order.items.count()}")
+            
+            # Serialize the order
+            serialized_data = OrderSerializer(order, context={'request': request}).data
+            print(f"DEBUG QUICK ORDER: Serialized data: {serialized_data}")
+            
             return Response(
-                OrderSerializer(order, context={'request': request}).data,
+                serialized_data,
                 status=status.HTTP_201_CREATED
             )
         

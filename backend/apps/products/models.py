@@ -403,7 +403,7 @@ class ProductOffer(models.Model):
     seller = models.ForeignKey('users.SellerProfile', on_delete=models.CASCADE, related_name='product_offers')
     
     # Offer details
-    name = models.CharField(max_length=200)
+    name = models.CharField(max_length=200, blank=True)
     description = models.TextField(blank=True)
     offer_type = models.CharField(max_length=15, choices=OFFER_TYPE)
     
