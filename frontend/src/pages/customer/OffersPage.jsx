@@ -1,99 +1,59 @@
 import React, { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
-import { 
-  fetchOffersPageData, 
-  fetchTrendingOffers, 
-  searchPromoCodes,
-  trackPromoImpression 
-} from '../../services/api'
 import marbleBg from '../../assets/marble-bg.jpg'
 
-// Import offer components
-import OfferSection from '../../components/offers/OfferSection'
-import OfferFilters from '../../components/offers/OfferFilters'
-import { LoadingGrid } from '../../components/offers/LoadingCard'
-
 const OffersPage = () => {
-  const [offersData, setOffersData] = useState(null)
-  const [trendingOffers, setTrendingOffers] = useState([])
-  const [searchResults, setSearchResults] = useState([])
+  const [products, setProducts] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
-  
-  // Filter states
   const [searchTerm, setSearchTerm] = useState('')
-  const [selectedType, setSelectedType] = useState('')
-  const [selectedCategory, setSelectedCategory] = useState('')
-  const [showingSearchResults, setShowingSearchResults] = useState(false)
+  const [filteredProducts, setFilteredProducts] = useState([])
+
+  // Simple API call to fetch products
+  const fetchProducts = async (params = {}) => {
+    const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000'
+    const queryParams = new URLSearchParams(params).toString()
+    const url = `${API_BASE_URL}/api/v1/products/${queryParams ? `?${queryParams}` : ''}`
+    
+    const response = await fetch(url)
+    if (!response.ok) {
+      throw new Error('Failed to fetch products')
+    }
+    return response.json()
+  }
 
   useEffect(() => {
-    const loadInitialData = async () => {
+    const loadProducts = async () => {
       try {
         setLoading(true)
-        
-        // Load main offers page data and trending offers in parallel
-        const [offersResponse, trendingResponse] = await Promise.all([
-          fetchOffersPageData(),
-          fetchTrendingOffers().catch(() => ({ trending_offers: [] }))
-        ])
-        
-        setOffersData(offersResponse)
-        setTrendingOffers(trendingResponse.trending_offers || [])
-        
+        // Fetch all products and filter for those with offers
+        const response = await fetchProducts({ limit: 100 })
+        const productsWithOffers = response.results?.filter(product => product.has_active_offer) || []
+        setProducts(productsWithOffers)
+        setFilteredProducts(productsWithOffers)
       } catch (err) {
         setError(err.message)
-        console.error('Error loading offers:', err)
+        console.error('Error loading products:', err)
       } finally {
         setLoading(false)
       }
     }
 
-    loadInitialData()
+    loadProducts()
   }, [])
 
-  // Handle search and filtering
+  // Filter products based on search term
   useEffect(() => {
-    const performSearch = async () => {
-      if (!searchTerm && !selectedType && !selectedCategory) {
-        setShowingSearchResults(false)
-        setSearchResults([])
-        return
-      }
-
-      try {
-        const results = await searchPromoCodes(searchTerm, selectedCategory, selectedType)
-        setSearchResults(results.promo_codes || [])
-        setShowingSearchResults(true)
-      } catch (err) {
-        console.error('Search error:', err)
-        setSearchResults([])
-        setShowingSearchResults(true)
-      }
+    if (!searchTerm) {
+      setFilteredProducts(products)
+    } else {
+      const filtered = products.filter(product =>
+        product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        product.description?.toLowerCase().includes(searchTerm.toLowerCase())
+      )
+      setFilteredProducts(filtered)
     }
-
-    const debounceTimer = setTimeout(performSearch, 300)
-    return () => clearTimeout(debounceTimer)
-  }, [searchTerm, selectedType, selectedCategory])
-
-  const clearFilters = () => {
-    setSearchTerm('')
-    setSelectedType('')
-    setSelectedCategory('')
-    setShowingSearchResults(false)
-    setSearchResults([])
-  }
-
-  const handlePromoClick = async (featuredPromoId) => {
-    if (featuredPromoId) {
-      await trackPromoImpression(featuredPromoId, 'click')
-    }
-  }
-
-  // Get available categories from offers data
-  const getAvailableCategories = () => {
-    if (!offersData?.category_offers) return []
-    return Object.keys(offersData.category_offers)
-  }
+  }, [searchTerm, products])
 
   return (
     <div
@@ -104,182 +64,159 @@ const OffersPage = () => {
         {/* Header */}
         <div className="text-center mb-8">
           <h1 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
-            Special Offers & Deals
+            Products on Sale
           </h1>
           <p className="text-gray-600 text-lg max-w-2xl mx-auto">
-            Discover amazing discounts, promo codes, and exclusive deals from all our sellers
+            Discover amazing discounts on products from all our sellers
           </p>
         </div>
 
-        {loading ? (
-          <div className="bg-white bg-opacity-90 rounded-lg p-6">
-            <LoadingGrid count={6} />
+        {/* Search Bar */}
+        <div className="bg-white bg-opacity-90 rounded-lg p-4 mb-6">
+          <div className="max-w-md mx-auto">
+            <input
+              type="text"
+              placeholder="Search products on sale..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-500 focus:border-transparent"
+            />
           </div>
-        ) : error ? (
-          <div className="bg-red-50 border border-red-200 text-red-700 px-6 py-4 rounded-lg">
-            <h3 className="font-medium mb-2">Error Loading Offers</h3>
-            <p>{error}</p>
-            <button 
-              onClick={() => window.location.reload()} 
-              className="mt-3 text-red-600 hover:text-red-800 underline"
-            >
-              Try Again
-            </button>
-          </div>
-        ) : (
-          <div className="space-y-8">
-            {/* Search and Filters */}
-            <div className="bg-white bg-opacity-90 rounded-lg">
-              <OfferFilters
-                searchTerm={searchTerm}
-                setSearchTerm={setSearchTerm}
-                selectedType={selectedType}
-                setSelectedType={setSelectedType}
-                selectedCategory={selectedCategory}
-                setSelectedCategory={setSelectedCategory}
-                categories={getAvailableCategories()}
-                onClearFilters={clearFilters}
-              />
-            </div>
+        </div>
 
-            {/* Search Results or Main Content */}
-            <div className="bg-white bg-opacity-90 rounded-lg p-6">
-              {showingSearchResults ? (
-                <div>
-                  <h2 className="text-2xl font-bold mb-6">
-                    Search Results ({searchResults.length} found)
-                  </h2>
-                  {searchResults.length > 0 ? (
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                      {searchResults.map((promoCode) => (
-                        <div key={promoCode.id} className="border rounded-lg p-4 hover:shadow-md transition-shadow">
-                          <div className="flex items-center justify-between mb-3">
-                            <code className="bg-gray-100 px-2 py-1 rounded text-sm font-mono">
-                              {promoCode.code}
-                            </code>
-                            <span className="text-sm text-gray-500">
-                              {promoCode.promotion_details?.promotion_type}
-                            </span>
-                          </div>
-                          <h3 className="font-medium mb-2">{promoCode.promotion_details?.name}</h3>
-                          <p className="text-gray-600 text-sm line-clamp-2">
-                            {promoCode.promotion_details?.description}
-                          </p>
+        {/* Content */}
+        <div className="bg-white bg-opacity-90 rounded-lg p-6">
+          {loading ? (
+            <div className="text-center py-8">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900 mx-auto mb-4"></div>
+              <p className="text-gray-600">Loading products with offers...</p>
+            </div>
+          ) : error ? (
+            <div className="bg-red-50 border border-red-200 text-red-700 px-6 py-4 rounded-lg">
+              <h3 className="font-medium mb-2">Error Loading Products</h3>
+              <p>{error}</p>
+              <button 
+                onClick={() => window.location.reload()} 
+                className="mt-3 text-red-600 hover:text-red-800 underline"
+              >
+                Try Again
+              </button>
+            </div>
+          ) : filteredProducts.length > 0 ? (
+            <div>
+              <div className="flex justify-between items-center mb-6">
+                <h2 className="text-2xl font-bold text-gray-900">
+                  {searchTerm ? `Search Results (${filteredProducts.length})` : `Products on Sale (${filteredProducts.length})`}
+                </h2>
+              </div>
+              
+              {/* Products Grid */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                {filteredProducts.map((product) => (
+                  <div key={product.id} className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow">
+                    {/* Product Image */}
+                    <div className="aspect-square relative">
+                      {product.images && product.images.length > 0 ? (
+                        <img
+                          src={product.images[0].image || product.images[0]}
+                          alt={product.name}
+                          className="w-full h-full object-cover"
+                          onError={(e) => {
+                            e.target.style.display = 'none'
+                            e.target.parentNode.querySelector('.fallback-image').style.display = 'flex'
+                          }}
+                        />
+                      ) : product.image ? (
+                        <img
+                          src={product.image}
+                          alt={product.name}
+                          className="w-full h-full object-cover"
+                          onError={(e) => {
+                            e.target.style.display = 'none'
+                            e.target.parentNode.querySelector('.fallback-image').style.display = 'flex'
+                          }}
+                        />
+                      ) : null}
+                      
+                      {/* Fallback div for broken images */}
+                      <div className="fallback-image w-full h-full bg-gray-200 flex items-center justify-center" style={{ display: (!product.images || product.images.length === 0) && !product.image ? 'flex' : 'none' }}>
+                        <span className="text-gray-400">No Image</span>
+                      </div>
+                      
+                      {/* Discount Badge */}
+                      {product.savings_amount && (
+                        <div className="absolute top-2 left-2 bg-red-500 text-white px-2 py-1 rounded-full text-sm font-bold">
+                          Save ৳{product.savings_amount}
                         </div>
-                      ))}
+                      )}
                     </div>
-                  ) : (
-                    <div className="text-center py-8">
-                      <p className="text-gray-500">No promo codes found matching your criteria</p>
-                    </div>
-                  )}
-                </div>
-              ) : offersData ? (
-                <div className="space-y-12">
-                  {/* Featured/Flash Deals */}
-                  {offersData.flash_deals?.length > 0 && (
-                    <OfferSection
-                      title="⚡ Flash Deals"
-                      description="Limited time offers ending soon!"
-                      offers={offersData.flash_deals}
-                      icon="🔥"
-                      maxItems={6}
-                    />
-                  )}
 
-                  {/* Hot Deals */}
-                  {offersData.hot_deals?.length > 0 && (
-                    <OfferSection
-                      title="🔥 Hot Deals"
-                      description="Most popular offers right now"
-                      offers={offersData.hot_deals}
-                      icon="🎯"
-                      maxItems={6}
-                    />
-                  )}
-
-                  {/* Trending Offers */}
-                  {trendingOffers?.length > 0 && (
-                    <OfferSection
-                      title="📈 Trending Offers"
-                      description="What everyone's talking about"
-                      offers={trendingOffers}
-                      icon="📊"
-                      maxItems={6}
-                    />
-                  )}
-
-                  {/* Percentage Deals */}
-                  {offersData.percentage_deals?.length > 0 && (
-                    <OfferSection
-                      title="💯 Percentage Discounts"
-                      description="Save big with percentage-based deals"
-                      offers={offersData.percentage_deals}
-                      icon="📊"
-                      maxItems={8}
-                    />
-                  )}
-
-                  {/* Free Shipping */}
-                  {offersData.free_shipping_offers?.length > 0 && (
-                    <OfferSection
-                      title="🚚 Free Shipping"
-                      description="No delivery charges on these offers"
-                      offers={offersData.free_shipping_offers}
-                      icon="📦"
-                      maxItems={5}
-                    />
-                  )}
-
-                  {/* Buy X Get Y */}
-                  {offersData.bxgy_deals?.length > 0 && (
-                    <OfferSection
-                      title="🎁 Buy X Get Y"
-                      description="Get more for your money"
-                      offers={offersData.bxgy_deals}
-                      icon="🎁"
-                      maxItems={6}
-                    />
-                  )}
-
-                  {/* Seasonal Offers */}
-                  {offersData.seasonal_offers?.length > 0 && (
-                    <OfferSection
-                      title="🌟 Featured Offers"
-                      description="Handpicked special deals"
-                      offers={offersData.seasonal_offers}
-                      icon="⭐"
-                      maxItems={8}
-                    />
-                  )}
-
-                  {/* Stats */}
-                  {offersData.total_active_offers > 0 && (
-                    <div className="text-center py-8 border-t border-gray-200">
-                      <p className="text-gray-600">
-                        Showing {offersData.total_active_offers} active offers across all categories
+                    {/* Product Info */}
+                    <div className="p-4">
+                      <h3 className="font-medium text-gray-900 mb-2 line-clamp-2">
+                        {product.name}
+                      </h3>
+                      
+                      {/* Seller */}
+                      <p className="text-sm text-gray-600 mb-2">
+                        by {product.store?.name || product.seller?.name || product.seller?.business_name || product.seller_name || product.seller_business_name || 'Seller'}
                       </p>
+
+                      {/* Pricing */}
+                      <div className="mb-3">
+                        <div className="flex items-center gap-2">
+                          <span className="text-lg font-bold text-gray-900">
+                            ৳{product.discounted_price || product.price}
+                          </span>
+                          {product.original_price && product.original_price !== product.price && (
+                            <span className="text-sm text-gray-500 line-through">
+                              ৳{product.original_price}
+                            </span>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* View Product Button */}
+                      <Link
+                        to={`/product/${product.id}`}
+                        className="block w-full bg-gray-900 text-white text-center py-2 rounded-lg hover:bg-gray-800 transition-colors"
+                      >
+                        View Product
+                      </Link>
                     </div>
-                  )}
-                </div>
-              ) : (
-                <div className="text-center py-12">
-                  <div className="text-6xl mb-4">🎉</div>
-                  <h3 className="text-xl font-medium mb-2">No Active Offers</h3>
-                  <p className="text-gray-600 mb-4">
-                    There are no active offers at the moment. Check back soon for exciting deals!
-                  </p>
-                  <Link 
-                    to="/" 
-                    className="inline-block px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-                  >
-                    Browse Products
-                  </Link>
-                </div>
-              )}
+                  </div>
+                ))}
+              </div>
             </div>
-          </div>
-        )}
+          ) : (
+            <div className="text-center py-12">
+              <div className="text-6xl mb-4">🏷️</div>
+              <h3 className="text-xl font-medium mb-2">
+                {searchTerm ? 'No Products Found' : 'No Products on Sale'}
+              </h3>
+              <p className="text-gray-600 mb-4">
+                {searchTerm 
+                  ? `No products found matching "${searchTerm}"`
+                  : 'There are no products with active offers at the moment. Check back soon for great deals!'
+                }
+              </p>
+              {searchTerm && (
+                <button
+                  onClick={() => setSearchTerm('')}
+                  className="inline-block px-6 py-2 bg-gray-900 text-white rounded-lg hover:bg-gray-800 transition-colors mr-4"
+                >
+                  Clear Search
+                </button>
+              )}
+              <Link 
+                to="/" 
+                className="inline-block px-6 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors"
+              >
+                Browse All Products
+              </Link>
+            </div>
+          )}
+        </div>
       </div>
     </div>
   )
