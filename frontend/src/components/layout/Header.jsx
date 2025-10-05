@@ -117,7 +117,7 @@ function Header() {
               await searchProducts("")
               navigate("/home")
             }}>
-              <img src={logo} alt="JustClothing" className="w-auto h-12 hover:cursor-pointer" />
+              <img src={logo} alt="JustClothing" className="w-auto h-10 sm:h-12 md:h-14 hover:cursor-pointer" />
             </div>
             <div className="flex items-center gap-4">
               <a href="/cart" className="flex items-center relative">
@@ -313,7 +313,7 @@ function Header() {
             await searchProducts("")
             navigate("/home")
           }}>
-            <img src={logo} alt="JustClothing" className="w-auto h-15 hover:cursor-pointer" />
+            <img src={logo} alt="JustClothing" className="w-auto h-12 lg:h-14 xl:h-16 hover:cursor-pointer" />
           </div>
           <div className="w-xl flex justify-center">
             <Suspense fallback={

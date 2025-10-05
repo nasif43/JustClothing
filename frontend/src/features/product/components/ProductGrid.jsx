@@ -85,13 +85,14 @@ function ProductGrid({ storeId = null, showStoreInfo = true, className = "m-10" 
   
   return (
     <div className={className}>
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 items-stretch">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 items-start">
         {displayProducts.map((product) => (
-          <ProductCard 
-            key={product.id} 
-            product={product} 
-            showStoreInfo={showStoreInfo}
-          />
+          <div key={product.id} className="group flex flex-col h-full">
+            <ProductCard 
+              product={product} 
+              showStoreInfo={showStoreInfo}
+            />
+          </div>
         ))}
       </div>
       
