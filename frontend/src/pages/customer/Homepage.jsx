@@ -1,5 +1,6 @@
 import { CategoryPills, CategoryLinks } from "../../features/category/components"
 import { ProductGrid } from "../../features/product/components"
+import InfiniteTrendingList from "../../features/product/components/InfiniteTrendingList"
 import useProductStore from "../../store/useProductStore"
 import TagsDisplay from "../../components/TagsDisplay"
 import { CategoryPillsSkeleton, ProductGridSkeleton } from "../../components/ui/SkeletonLoader"
@@ -78,6 +79,9 @@ function Homepage() {
 
                 <div className="mt-6 sm:mt-8">
                     <ProductGrid className="mx-2 sm:m-10" />
+                </div>
+                <div className="mt-12">
+                    <InfiniteTrendingList />
                 </div>
             </div>
         </div>
