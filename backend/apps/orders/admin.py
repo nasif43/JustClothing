@@ -63,7 +63,7 @@ class OrderAdmin(admin.ModelAdmin):
     status_badge.short_description = 'Status'
     
     def total_items(self, obj):
-        return obj.totalItems
+        return obj.items.count()
     total_items.short_description = 'Total Items'
     
     def mark_processing(self, request, queryset):
