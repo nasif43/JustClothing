@@ -236,13 +236,19 @@ class CreateOrderView(APIView):
                     size = selected_item.get('size', '')
                     color = selected_item.get('color', '')
                     
-                    print(f"DEBUG: Looking for - Product ID: {item_id}, Size: '{size}', Color: '{color}'")
+                    print(f"DEBUG: Looking for cart item ID: {item_id}, Size: '{size}', Color: '{color}'")
                     
-                    cart_item = cart.items.filter(
-                        product__id=item_id,
-                        size=size,
-                        color=color
-                    ).first()
+                    # Try to find by cart item ID first
+                    cart_item = cart.items.filter(id=item_id).first()
+                    
+                    # If not found by cart item ID, try by product ID and attributes
+                    if not cart_item:
+                        print(f"DEBUG: Cart item not found by ID, trying product ID: {item_id}")
+                        cart_item = cart.items.filter(
+                            product__id=item_id,
+                            size=size,
+                            color=color
+                        ).first()
                     
                     print(f"DEBUG: Cart item found: {cart_item}")
                     
@@ -347,14 +353,20 @@ class CreateOrderView(APIView):
                     color = selected_item.get('color', '')
                     
                     try:
-                        cart_item = cart.items.filter(
-                            product__id=item_id,
-                            size=size,
-                            color=color
-                        ).first()
+                        # Try to find by cart item ID first
+                        cart_item = cart.items.filter(id=item_id).first()
+                        
+                        # If not found by cart item ID, try by product ID and attributes
+                        if not cart_item:
+                            cart_item = cart.items.filter(
+                                product__id=item_id,
+                                size=size,
+                                color=color
+                            ).first()
+                        
                         if cart_item:
                             cart_item.delete()
-                            print(f"DEBUG: Deleted cart item {cart_item.id} for product {item_id}")
+                            print(f"DEBUG: Deleted cart item {cart_item.id} for item {item_id}")
                     except Exception as e:
                         print(f"DEBUG: Error deleting cart item: {e}")
                 
