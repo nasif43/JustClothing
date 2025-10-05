@@ -32,10 +32,10 @@ urlpatterns = [
     
     # Products - Public
     path('', ProductListView.as_view(), name='product_list'),
-    path('<str:id>/', ProductDetailView.as_view(), name='product_detail'),
     path('featured/', featured_products_view, name='featured_products'),
     path('trending/', trending_products_view, name='trending_products'),
     path('<str:product_id>/related/', related_products_view, name='related_products'),
+    path('<str:id>/', ProductDetailView.as_view(), name='product_detail'),
     
     # Products - Seller Management
     path('seller/products/', SellerProductListView.as_view(), name='seller_product_list'),
