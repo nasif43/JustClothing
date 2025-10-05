@@ -2,15 +2,15 @@ from django.shortcuts import render
 from rest_framework import viewsets, status, permissions
 from rest_framework.decorators import action, api_view, permission_classes
 from rest_framework.response import Response
-from django.db.models import Q
+from django.db.models import Q, Count
 from django.utils import timezone
 from .models import (
     Promotion, PromoCode, SellerPromoRequest, 
-    PromotionalCampaign, PromoUsage
+    PromotionalCampaign, PromoUsage, FeaturedPromo, PromoImpression
 )
 from .serializers import (
     PromotionSerializer, PromoCodeSerializer, SellerPromoRequestSerializer,
-    PromoUsageSerializer, ProductBasicSerializer
+    PromoUsageSerializer, ProductBasicSerializer, FeaturedPromoSerializer
 )
 from apps.products.models import Product
 
@@ -191,3 +191,210 @@ class PromotionViewSet(viewsets.ReadOnlyModelViewSet):
         featured_promos = self.get_queryset().filter(is_featured=True)
         serializer = self.get_serializer(featured_promos, many=True)
         return Response(serializer.data)
+
+
+@api_view(['GET'])
+@permission_classes([permissions.AllowAny])
+def offers_page_data(request):
+    """Get comprehensive data for offers page"""
+    now = timezone.now()
+    
+    # Get featured banners/promos
+    featured_banners = FeaturedPromo.objects.filter(
+        placement='homepage_banner',
+        is_currently_active=True
+    ).select_related('promo_code__promotion')[:5]
+    
+    # Get all active promotions
+    active_promotions = Promotion.objects.filter(
+        status='active',
+        start_date__lte=now,
+        end_date__gte=now
+    ).prefetch_related('promo_codes', 'applicable_products')
+    
+    # Get category-wise offers
+    category_offers = {}
+    for promotion in active_promotions:
+        for category in promotion.applicable_categories.all():
+            if category.name not in category_offers:
+                category_offers[category.name] = []
+            category_offers[category.name].append(PromotionSerializer(promotion).data)
+    
+    # Get flash deals (promotions ending soon)
+    flash_deals = active_promotions.filter(
+        end_date__lte=now + timezone.timedelta(days=7)
+    ).order_by('end_date')[:10]
+    
+    # Get hot deals (heavily used promotions)
+    hot_deals = active_promotions.filter(
+        usage_count__gte=10
+    ).order_by('-usage_count')[:10]
+    
+    # Get seasonal/special offers (featured ones)
+    seasonal_offers = active_promotions.filter(is_featured=True)[:8]
+    
+    # Get free shipping offers
+    free_shipping_offers = active_promotions.filter(
+        promotion_type='free_shipping'
+    )[:5]
+    
+    # Get percentage deals
+    percentage_deals = active_promotions.filter(
+        promotion_type='percentage',
+        discount_percentage__gte=20
+    ).order_by('-discount_percentage')[:8]
+    
+    # Get buy x get y deals
+    bxgy_deals = active_promotions.filter(
+        promotion_type='buy_x_get_y'
+    )[:6]
+    
+    return Response({
+        'featured_banners': FeaturedPromoSerializer(featured_banners, many=True).data,
+        'flash_deals': PromotionSerializer(flash_deals, many=True).data,
+        'hot_deals': PromotionSerializer(hot_deals, many=True).data,
+        'seasonal_offers': PromotionSerializer(seasonal_offers, many=True).data,
+        'free_shipping_offers': PromotionSerializer(free_shipping_offers, many=True).data,
+        'percentage_deals': PromotionSerializer(percentage_deals, many=True).data,
+        'bxgy_deals': PromotionSerializer(bxgy_deals, many=True).data,
+        'category_offers': category_offers,
+        'total_active_offers': active_promotions.count()
+    })
+
+
+@api_view(['GET'])
+@permission_classes([permissions.AllowAny])
+def trending_offers(request):
+    """Get trending/popular offers"""
+    now = timezone.now()
+    
+    # Get most used promotions in last 30 days
+    trending = Promotion.objects.filter(
+        status='active',
+        start_date__lte=now,
+        end_date__gte=now,
+        usages__used_at__gte=now - timezone.timedelta(days=30)
+    ).annotate(
+        recent_usage_count=Count('usages')
+    ).filter(
+        recent_usage_count__gte=5
+    ).order_by('-recent_usage_count')[:15]
+    
+    return Response({
+        'trending_offers': PromotionSerializer(trending, many=True).data
+    })
+
+
+@api_view(['GET'])
+@permission_classes([permissions.AllowAny])
+def promo_code_search(request):
+    """Search for promo codes"""
+    query = request.GET.get('q', '')
+    category = request.GET.get('category', '')
+    discount_type = request.GET.get('type', '')
+    
+    if not query and not category and not discount_type:
+        return Response({'error': 'Please provide search parameters'}, status=400)
+    
+    now = timezone.now()
+    promo_codes = PromoCode.objects.filter(
+        is_active=True,
+        promotion__status='active',
+        promotion__start_date__lte=now,
+        promotion__end_date__gte=now
+    )
+    
+    if query:
+        promo_codes = promo_codes.filter(
+            Q(code__icontains=query) | 
+            Q(promotion__name__icontains=query) |
+            Q(promotion__description__icontains=query)
+        )
+    
+    if category:
+        promo_codes = promo_codes.filter(
+            promotion__applicable_categories__name__icontains=category
+        )
+    
+    if discount_type:
+        promo_codes = promo_codes.filter(
+            promotion__promotion_type=discount_type
+        )
+    
+    promo_codes = promo_codes.distinct()[:20]
+    
+    return Response({
+        'promo_codes': PromoCodeSerializer(promo_codes, many=True).data,
+        'total_found': promo_codes.count()
+    })
+
+
+@api_view(['POST'])
+@permission_classes([permissions.AllowAny])
+def track_promo_impression(request):
+    """Track promo code impression/click"""
+    featured_promo_id = request.data.get('featured_promo_id')
+    action_type = request.data.get('action', 'view')  # 'view' or 'click'
+    
+    if not featured_promo_id:
+        return Response({'error': 'Featured promo ID required'}, status=400)
+    
+    try:
+        featured_promo = FeaturedPromo.objects.get(id=featured_promo_id)
+        
+        # Create or get impression record
+        impression, created = PromoImpression.objects.get_or_create(
+            featured_promo=featured_promo,
+            user=request.user if request.user.is_authenticated else None,
+            session_key=request.session.session_key if hasattr(request, 'session') else '',
+            defaults={
+                'user_agent': request.META.get('HTTP_USER_AGENT', ''),
+                'ip_address': request.META.get('REMOTE_ADDR'),
+                'referrer': request.META.get('HTTP_REFERER', '')
+            }
+        )
+        
+        # Update impression/click counts
+        if action_type == 'click' and not impression.clicked_at:
+            impression.clicked_at = timezone.now()
+            impression.save()
+            
+            # Update featured promo click count
+            featured_promo.current_clicks += 1
+            featured_promo.save()
+        elif created:
+            # New impression
+            featured_promo.current_impressions += 1
+            featured_promo.save()
+        
+        return Response({'success': True})
+        
+    except FeaturedPromo.DoesNotExist:
+        return Response({'error': 'Featured promo not found'}, status=404)
+
+
+@api_view(['GET'])
+@permission_classes([permissions.AllowAny])
+def offers_by_category(request, category_slug):
+    """Get offers for a specific category"""
+    from apps.products.models import Category
+    
+    try:
+        category = Category.objects.get(slug=category_slug)
+        now = timezone.now()
+        
+        offers = Promotion.objects.filter(
+            status='active',
+            start_date__lte=now,
+            end_date__gte=now,
+            applicable_categories=category
+        ).prefetch_related('promo_codes', 'applicable_products')
+        
+        return Response({
+            'category': category.name,
+            'offers': PromotionSerializer(offers, many=True).data,
+            'total_offers': offers.count()
+        })
+        
+    except Category.DoesNotExist:
+        return Response({'error': 'Category not found'}, status=404)

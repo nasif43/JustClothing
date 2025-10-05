@@ -14,6 +14,13 @@ urlpatterns = [
     # General promo endpoints
     path('validate/', views.validate_promo_code, name='validate_promo_code'),
     
+    # Offers page endpoints
+    path('offers-page/', views.offers_page_data, name='offers_page_data'),
+    path('trending/', views.trending_offers, name='trending_offers'),
+    path('search/', views.promo_code_search, name='promo_code_search'),
+    path('track-impression/', views.track_promo_impression, name='track_promo_impression'),
+    path('category/<slug:category_slug>/', views.offers_by_category, name='offers_by_category'),
+    
     # Include router URLs
     path('', include(router.urls)),
 ] 

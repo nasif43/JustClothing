@@ -641,10 +641,23 @@ export const updateUserProfile = async (profileData) => {
   }
 }
 
-// Promotions API
-export const fetchPromotions = async () => {
+// Promotions API (enhanced version with filters)
+export const fetchPromotions = async (filters = {}) => {
   try {
-    return await apiRequest('promos/promotions/')
+    const params = new URLSearchParams()
+    Object.keys(filters).forEach(key => {
+      if (filters[key]) params.append(key, filters[key])
+    })
+    
+    const endpoint = params.toString() 
+      ? `promos/promotions/?${params.toString()}`
+      : 'promos/promotions/'
+    
+    const response = await apiRequest(endpoint, {
+      method: 'GET',
+      auth: false
+    })
+    return response
   } catch (error) {
     throw new Error(error.message || 'Failed to fetch promotions')
   }
@@ -860,5 +873,111 @@ export const fetchSellerProfile = async () => {
     return await apiRequest('auth/seller/profile/')
   } catch (error) {
     throw new Error(error.message || 'Failed to fetch seller profile')
+  }
+}
+
+// ===== OFFERS & PROMOTIONS API =====
+
+// Fetch comprehensive offers page data
+export const fetchOffersPageData = async () => {
+  try {
+    const response = await apiRequest('promos/offers-page/', {
+      method: 'GET',
+      auth: false
+    })
+    return response
+  } catch (error) {
+    throw new Error(error.message || 'Failed to fetch offers data')
+  }
+}
+
+// Fetch trending offers
+export const fetchTrendingOffers = async () => {
+  try {
+    const response = await apiRequest('promos/trending/', {
+      method: 'GET',
+      auth: false
+    })
+    return response
+  } catch (error) {
+    throw new Error(error.message || 'Failed to fetch trending offers')
+  }
+}
+
+// Search promo codes
+export const searchPromoCodes = async (query, category = '', type = '') => {
+  try {
+    const params = new URLSearchParams()
+    if (query) params.append('q', query)
+    if (category) params.append('category', category)
+    if (type) params.append('type', type)
+    
+    const response = await apiRequest(`promos/search/?${params.toString()}`, {
+      method: 'GET',
+      auth: false
+    })
+    return response
+  } catch (error) {
+    throw new Error(error.message || 'Failed to search promo codes')
+  }
+}
+
+// Fetch offers by category
+export const fetchOffersByCategory = async (categorySlug) => {
+  try {
+    const response = await apiRequest(`promos/category/${categorySlug}/`, {
+      method: 'GET',
+      auth: false
+    })
+    return response
+  } catch (error) {
+    throw new Error(error.message || 'Failed to fetch category offers')
+  }
+}
+
+// Validate promo code (enhanced version)
+export const validatePromoCodeEnhanced = async (code) => {
+  try {
+    const response = await apiRequest('promos/validate/', {
+      method: 'POST',
+      body: JSON.stringify({ code }),
+      auth: true
+    })
+    return response
+  } catch (error) {
+    throw new Error(error.message || 'Failed to validate promo code')
+  }
+}
+
+// Track promo impression/click
+export const trackPromoImpression = async (featuredPromoId, action = 'view') => {
+  try {
+    const response = await apiRequest('promos/track-impression/', {
+      method: 'POST',
+      body: JSON.stringify({ 
+        featured_promo_id: featuredPromoId, 
+        action 
+      }),
+      auth: false
+    })
+    return response
+  } catch (error) {
+    console.error('Failed to track promo impression:', error)
+    // Don't throw error for tracking as it's not critical
+    return null
+  }
+}
+
+
+// Fetch featured promotions
+export const fetchFeaturedPromotions = async () => {
+  try {
+    const response = await apiRequest('promos/promotions/featured/', {
+      method: 'GET',
+      auth: false
+    })
+    return response
+  } catch (error) {
+    throw new Error(error.message || 'Failed to fetch featured promotions')
   }
 }

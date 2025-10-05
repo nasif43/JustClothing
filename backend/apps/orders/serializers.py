@@ -190,6 +190,22 @@ class CreateOrderSerializer(serializers.Serializer):
     payment_method = serializers.ChoiceField(choices=PAYMENT_METHOD_CHOICES)
     customer_phone = serializers.CharField(required=False, allow_blank=True)
     customer_address = serializers.CharField(required=False, allow_blank=True)
+    promo_code = serializers.CharField(required=False, allow_blank=True)
+    
+    def validate_promo_code(self, value):
+        """Validate promo code if provided"""
+        if value:
+            from apps.promos.models import PromoCode
+            try:
+                promo = PromoCode.objects.get(code=value, is_active=True)
+                if not promo.can_be_used():
+                    raise serializers.ValidationError("Promo code is no longer available")
+                if not promo.promotion.can_be_used_by(self.context['request'].user):
+                    raise serializers.ValidationError("You cannot use this promo code")
+                return value
+            except PromoCode.DoesNotExist:
+                raise serializers.ValidationError("Invalid promo code")
+        return value
 
 
 class CreateQuickOrderSerializer(serializers.Serializer):
@@ -210,6 +226,22 @@ class CreateQuickOrderSerializer(serializers.Serializer):
     customer_name = serializers.CharField()
     customer_phone = serializers.CharField()
     customer_address = serializers.CharField()
+    promo_code = serializers.CharField(required=False, allow_blank=True)
+    
+    def validate_promo_code(self, value):
+        """Validate promo code if provided"""
+        if value:
+            from apps.promos.models import PromoCode
+            try:
+                promo = PromoCode.objects.get(code=value, is_active=True)
+                if not promo.can_be_used():
+                    raise serializers.ValidationError("Promo code is no longer available")
+                if not promo.promotion.can_be_used_by(self.context['request'].user):
+                    raise serializers.ValidationError("You cannot use this promo code")
+                return value
+            except PromoCode.DoesNotExist:
+                raise serializers.ValidationError("Invalid promo code")
+        return value
     
     def validate_product_id(self, value):
         """Validate product exists and is available"""

@@ -270,13 +270,40 @@ class CreateOrderView(APIView):
                 
                 print(f"DEBUG: Grouped items into {len(seller_items)} seller groups")
                 
+                # Apply promo code if provided
+                promo_code = serializer.validated_data.get('promo_code')
+                total_discount = 0
+                promo_applied = False
+                
+                if promo_code:
+                    from apps.promos.utils import calculate_promo_discount
+                    cart_total = sum(item.total_price for item in filtered_cart_items)
+                    discount_amount, is_valid, error_msg = calculate_promo_discount(
+                        promo_code, cart_total, filtered_cart_items, request.user
+                    )
+                    
+                    if is_valid and discount_amount > 0:
+                        total_discount = discount_amount
+                        promo_applied = True
+                        print(f"DEBUG: Promo code {promo_code} applied with discount: {discount_amount}")
+                    else:
+                        print(f"DEBUG: Promo code error: {error_msg}")
+                
                 # Create separate orders for each seller
                 orders = []
                 for seller, items in seller_items.items():
                     # Calculate total amount for this seller's items
-                    total_amount = sum(item.total_price for item in items)
+                    subtotal = sum(item.total_price for item in items)
                     
-                    print(f"DEBUG: Creating order for seller {seller} with amount {total_amount}")
+                    # Apply proportional discount if promo code was used
+                    seller_discount = 0
+                    if promo_applied and total_discount > 0:
+                        cart_total = sum(item.total_price for item in filtered_cart_items)
+                        seller_discount = (subtotal / cart_total) * total_discount
+                    
+                    final_amount = subtotal - seller_discount
+                    
+                    print(f"DEBUG: Creating order for seller {seller} - Subtotal: {subtotal}, Discount: {seller_discount}, Final: {final_amount}")
                     
                     # Create order for this seller
                     order = Order.objects.create(
@@ -287,8 +314,8 @@ class CreateOrderView(APIView):
                         customer_phone=serializer.validated_data.get('customer_phone', ''),
                         customer_address=serializer.validated_data.get('customer_address', ''),
                         payment_method=serializer.validated_data['payment_method'],
-                        total_amount=total_amount,
-                        bill=total_amount,
+                        total_amount=final_amount,
+                        bill=final_amount,
                     )
                     
                     print(f"DEBUG: Created order with ID: {order.id}")
@@ -331,6 +358,22 @@ class CreateOrderView(APIView):
                 
                 # Don't delete cart items here - we'll handle it after order creation
                 # This is important to prevent the entire cart from being cleared
+                
+                # Apply promo code usage tracking if promo was used
+                if promo_applied and promo_code:
+                    from apps.promos.utils import apply_promo_code
+                    for order in orders:
+                        # Calculate proportional discount for this order
+                        subtotal = sum(item.total_price for item in seller_items[order.seller])
+                        cart_total = sum(item.total_price for item in filtered_cart_items)
+                        order_discount = (subtotal / cart_total) * total_discount
+                        
+                        # Apply promo code to this order
+                        success, message = apply_promo_code(promo_code, order, request.user, order_discount)
+                        if success:
+                            print(f"DEBUG: Promo code applied to order {order.id} with discount {order_discount}")
+                        else:
+                            print(f"DEBUG: Failed to apply promo to order {order.id}: {message}")
                 
                 # Notify customer about orders
                 for order in orders:
@@ -407,7 +450,22 @@ class CreateQuickOrderView(APIView):
             
             # Calculate total price
             unit_price = product.price
-            total_price = unit_price * quantity
+            subtotal = unit_price * quantity
+            
+            # Apply promo code if provided
+            promo_code = serializer.validated_data.get('promo_code')
+            discount_amount = 0
+            
+            if promo_code:
+                from apps.promos.utils import calculate_promo_discount
+                discount_amount, is_valid, error_msg = calculate_promo_discount(
+                    promo_code, subtotal, None, request.user
+                )
+                
+                if not is_valid:
+                    return Response({'error': error_msg}, status=status.HTTP_400_BAD_REQUEST)
+            
+            final_amount = subtotal - discount_amount
             
             # Create order with total amount
             order = Order.objects.create(
@@ -418,8 +476,8 @@ class CreateQuickOrderView(APIView):
                 customer_phone=serializer.validated_data['customer_phone'],
                 customer_address=serializer.validated_data['customer_address'],
                 payment_method=serializer.validated_data['payment_method'],
-                total_amount=total_price,
-                bill=total_price,
+                total_amount=final_amount,
+                bill=final_amount,
                 status='pending'
             )
             
@@ -439,6 +497,15 @@ class CreateQuickOrderView(APIView):
             product.stock_quantity = F('stock_quantity') - quantity
             product.sales_count = F('sales_count') + quantity
             product.save()
+            
+            # Apply promo code usage tracking if promo was used
+            if promo_code and discount_amount > 0:
+                from apps.promos.utils import apply_promo_code
+                success, message = apply_promo_code(promo_code, order, request.user, discount_amount)
+                if success:
+                    print(f"DEBUG QUICK ORDER: Promo code {promo_code} applied with discount {discount_amount}")
+                else:
+                    print(f"DEBUG QUICK ORDER: Failed to apply promo: {message}")
             
             # Notify sellers and customer about new order
             notify_sellers_about_new_order(order)

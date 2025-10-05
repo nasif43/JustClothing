@@ -1,7 +1,7 @@
 from rest_framework import serializers
 from .models import (
     Promotion, PromoCode, SellerPromoRequest, 
-    PromotionalCampaign, PromoUsage
+    PromotionalCampaign, PromoUsage, FeaturedPromo
 )
 from apps.products.models import Product, ProductImage
 
@@ -134,4 +134,17 @@ class PromoUsageSerializer(serializers.ModelSerializer):
         fields = [
             'id', 'promotion_name', 'promo_code', 'discount_amount',
             'used_at'
+        ]
+
+
+class FeaturedPromoSerializer(serializers.ModelSerializer):
+    """Serializer for featured promotions"""
+    promo_code_details = PromoCodeSerializer(source='promo_code', read_only=True)
+    
+    class Meta:
+        model = FeaturedPromo
+        fields = [
+            'id', 'placement', 'priority', 'promotion_start', 'promotion_end',
+            'current_impressions', 'current_clicks', 'is_active', 
+            'is_currently_active', 'promo_code_details'
         ] 
