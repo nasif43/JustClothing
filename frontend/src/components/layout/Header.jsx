@@ -107,17 +107,17 @@ function Header() {
   }
 
   return (
-    <header className="bg-black text-white p-4 relative sticky top-0 z-50">
-      <div className="max-w-7xl mx-auto">
+    <header className="bg-black text-white relative sticky top-0 z-50">
+      <div className="max-w-7xl mx-auto px-4 py-4">
         {/* Mobile Layout */}
         <div className="lg:hidden">
           {/* Top row - Logo, Cart, Menu */}
           <div className="flex items-center justify-between mb-3">
-            <div className="flex" onClick={async () => {
+            <div className="flex items-center flex-shrink-0" onClick={async () => {
               await searchProducts("")
               navigate("/home")
             }}>
-              <img src={logo} alt="logo" className="w-auto h-12 hover:cursor-pointer" />
+              <img src={logo} alt="JustClothing" className="w-auto h-12 hover:cursor-pointer" />
             </div>
             <div className="flex items-center gap-4">
               <a href="/cart" className="flex items-center relative">
@@ -309,11 +309,11 @@ function Header() {
 
         {/* Desktop Layout */}
         <div className="hidden lg:flex items-center justify-between">
-          <div className="flex" onClick={async () => {
+          <div className="flex items-center flex-shrink-0 mr-8" onClick={async () => {
             await searchProducts("")
             navigate("/home")
           }}>
-            <img src={logo} alt="logo" className="w-auto h-15 hover:cursor-pointer" />
+            <img src={logo} alt="JustClothing" className="w-auto h-15 hover:cursor-pointer" />
           </div>
           <div className="w-xl flex justify-center">
             <Suspense fallback={

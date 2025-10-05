@@ -319,15 +319,76 @@ def featured_products_view(request):
 @api_view(['GET'])
 @permission_classes([permissions.AllowAny])
 def trending_products_view(request):
-    """Get trending products (most viewed/sold)"""
+    """Get trending products with analytics"""
+    from django.utils import timezone
+    from datetime import timedelta
+    from django.db.models import Count, Sum
+    from apps.orders.models import OrderItem, CartItem
+    
+    # Get time range for analytics (last 24 hours by default)
+    hours = int(request.GET.get('hours', 24))
+    time_threshold = timezone.now() - timedelta(hours=hours)
+    
+    # Get products with basic ordering
     products = Product.objects.filter(
         status='active'
     ).select_related('seller', 'category').prefetch_related('images', 'tags').order_by(
         '-views_count', '-sales_count'
-    )[:10]
+    )[:20]
     
+    # Prepare response with analytics
+    products_data = []
     serializer = ProductListSerializer(products, many=True, context={'request': request})
-    return Response(serializer.data)
+    
+    for i, product_data in enumerate(serializer.data):
+        product_id = product_data['id']
+        
+        # Get cart analytics (added to cart in last X hours)
+        cart_adds = CartItem.objects.filter(
+            product_id=product_id,
+            created_at__gte=time_threshold
+        ).aggregate(
+            total_cart_adds=Count('id'),
+            total_cart_quantity=Sum('quantity')
+        )
+        
+        # Get order analytics (ordered in last X hours)
+        order_stats = OrderItem.objects.filter(
+            product_id=product_id,
+            created_at__gte=time_threshold
+        ).aggregate(
+            total_orders=Count('id'),
+            total_ordered_quantity=Sum('quantity')
+        )
+        
+        # Add analytics to product data
+        product_data['analytics'] = {
+            'cart_adds': cart_adds['total_cart_adds'] or 0,
+            'cart_quantity': cart_adds['total_cart_quantity'] or 0,
+            'orders': order_stats['total_orders'] or 0,
+            'ordered_quantity': order_stats['total_ordered_quantity'] or 0,
+            'hours_analyzed': hours
+        }
+        
+        # Generate analytics subtitle
+        analytics_parts = []
+        if product_data['analytics']['cart_adds'] > 0:
+            analytics_parts.append(f"added to cart {product_data['analytics']['cart_adds']} times")
+        if product_data['analytics']['orders'] > 0:
+            analytics_parts.append(f"ordered {product_data['analytics']['orders']} times")
+        
+        if analytics_parts:
+            product_data['analytics_subtitle'] = f"{' and '.join(analytics_parts)} in the last {hours} hours"
+        else:
+            product_data['analytics_subtitle'] = f"No recent activity in the last {hours} hours"
+        
+        products_data.append(product_data)
+    
+    return Response({
+        'products': products_data,
+        'analytics_period_hours': hours,
+        'total_products': len(products_data)
+    })
 
 
 @api_view(['GET'])

@@ -12,6 +12,7 @@ import CustomerOrderDetailsPage from "./pages/customer/OrderDetailsPage"
 import QuickCheckoutPage from "./pages/customer/QuickCheckoutPage"
 import OrderConfirmationPage from "./pages/customer/OrderConfirmationPage"
 import OffersPage from "./pages/customer/OffersPage"
+import TrendingPage from "./pages/customer/TrendingPage"
 // Shared pages
 import WelcomePage from "./pages/shared/WelcomePage"
 import { ProductProvider, useProducts } from "./context/ProductContext"
@@ -182,6 +183,11 @@ function AppContent() {
         <Route path="/offers" element={
           <ProtectedRoute>
             <MainLayout><OffersPage /></MainLayout>
+          </ProtectedRoute>
+        } />
+        <Route path="/trending" element={
+          <ProtectedRoute>
+            <MainLayout><TrendingPage /></MainLayout>
           </ProtectedRoute>
         } />
         <Route path="/order/:orderId" element={
