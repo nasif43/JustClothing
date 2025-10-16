@@ -31,12 +31,12 @@ class CartItemSerializer(serializers.ModelSerializer):
         read_only_fields = ('id', 'unit_price', 'total_price', 'created_at', 'updated_at')
     
     def get_unit_price(self, obj):
-        """Get unit price from product"""
-        return obj.product.price
+        """Get unit price from cart item (uses discounted price)"""
+        return obj.unit_price
     
     def get_total_price(self, obj):
-        """Calculate total price"""
-        return obj.product.price * obj.quantity
+        """Get total price from cart item (uses discounted price)"""
+        return obj.total_price
     
     def get_product_image(self, obj):
         """Get product primary image"""
