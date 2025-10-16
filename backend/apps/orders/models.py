@@ -6,6 +6,10 @@ import uuid
 from decimal import Decimal
 from django.utils import timezone
 import random
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from django.db.models import QuerySet
 
 User = get_user_model()
 
@@ -94,10 +98,94 @@ class Order(models.Model):
     def __str__(self):
         return f"Order #{self.id}"
     
+class Order(models.Model):
+    """Orders placed by customers - matches frontend Order structure"""
+    
+    ORDER_STATUS = (
+        ('pending', 'Pending'),
+        ('processing', 'Processing'),
+        ('shipped', 'Shipped'),
+        ('delivered', 'Delivered'),
+        ('partially_delivered', 'Partially Delivered'),
+        ('cancelled', 'Cancelled'),
+        ('refunded', 'Refunded'),
+    )
+    
+    PAYMENT_METHOD = (
+        ('cod', 'Cash on Delivery'),
+        ('card', 'Credit/Debit Card'),
+        ('mobile_banking', 'Mobile Banking'),
+        ('bank_transfer', 'Bank Transfer'),
+    )
+    
+    id = models.CharField(max_length=20, primary_key=True)  # Custom ID like "69420"
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='orders')
+    seller = models.ForeignKey('users.SellerProfile', on_delete=models.SET_NULL, null=True, related_name='seller_orders')
+    
+    # Customer information
+    customer_name = models.CharField(max_length=200)
+    customer_email = models.EmailField()
+    customer_phone = models.CharField(max_length=20)
+    customer_address = models.TextField()
+    
+    # Order details - frontend compatible fields
+    status = models.CharField(max_length=20, choices=ORDER_STATUS, default='pending')
+    payment_method = models.CharField(max_length=20, choices=PAYMENT_METHOD, default='cod')
+    total_amount = models.DecimalField(max_digits=10, decimal_places=2)
+    bill = models.DecimalField(max_digits=10, decimal_places=2)  # Frontend uses 'bill'
+    
+    # Frontend timestamp fields
+    placedOn = models.CharField(max_length=20, blank=True)  # Frontend format: "02/03/25"
+    time = models.CharField(max_length=20, blank=True)  # Frontend format: "04:20 P.M"
+    placedTime = models.CharField(max_length=20, blank=True)  # Alternative field name
+    
+    # Standard timestamps
+    placed_on_date = models.DateField(auto_now_add=True)
+    placed_time_obj = models.TimeField(auto_now_add=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        db_table = 'orders'
+        indexes = [
+            models.Index(fields=['user', 'status']),
+            models.Index(fields=['seller', 'status']),
+            models.Index(fields=['status']),
+            models.Index(fields=['created_at']),
+        ]
+        ordering = ['-created_at']
+    
+    def save(self, *args, **kwargs):
+        from django.utils import timezone
+        
+        # Generate custom order ID if not provided
+        if not self.id:
+            self.id = str(random.randint(10000, 99999))
+            while Order.objects.filter(id=self.id).exists():
+                self.id = str(random.randint(10000, 99999))
+        
+        # Sync bill with total_amount
+        if self.total_amount:
+            self.bill = self.total_amount
+        
+        # Format frontend date/time fields using current time if created_at is not set yet
+        current_time = self.created_at or timezone.now()
+        if not self.placedOn:
+            self.placedOn = current_time.strftime("%d/%m/%y")
+        if not self.time:
+            self.time = current_time.strftime("%I:%M %p")
+        if not self.placedTime:
+            self.placedTime = self.time
+        
+        super().save(*args, **kwargs)
+    
+    def __str__(self):
+        return f"Order #{self.id}"
+    
     @property
     def totalItems(self):
         """Frontend compatibility"""
-        return sum(item.quantity for item in self.items.all())
+        return sum(item.quantity for item in self.items.all())  # type: ignore
     
     @property
     def total_items(self):
@@ -205,11 +293,11 @@ class Cart(models.Model):
     
     @property
     def total_items(self):
-        return sum(item.quantity for item in self.items.all())
+        return sum(item.quantity for item in self.items.all())  # type: ignore
     
     @property
     def total_price(self):
-        return sum(item.total_price for item in self.items.all())
+        return sum(item.total_price for item in self.items.all())  # type: ignore
 
 
 class CartItem(models.Model):
@@ -233,11 +321,11 @@ class CartItem(models.Model):
     
     @property
     def total_price(self):
-        return self.product.price * self.quantity
+        return self.product.discounted_price * self.quantity
     
     @property
     def unit_price(self):
-        return self.product.price
+        return self.product.discounted_price
 
 
 class Wishlist(models.Model):

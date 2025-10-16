@@ -334,7 +334,7 @@ class CreateOrderView(APIView):
                             size=cart_item.size,
                             color=cart_item.color,
                             quantity=cart_item.quantity,
-                            unit_price=cart_item.product.price,
+                            unit_price=cart_item.unit_price,
                             total_price=cart_item.total_price,
                         )
                         
@@ -449,7 +449,7 @@ class CreateQuickOrderView(APIView):
                 )
             
             # Calculate total price
-            unit_price = product.price
+            unit_price = product.discounted_price
             subtotal = unit_price * quantity
             
             # Apply promo code if provided
@@ -487,7 +487,7 @@ class CreateQuickOrderView(APIView):
                 product=product,
                 quantity=quantity,
                 unit_price=unit_price,
-                total_price=total_price,
+                total_price=subtotal,
                 size=serializer.validated_data.get('size', ''),
                 color=serializer.validated_data.get('color', ''),
                 title=product.name
