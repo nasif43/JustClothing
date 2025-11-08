@@ -217,9 +217,14 @@ const SellerSignupFormPage = () => {
                   <label className="flex items-center gap-2">
                     <input type="radio" name="businessType" value="Thrifted Clothing" checked={form.businessType === 'Thrifted Clothing'} onChange={handleChange} /> Thrifted Clothing
                   </label>
-                  <label className="flex items-center gap-2">
-                    <input type="radio" name="businessType" value="Loose Fabric" checked={form.businessType === 'Loose Fabric'} onChange={handleChange} /> Loose Fabric
-                  </label>
+                  <div className="relative group">
+                    <button type="button" disabled className="flex items-center gap-2 px-3 py-1 bg-gray-300 text-gray-500 cursor-not-allowed rounded">
+                      Loose Fabric
+                    </button>
+                    <span className="absolute top-full left-0 mt-1 text-xs text-gray-600 opacity-0 group-hover:opacity-100 transition-opacity">
+                      (coming soon!)
+                    </span>
+                  </div>
                 </div>
               </div>
               <div className="mb-4">
@@ -232,7 +237,14 @@ const SellerSignupFormPage = () => {
               </div>
               <div className="mb-4">
                 <label className="block text-sm font-medium mb-1">Pick-up Location</label>
-                <input name="pickupLocation" value={form.pickupLocation} onChange={handleChange} required className="input" />
+                <select name="pickupLocation" value={form.pickupLocation} onChange={handleChange} required className="input">
+                  <option value="">Select a location</option>
+                  <option value="Mirpur 11 1/2">Mirpur 11 1/2</option>
+                  <option value="Pallabi">Pallabi</option>
+                  <option value="Mirpur DOHS">Mirpur DOHS</option>
+                  <option value="Uttara">Uttara</option>
+                  <option value="Dhanmondi">Dhanmondi</option>
+                </select>
               </div>
               <div className="mb-4">
                 <label className="block text-sm font-medium mb-1">Instagram handle <span className="text-gray-400">(Optional)</span></label>

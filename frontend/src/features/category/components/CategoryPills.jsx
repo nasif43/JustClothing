@@ -29,6 +29,21 @@ function CategoryPills() {
     <div className="flex flex-col sm:flex-row gap-3 sm:gap-8 items-center">
       {categories.map((category) => {
         const isActive = currentBusinessType === category.businessType
+        if (category.businessType === "Loose Fabric") {
+          return (
+            <div key={category.id} className="relative group">
+              <button
+                disabled
+                className="w-full sm:w-auto px-6 sm:px-10 py-3 sm:py-4 border-1 rounded-full font-medium text-sm sm:text-base bg-gray-300 text-gray-500 cursor-not-allowed"
+              >
+                {category.name}
+              </button>
+              <span className="absolute top-full left-0 mt-1 text-xs text-gray-600 opacity-0 group-hover:opacity-100 transition-opacity">
+                (coming soon!)
+              </span>
+            </div>
+          )
+        }
         return (
           <button
             key={category.id}
