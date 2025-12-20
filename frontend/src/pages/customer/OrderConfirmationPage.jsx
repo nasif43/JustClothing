@@ -9,6 +9,41 @@ const OrderConfirmationPage = () => {
   // Use order number from API or fallback to random number
   const displayOrderNumber = orderNumber || order?.id || Math.floor(Math.random() * 100000);
   
+  // Calculate estimated delivery time based on product pickup days + shipping days (2)
+  const calculateEstimatedDelivery = () => {
+    const SHIPPING_DAYS = 2; // Default shipping days
+    let maxPickupDays = 3; // Default fallback
+    
+    // Check if we have order(s) with items
+    if (orders && orders.length > 0) {
+      // For multiple orders, find the maximum pickup days across all products
+      orders.forEach(orderItem => {
+        if (orderItem.items && orderItem.items.length > 0) {
+          orderItem.items.forEach(item => {
+            if (item.product?.estimated_pickup_days) {
+              maxPickupDays = Math.max(maxPickupDays, item.product.estimated_pickup_days);
+            }
+          });
+        }
+      });
+    } else if (order?.items && order.items.length > 0) {
+      // For single order, find the maximum pickup days
+      order.items.forEach(item => {
+        if (item.product?.estimated_pickup_days) {
+          maxPickupDays = Math.max(maxPickupDays, item.product.estimated_pickup_days);
+        }
+      });
+    }
+    
+    const totalDays = maxPickupDays + SHIPPING_DAYS;
+    const minDays = totalDays;
+    const maxDays = totalDays + 2; // Add buffer for delivery window
+    
+    return `${minDays}-${maxDays} days`;
+  };
+  
+  const estimatedDelivery = calculateEstimatedDelivery();
+  
   return (
     <div className="min-h-screen w-full flex items-center justify-center p-4">
         <div className="p-8 md:p-12 flex flex-col items-center justify-center min-h-[500px]">
@@ -41,7 +76,9 @@ const OrderConfirmationPage = () => {
             </p>
           )}
           
-          <p className="text-2xl font-bold md:text-xl text-black-700 text-center mb-2">estimated delivery time 2-4 days</p>
+          <p className="text-2xl font-bold md:text-xl text-black-700 text-center mb-2">
+            estimated delivery time {estimatedDelivery}
+          </p>
           <p className="text-lg font-bold md:text-lg text-gray-700 text-center mt-12">
             you will receive an email regarding your order!
           </p>
@@ -57,4 +94,4 @@ const OrderConfirmationPage = () => {
   );
 };
 
-export default OrderConfirmationPage; 
+export default OrderConfirmationPage;

@@ -114,13 +114,14 @@ class OrderItemSerializer(serializers.ModelSerializer):
     product_name = serializers.CharField(source='product.name', read_only=True)
     product_image = serializers.SerializerMethodField()
     seller_name = serializers.CharField(source='product.seller.business_name', read_only=True)
+    estimated_pickup_days = serializers.IntegerField(source='product.estimated_pickup_days', read_only=True)
     
     class Meta:
         model = OrderItem
         fields = [
             'id', 'product', 'title', 'photo', 'size', 'color', 'quantity', 
             'price', 'unit_price', 'total_price', 'product_name', 'product_image', 
-            'seller_name'
+            'seller_name', 'estimated_pickup_days'
         ]
     
     def get_product_image(self, obj):

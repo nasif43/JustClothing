@@ -236,23 +236,23 @@ function Header() {
                         e.stopPropagation()
                         navigate('/offers')
                         setIsMenuOpen(false)
-                      }}
-                      className="block w-full text-left px-4 py-3 text-sm hover:font-bold active:bg-gray-800 transition-colors"
-                    >
-                      Offers
-                    </button>
-                    <button 
-                      onClick={(e) => {
-                        e.stopPropagation()
-                        navigate('/blog')
-                        setIsMenuOpen(false)
-                      }}
-                      className="block w-full text-left px-4 py-3 text-sm hover:font-bold active:bg-gray-800 transition-colors"
-                    >
-                      Blog
-                    </button>
-                    {isAuthenticated ? (
+                        }}
+                        className="block w-full text-left px-4 py-3 text-sm hover:font-bold active:bg-gray-800 transition-colors"
+                      >
+                        Offers
+                      </button>
                       <button 
+                        disabled
+                        onClick={(e) => {
+                        e.stopPropagation()
+                        }}
+                        className="block w-full text-left px-4 py-3 text-sm hover:font-bold active:bg-gray-800 transition-colors opacity-50 cursor-not-allowed group"
+                      >
+                        <span className="group-hover:hidden">Blog</span>
+                        <span className="hidden group-hover:inline">(Coming Soon!)</span>
+                      </button>
+                      {isAuthenticated ? (
+                        <button 
                         onClick={() => {
                           logout()
                           setIsMenuOpen(false)
@@ -419,14 +419,15 @@ function Header() {
                     Offers
                   </button>
                   <button 
-                    onClick={() => {
-                      navigate('/blog')
-                      setIsMenuOpen(false)
-                    }}
-                    className="block w-full text-left px-4 py-2 text-sm hover:font-bold"
-                  >
-                    Blog
-                  </button>
+                        disabled
+                        onClick={(e) => {
+                        e.stopPropagation()
+                        }}
+                        className="block w-full text-left px-4 py-3 text-sm hover:font-bold active:bg-gray-800 transition-colors opacity-50 cursor-not-allowed group"
+                      >
+                        <span className="group-hover:hidden">Blog</span>
+                        <span className="hidden group-hover:inline">(Coming Soon!)</span>
+                      </button>
                   {isAuthenticated ? (
                     <button 
                       onClick={() => {

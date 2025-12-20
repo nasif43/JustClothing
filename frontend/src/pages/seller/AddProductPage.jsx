@@ -630,6 +630,12 @@ const AddProductPage = () => {
               <label className="block mb-2 font-medium text-gray-700">
                 Current Images <span className="text-xs text-gray-500">(Max 6)</span>
               </label>
+              <p className="text-xs text-gray-600 mb-3">
+                  Need help with your images? 
+                  <a href="https://backgrounderase.net/home" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:text-blue-800 mx-1">Remove Background</a>
+                  or
+                  <a href="https://imagecompressor.com/" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:text-blue-800 mx-1">Compress Images</a>
+                </p>
               <div className="border border-gray-300 rounded-lg p-4 min-h-[150px] flex items-start gap-4 flex-wrap">
                 {existingImages.map((image, index) => (
                   <div key={index} className="relative w-16 h-16">
@@ -656,6 +662,12 @@ const AddProductPage = () => {
             <label className="block mb-2 font-medium text-gray-700">
               {isEditMode ? 'Add New Images' : 'Add Photos'} <span className="text-xs text-gray-500">(Max 6)</span>
             </label>
+            <p className="text-xs text-gray-600 mb-3">
+                  Need help with your images? 
+                  <a href="https://backgrounderase.net/home" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:text-blue-800 mx-1">Remove Background</a>
+                  or
+                  <a href="https://imagecompressor.com/" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:text-blue-800 mx-1">Compress Images</a>
+            </p>
             <div className="border border-gray-300 rounded-lg p-4 min-h-[150px] flex items-start gap-4 flex-wrap">
               {console.log('Rendering selectedImages:', selectedImages)}
               {selectedImages.map((image, index) => (

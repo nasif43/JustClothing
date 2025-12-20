@@ -328,6 +328,28 @@ function ProductDetailPage() {
             )}
           </div>
 
+          {/* Estimated Delivery Time */}
+          <div className="mb-4 bg-blue-50 border border-blue-200 rounded-lg p-3">
+            <div className="flex items-center gap-2">
+              <svg className="h-5 w-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              <span className="text-sm font-medium text-blue-900">
+                Estimated Delivery: {(() => {
+                  const SHIPPING_DAYS = 2;
+                  const pickupDays = product.estimated_pickup_days || 3;
+                  const totalDays = pickupDays + SHIPPING_DAYS;
+                  const minDays = totalDays;
+                  const maxDays = totalDays + 2;
+                  return `${minDays}-${maxDays} days`;
+                })()}
+              </span>
+            </div>
+            <p className="text-xs text-blue-700 mt-1 ml-7">
+              Preparation time ({product.estimated_pickup_days || 3} days) + shipping (2 days)
+            </p>
+          </div>
+
           {/* Out of Stock Banner */}
           {isOutOfStock && (
             <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
@@ -590,6 +612,28 @@ function ProductDetailPage() {
               ) : (
                 <div className="text-3xl font-bold text-black">৳{product.price}</div>
               )}
+            </div>
+
+            {/* Estimated Delivery Time */}
+            <div className="mb-4 bg-blue-50 border border-blue-200 rounded-lg p-3">
+              <div className="flex items-center gap-2">
+                <svg className="h-5 w-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                <span className="text-sm font-medium text-blue-900">
+                  Estimated Delivery: {(() => {
+                    const SHIPPING_DAYS = 2;
+                    const pickupDays = product.estimated_pickup_days || 3;
+                    const totalDays = pickupDays + SHIPPING_DAYS;
+                    const minDays = totalDays;
+                    const maxDays = totalDays + 2;
+                    return `${minDays}-${maxDays} days`;
+                  })()}
+                </span>
+              </div>
+              <p className="text-xs text-blue-700 mt-1 ml-7">
+                Preparation time ({product.estimated_pickup_days || 3} days) + shipping (2 days)
+              </p>
             </div>
 
             {/* Out of Stock Banner */}
