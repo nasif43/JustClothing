@@ -37,6 +37,12 @@ class MinIOStorage(Storage):
             else:
                 content_bytes = content
             
+            print(f"[MinIO DEBUG] Attempting to save file: {name}")
+            print(f"[MinIO DEBUG] Bucket: {self.bucket_name}")
+            print(f"[MinIO DEBUG] Content size: {len(content_bytes)} bytes")
+            print(f"[MinIO DEBUG] Endpoint: {settings.MINIO_STORAGE_ENDPOINT}")
+            print(f"[MinIO DEBUG] Use HTTPS: {settings.MINIO_STORAGE_USE_HTTPS}")
+            
             # Upload to MinIO
             self.client.put_object(
                 self.bucket_name,
@@ -44,9 +50,15 @@ class MinIOStorage(Storage):
                 io.BytesIO(content_bytes),
                 length=len(content_bytes)
             )
+            
+            print(f"[MinIO DEBUG] Successfully uploaded: {name}")
             return name
         except S3Error as e:
+            print(f"[MinIO ERROR] Failed to upload {name}: {e}")
             raise IOError(f"Error saving file to MinIO: {e}")
+        except Exception as e:
+            print(f"[MinIO ERROR] Unexpected error uploading {name}: {e}")
+            raise
     
     def _open(self, name, mode='rb'):
         """Open file from MinIO"""
