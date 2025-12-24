@@ -104,6 +104,18 @@ class SellerProfileView(generics.RetrieveUpdateAPIView):
     
     def get_object(self):
         return get_object_or_404(SellerProfile, user=self.request.user)
+    
+    def update(self, request, *args, **kwargs):
+        print(f"[SELLER PROFILE UPDATE] Request data: {request.data}")
+        print(f"[SELLER PROFILE UPDATE] Request FILES: {request.FILES}")
+        partial = kwargs.pop('partial', False)
+        instance = self.get_object()
+        serializer = self.get_serializer(instance, data=request.data, partial=partial)
+        serializer.is_valid(raise_exception=True)
+        print(f"[SELLER PROFILE UPDATE] Validated data: {serializer.validated_data}")
+        self.perform_update(serializer)
+        print(f"[SELLER PROFILE UPDATE] Update performed successfully")
+        return Response(serializer.data)
 
 
 class CustomerProfileView(generics.RetrieveUpdateAPIView):

@@ -194,7 +194,17 @@ if USE_MINIO_MEDIA:
     MINIO_STORAGE_MEDIA_BUCKET_NAME = config('MINIO_STORAGE_MEDIA_BUCKET_NAME', default='justclothing-media')
     MINIO_STORAGE_MEDIA_URL = config('MINIO_STORAGE_MEDIA_URL', default='http://localhost:9000/justclothing-media/')
     
-    # Use MinIO for media files only
+    # Django 4.2+ uses STORAGES setting
+    STORAGES = {
+        "default": {
+            "BACKEND": "justclothing.minio_backends.MinIOMediaStorage",
+        },
+        "staticfiles": {
+            "BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage",
+        },
+    }
+    
+    # Also set legacy setting for compatibility
     DEFAULT_FILE_STORAGE = 'justclothing.minio_backends.MinIOMediaStorage'
     MEDIA_URL = MINIO_STORAGE_MEDIA_URL
     
