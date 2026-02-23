@@ -17,7 +17,7 @@ NC='\033[0m' # No Color
 
 # Configuration
 APP_USER="justclothing"
-APP_HOME="/home/$APP_USER/justclothing"
+APP_HOME="/JustClothing"
 DOMAIN="${DOMAIN:-example.com}"
 BACKEND_PORT=8000
 REDIS_PORT=6379
@@ -138,6 +138,10 @@ systemctl enable postgresql
 
 # Create database and user
 sudo -u postgres psql -v ON_ERROR_STOP=1 <<-EOSQL
+    -- Reset default privileges first
+    ALTER DEFAULT PRIVILEGES IN SCHEMA public REVOKE ALL ON TABLES FROM $POSTGRES_USER;
+    ALTER DEFAULT PRIVILEGES IN SCHEMA public REVOKE ALL ON SEQUENCES FROM $POSTGRES_USER;
+    
     -- Drop if exists (for fresh setup)
     DROP DATABASE IF EXISTS $POSTGRES_DB;
     DROP USER IF EXISTS $POSTGRES_USER;
@@ -240,6 +244,12 @@ log_info "Step 8: Configuring Django..."
 
 # Ensure backend directory has correct permissions
 chown -R $APP_USER:$APP_USER $APP_HOME/backend
+
+# Create logs directory
+mkdir -p $APP_HOME/backend/logs
+mkdir -p $APP_HOME/backend/media
+chown -R $APP_USER:$APP_USER $APP_HOME/backend/logs
+chown -R $APP_USER:$APP_USER $APP_HOME/backend/media
 
 cd $APP_HOME/backend
 
@@ -398,11 +408,11 @@ server {
     }
 
     location /static/ {
-        alias /home/APP_USER_PLACEHOLDER/justclothing/backend/staticfiles/;
+        alias /JustClothing/backend/staticfiles/;
     }
 
     location /media/ {
-        alias /home/APP_USER_PLACEHOLDER/justclothing/backend/media/;
+        alias /JustClothing/backend/media/;
     }
 }
 EOF
