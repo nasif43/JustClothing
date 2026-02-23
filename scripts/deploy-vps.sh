@@ -96,8 +96,6 @@ apt-get install -y \
     postgresql-contrib \
     redis-server \
     nginx \
-    nodejs \
-    npm \
     supervisor \
     ssl-cert \
     certbot \
@@ -109,6 +107,13 @@ apt-get install -y \
     net-tools
 
 log_success "System packages installed"
+
+# Install Node.js v20+ (required for react-router-dom v7+)
+log_info "Installing Node.js v20..."
+curl -fsSL https://deb.nodesource.com/setup_20.x | bash -
+apt-get install -y nodejs
+
+log_success "Node.js $(node --version) installed"
 
 ###############################################################################
 # Step 2: Create application user
@@ -214,10 +219,15 @@ log_success "Python dependencies installed"
 ###############################################################################
 log_info "Step 7: Setting up Node.js frontend..."
 
+# Ensure frontend directory has correct permissions
+chown -R $APP_USER:$APP_USER $APP_HOME/frontend
+
 cd $APP_HOME/frontend
 
-# Install npm dependencies
-sudo -u $APP_USER npm install
+# Install npm dependencies as the app user
+# Use --unsafe-perm to allow npm to run scripts
+sudo -u $APP_USER npm install --unsafe-perm
+
 log_info "Building frontend..."
 sudo -u $APP_USER npm run build
 
@@ -227,6 +237,9 @@ log_success "Frontend built successfully"
 # Step 8: Configure Django Settings
 ###############################################################################
 log_info "Step 8: Configuring Django..."
+
+# Ensure backend directory has correct permissions
+chown -R $APP_USER:$APP_USER $APP_HOME/backend
 
 cd $APP_HOME/backend
 
