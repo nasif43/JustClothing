@@ -215,6 +215,12 @@ step_setup_redis() {
 step_setup_minio() {
     print_header "Step 6: Setting Up MinIO Object Storage"
     
+    # Check if MinIO is already running
+    if systemctl is-active --quiet minio; then
+        print_success "MinIO is already running - skipping setup"
+        return 0
+    fi
+    
     # Create minio user first (before any directory creation)
     if ! id "minio" &>/dev/null; then
         useradd -r -s /bin/false minio
