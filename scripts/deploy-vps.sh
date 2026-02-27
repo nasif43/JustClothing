@@ -1,12 +1,13 @@
 #!/bin/bash
 
-###############################################################################
-# JustClothing VPS Deployment Script (Native)
-# This script deploys the application without Docker
-# Usage: sudo bash deploy-vps.sh
-###############################################################################
+################################################################################
+# JustClothing VPS Deployment Script
+# Deploys Django backend, React frontend, PostgreSQL, Redis, MinIO, and Nginx
+# Assumes: Ubuntu/Debian-based system with sudo privileges
+# Usage: sudo bash deploy-vps.sh or ./deploy-vps.sh
+################################################################################
 
-set -e
+set -e  # Exit on any error
 
 # Color codes for output
 RED='\033[0;31m'
@@ -15,529 +16,964 @@ YELLOW='\033[1;33m'
 BLUE='\033[0;34m'
 NC='\033[0m' # No Color
 
-# Configuration
+# Configuration Variables
+REPO_PATH="${1:-.}"
 APP_USER="justclothing"
-APP_HOME="/JustClothing"
-DOMAIN="${DOMAIN:-example.com}"
+APP_GROUP="justclothing"
+DOMAIN="${2:-justclothing.store}"
+EMAIL="${3:-admin@justclothing.store}"
 BACKEND_PORT=8000
+MINIO_PORT=9000
+MINIO_CONSOLE_PORT=9001
 REDIS_PORT=6379
 POSTGRES_PORT=5432
-POSTGRES_DB="justclothing_db"
-POSTGRES_USER="justclothing_user"
-POSTGRES_PASSWORD="${DB_PASSWORD:-changeMe123!}"
+LOG_DIR="/var/log/justclothing"
+APP_DIR="/opt/justclothing"
+VENV_DIR="$APP_DIR/venv"
 
-# Helper functions
-log_info() {
-    echo -e "${BLUE}[INFO]${NC} $1"
+# Function to print colored output
+print_header() {
+    echo -e "\n${BLUE}================================${NC}"
+    echo -e "${BLUE}$1${NC}"
+    echo -e "${BLUE}================================${NC}\n"
 }
 
-log_success() {
-    echo -e "${GREEN}[SUCCESS]${NC} $1"
+print_success() {
+    echo -e "${GREEN}✓ $1${NC}"
 }
 
-log_warning() {
-    echo -e "${YELLOW}[WARNING]${NC} $1"
+print_error() {
+    echo -e "${RED}✗ $1${NC}"
 }
 
-log_error() {
-    echo -e "${RED}[ERROR]${NC} $1"
-    exit 1
+print_warning() {
+    echo -e "${YELLOW}⚠ $1${NC}"
 }
 
-# Check if running as root
+# Check if running with sudo or as root
 if [[ $EUID -ne 0 ]]; then
-    log_error "This script must be run as root (use: sudo bash deploy-vps.sh)"
+    print_error "This script must be run as root"
+    exit 1
 fi
 
-# Parse arguments
-while [[ $# -gt 0 ]]; do
-    case $1 in
-        --domain)
-            DOMAIN="$2"
-            shift 2
-            ;;
-        --db-password)
-            POSTGRES_PASSWORD="$2"
-            shift 2
-            ;;
-        --app-user)
-            APP_USER="$2"
-            APP_HOME="/home/$APP_USER/justclothing"
-            shift 2
-            ;;
-        *)
-            log_warning "Unknown option: $1"
-            shift
-            ;;
-    esac
-done
-
-log_info "Starting JustClothing VPS deployment..."
-log_info "Domain: $DOMAIN"
-log_info "App User: $APP_USER"
-log_info "App Home: $APP_HOME"
-
-###############################################################################
-# Step 1: Update system packages
-###############################################################################
-log_info "Step 1: Updating system packages..."
-apt-get update
-apt-get upgrade -y
-apt-get install -y \
-    curl \
-    wget \
-    git \
-    build-essential \
-    python3 \
-    python3-pip \
-    python3-venv \
-    python3-dev \
-    postgresql \
-    postgresql-contrib \
-    redis-server \
-    nginx \
-    supervisor \
-    ssl-cert \
-    certbot \
-    python3-certbot-nginx \
-    ufw \
-    git \
-    vim \
-    htop \
-    net-tools
-
-log_success "System packages installed"
-
-# Install Node.js v20+ (required for react-router-dom v7+)
-log_info "Installing Node.js v20..."
-curl -fsSL https://deb.nodesource.com/setup_20.x | bash -
-apt-get install -y nodejs
-
-log_success "Node.js $(node --version) installed"
-
-###############################################################################
-# Step 2: Create application user
-###############################################################################
-log_info "Step 2: Setting up application user..."
-
-if id "$APP_USER" &>/dev/null; then
-    log_warning "User $APP_USER already exists"
-else
-    useradd -m -s /bin/bash $APP_USER
-    log_success "User $APP_USER created"
-fi
-
-###############################################################################
-# Step 3: Setup PostgreSQL Database
-###############################################################################
-log_info "Step 3: Setting up PostgreSQL database..."
-
-# Start PostgreSQL
-systemctl start postgresql || true
-systemctl enable postgresql
-
-# Create database and user
-sudo -u postgres psql -v ON_ERROR_STOP=1 <<-EOSQL
-    -- Reset default privileges first
-    ALTER DEFAULT PRIVILEGES IN SCHEMA public REVOKE ALL ON TABLES FROM $POSTGRES_USER;
-    ALTER DEFAULT PRIVILEGES IN SCHEMA public REVOKE ALL ON SEQUENCES FROM $POSTGRES_USER;
+# Main Deployment
+main() {
+    print_header "JustClothing VPS Deployment Starting"
+    echo "Repository Path: $REPO_PATH"
+    echo "Domain: $DOMAIN"
+    echo "App Directory: $APP_DIR"
     
-    -- Drop if exists (for fresh setup)
-    DROP DATABASE IF EXISTS $POSTGRES_DB;
-    DROP USER IF EXISTS $POSTGRES_USER;
+    step_update_system
+    step_create_app_user
+    step_install_dependencies
+    step_setup_postgresql
+    step_setup_redis
+    step_setup_minio
+    step_copy_application
+    step_setup_backend
+    step_setup_frontend
+    step_setup_nginx
+    step_setup_ssl
+    step_setup_systemd_services
+    step_setup_logging
+    step_setup_firewall
+    step_final_configuration
     
-    -- Create user
-    CREATE USER $POSTGRES_USER WITH PASSWORD '$POSTGRES_PASSWORD';
+    print_header "Deployment Complete!"
+    print_success "Your application is ready at https://$DOMAIN"
+    print_success "Admin panel at https://$DOMAIN/admin"
+}
+
+################################################################################
+# Step 1: Update System
+################################################################################
+step_update_system() {
+    print_header "Step 1: Updating System Packages"
     
-    -- Create database
-    CREATE DATABASE $POSTGRES_DB OWNER $POSTGRES_USER;
+    apt-get update
+    apt-get upgrade -y
     
-    -- Grant privileges
-    GRANT ALL PRIVILEGES ON DATABASE $POSTGRES_DB TO $POSTGRES_USER;
-    ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON TABLES TO $POSTGRES_USER;
-    ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON SEQUENCES TO $POSTGRES_USER;
-EOSQL
+    print_success "System packages updated"
+}
 
-log_success "PostgreSQL database configured"
+################################################################################
+# Step 2: Create Application User
+################################################################################
+step_create_app_user() {
+    print_header "Step 2: Creating Application User"
+    
+    if id "$APP_USER" &>/dev/null; then
+        print_warning "User $APP_USER already exists"
+    else
+        useradd -m -s /bin/bash -d /home/$APP_USER $APP_USER
+        print_success "User $APP_USER created"
+    fi
+}
 
-###############################################################################
-# Step 4: Setup Redis
-###############################################################################
-log_info "Step 4: Setting up Redis..."
+################################################################################
+# Step 3: Install System Dependencies
+################################################################################
+step_install_dependencies() {
+    print_header "Step 3: Installing System Dependencies"
+    
+    # Build tools
+    apt-get install -y build-essential libssl-dev libffi-dev
+    
+    # Python
+    apt-get install -y python3 python3-pip python3-venv python3-dev
+    
+    # PostgreSQL client and server
+    apt-get install -y postgresql postgresql-contrib postgresql-client
+    
+    # Redis
+    apt-get install -y redis-server
+    
+    # Nginx
+    apt-get install -y nginx
+    
+    # Node.js and npm
+    curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash -
+    apt-get install -y nodejs
+    
+    # Certbot for Let's Encrypt
+    apt-get install -y certbot python3-certbot-nginx
+    
+    # Supervisor for process management (alternative to systemd)
+    apt-get install -y supervisor
+    
+    # Utility packages
+    apt-get install -y curl wget git htop
+    
+    # AWS CLI for S3 operations (optional)
+    apt-get install -y awscli
+    
+    print_success "All system dependencies installed"
+}
 
-systemctl start redis-server
-systemctl enable redis-server
+################################################################################
+# Step 4: Setup PostgreSQL
+################################################################################
+step_setup_postgresql() {
+    print_header "Step 4: Setting Up PostgreSQL"
+    
+    # Start PostgreSQL service
+    systemctl start postgresql
+    systemctl enable postgresql
+    
+    # Read database password
+    echo -n "Enter PostgreSQL password for justclothing_user: "
+    read -s DB_PASSWORD
+    echo
+    
+    # Create database and user
+    sudo -u postgres psql << EOF
+-- Create database
+CREATE DATABASE justclothing_db;
 
-# Configure Redis
-sed -i 's/# maxmemory <bytes>/maxmemory 512mb/' /etc/redis/redis.conf
-sed -i 's/# maxmemory-policy noeviction/maxmemory-policy allkeys-lru/' /etc/redis/redis.conf
+-- Create user
+CREATE USER justclothing_user WITH PASSWORD '$DB_PASSWORD';
 
-systemctl restart redis-server
+-- Grant privileges
+ALTER ROLE justclothing_user SET client_encoding TO 'utf8';
+ALTER ROLE justclothing_user SET default_transaction_isolation TO 'read committed';
+ALTER ROLE justclothing_user SET default_transaction_deferrable TO on;
+ALTER ROLE justclothing_user SET default_transaction_level TO 'read committed';
+ALTER ROLE justclothing_user SET timezone TO 'UTC';
+GRANT ALL PRIVILEGES ON DATABASE justclothing_db TO justclothing_user;
 
-log_success "Redis configured and running"
+-- Connect to the database and grant schema permissions
+\c justclothing_db;
+GRANT ALL ON SCHEMA public TO justclothing_user;
+EOF
+    
+    print_success "PostgreSQL database and user created"
+}
 
-###############################################################################
-# Step 5: Clone/Prepare application code
-###############################################################################
-log_info "Step 5: Preparing application code..."
+################################################################################
+# Step 5: Setup Redis
+################################################################################
+step_setup_redis() {
+    print_header "Step 5: Setting Up Redis"
+    
+    # Configure Redis
+    cp /etc/redis/redis.conf /etc/redis/redis.conf.backup
+    
+    # Update Redis configuration
+    sed -i 's/^# bind 127.0.0.1/bind 127.0.0.1/' /etc/redis/redis.conf
+    sed -i 's/^# requirepass/requirepass/' /etc/redis/redis.conf
+    
+    # Start Redis
+    systemctl start redis-server
+    systemctl enable redis-server
+    
+    print_success "Redis configured and started"
+}
 
-# Copy application code to app home
-mkdir -p $APP_HOME
-chown -R $APP_USER:$APP_USER $APP_HOME
+################################################################################
+# Step 6: Setup MinIO
+################################################################################
+step_setup_minio() {
+    print_header "Step 6: Setting Up MinIO Object Storage"
+    
+    # Create MinIO directories
+    mkdir -p /opt/minio/data
+    mkdir -p /opt/minio/config
+    
+    # Download MinIO binary
+    cd /opt/minio
+    curl -o minio https://dl.min.io/server/minio/release/linux-amd64/minio
+    chmod +x minio
+    
+    # Create environment file for MinIO
+    cat > /etc/default/minio << 'EOF'
+MINIO_ROOT_USER=minioadmin
+MINIO_ROOT_PASSWORD=minioadmin123
+MINIO_CONFIG_ENV_FILE=/opt/minio/config/minio.env
+EOF
+    
+    # Create systemd service for MinIO
+    cat > /etc/systemd/system/minio.service << 'EOF'
+[Unit]
+Description=MinIO Object Storage Server
+Documentation=https://docs.min.io/docs/minio-quickstart-guide
+Wants=network-online.target
+After=network-online.target
+AssertFileNotEmpty=/etc/default/minio
 
-# If code already exists, pull latest; otherwise clone
-if [ -d "$APP_HOME/.git" ]; then
-    log_info "Repository exists, pulling latest changes..."
-    cd $APP_HOME
-    sudo -u $APP_USER git pull
-else
-    log_warning "Please ensure application code is in $APP_HOME"
-    log_info "You can copy your code with: sudo cp -r /path/to/justclothing/* $APP_HOME/"
-    log_info "Waiting for user confirmation..."
-    read -p "Press Enter once you've copied the code to $APP_HOME..."
-fi
+[Service]
+Type=notify
+WorkingDirectory=/opt/minio
+ExecStartPre=/bin/bash -c "echo 'User minio' && test -u minio"
+ExecStart=/opt/minio/minio server /opt/minio/data --console-address ":9001"
+Restart=always
+RestartSec=5
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=minio
+User=minio
+Group=minio
+ProtectParentDirectories=yes
+ProtectControlGroups=yes
+ProtectKernelTunables=yes
+PrivateDevices=yes
+AllowedCPUs=*
+AllowedIOWeight=*
+ProtectSystem=full
+ProtectHome=yes
+NoNewPrivileges=on
 
-log_success "Application code prepared"
+[Install]
+WantedBy=multi-user.target
+EOF
+    
+    # Create minio user
+    useradd -r -s /bin/false minio 2>/dev/null || true
+    chown -R minio:minio /opt/minio
+    
+    # Start MinIO
+    systemctl daemon-reload
+    systemctl start minio
+    systemctl enable minio
+    
+    print_success "MinIO installed and configured"
+    print_warning "MinIO Admin Console: http://$(hostname -I | awk '{print $1}'):9001"
+    print_warning "MinIO API: http://$(hostname -I | awk '{print $1}'):9000"
+}
 
-###############################################################################
-# Step 6: Setup Python Virtual Environment and Dependencies
-###############################################################################
-log_info "Step 6: Setting up Python virtual environment..."
+################################################################################
+# Step 7: Copy Application
+################################################################################
+step_copy_application() {
+    print_header "Step 7: Copying Application Files"
+    
+    # Create app directory
+    mkdir -p $APP_DIR
+    
+    # Copy repository
+    cp -r "$REPO_PATH"/* $APP_DIR/ 2>/dev/null || cp -r "$REPO_PATH"/. $APP_DIR/
+    
+    # Create necessary directories
+    mkdir -p $APP_DIR/media/products $APP_DIR/media/sellers
+    mkdir -p $APP_DIR/staticfiles
+    mkdir -p $LOG_DIR/{backend,frontend,nginx,celery}
+    
+    # Set permissions
+    chown -R $APP_USER:$APP_GROUP $APP_DIR
+    chown -R $APP_USER:$APP_GROUP $LOG_DIR
+    chmod -R 755 $LOG_DIR
+    
+    print_success "Application files copied to $APP_DIR"
+}
 
-cd $APP_HOME
-
-# Create virtual environment
-sudo -u $APP_USER python3 -m venv venv
-log_success "Virtual environment created"
-
-# Upgrade pip
-sudo -u $APP_USER ./venv/bin/pip install --upgrade pip setuptools wheel
-
-# Install Python dependencies
-log_info "Installing Python dependencies..."
-sudo -u $APP_USER ./venv/bin/pip install -r backend/requirements.txt
-log_success "Python dependencies installed"
-
-###############################################################################
-# Step 7: Setup Node.js and Frontend
-###############################################################################
-log_info "Step 7: Setting up Node.js frontend..."
-
-# Ensure frontend directory has correct permissions
-chown -R $APP_USER:$APP_USER $APP_HOME/frontend
-
-cd $APP_HOME/frontend
-
-# Install npm dependencies as the app user
-# Use --unsafe-perm to allow npm to run scripts
-sudo -u $APP_USER npm install --unsafe-perm
-
-log_info "Building frontend..."
-sudo -u $APP_USER npm run build
-
-log_success "Frontend built successfully"
-
-###############################################################################
-# Step 8: Configure Django Settings
-###############################################################################
-log_info "Step 8: Configuring Django..."
-
-# Ensure backend directory has correct permissions
-chown -R $APP_USER:$APP_USER $APP_HOME/backend
-
-# Create logs directory
-mkdir -p $APP_HOME/backend/logs
-mkdir -p $APP_HOME/backend/media
-chown -R $APP_USER:$APP_USER $APP_HOME/backend/logs
-chown -R $APP_USER:$APP_USER $APP_HOME/backend/media
-
-cd $APP_HOME/backend
-
-# Create .env file
-cat > .env <<EOF
+################################################################################
+# Step 8: Setup Backend
+################################################################################
+step_setup_backend() {
+    print_header "Step 8: Setting Up Django Backend"
+    
+    cd $APP_DIR/backend
+    
+    # Create Python virtual environment
+    python3 -m venv $VENV_DIR
+    source $VENV_DIR/bin/activate
+    
+    # Upgrade pip
+    pip install --upgrade pip setuptools wheel
+    
+    # Install Python dependencies
+    pip install -r requirements.txt
+    
+    # Create .env file
+    echo -n "Enter Django SECRET_KEY (or press Enter for auto-generated): "
+    read SECRET_KEY
+    
+    if [ -z "$SECRET_KEY" ]; then
+        SECRET_KEY=$(python3 -c 'from django.core.management.utils import get_random_secret_key; print(get_random_secret_key())')
+    fi
+    
+    echo -n "Enter database password: "
+    read -s DB_PASSWORD
+    echo
+    
+    # Create .env file for Django
+    cat > $APP_DIR/backend/.env << EOF
+# Django Settings
+SECRET_KEY=$SECRET_KEY
 DEBUG=False
-SECRET_KEY=$(python3 -c 'from django.core.management.utils import get_random_secret_key; print(get_random_secret_key())')
-ALLOWED_HOSTS=$DOMAIN,www.$DOMAIN,127.0.0.1,localhost
-SECURE_SSL_REDIRECT=True
-SESSION_COOKIE_SECURE=True
-CSRF_COOKIE_SECURE=True
+ALLOWED_HOSTS=$DOMAIN,www.$DOMAIN,localhost,127.0.0.1
 
-# Database
+# Database Configuration
 DB_ENGINE=django.db.backends.postgresql
-DB_NAME=$POSTGRES_DB
-DB_USER=$POSTGRES_USER
-DB_PASSWORD=$POSTGRES_PASSWORD
-DB_HOST=127.0.0.1
+DB_NAME=justclothing_db
+DB_USER=justclothing_user
+DB_PASSWORD=$DB_PASSWORD
+DB_HOST=localhost
 DB_PORT=$POSTGRES_PORT
 
-# Redis
+# Redis Configuration
 REDIS_URL=redis://127.0.0.1:$REDIS_PORT/0
+
+# Celery Configuration
 CELERY_BROKER_URL=redis://127.0.0.1:$REDIS_PORT/0
 CELERY_RESULT_BACKEND=redis://127.0.0.1:$REDIS_PORT/0
 
-# Frontend
-FRONTEND_URL=https://$DOMAIN
-CORS_ALLOWED_ORIGINS=https://$DOMAIN,https://www.$DOMAIN
+# MinIO Configuration
+MINIO_STORAGE_ENDPOINT=localhost:$MINIO_PORT
+MINIO_STORAGE_USE_HTTPS=True
+MINIO_STORAGE_MEDIA_URL=https://$DOMAIN/minio/
 
-# Email (configure as needed)
-EMAIL_BACKEND=django.core.mail.backends.console.EmailBackend
-EMAIL_HOST=smtp.gmail.com
-EMAIL_PORT=587
-EMAIL_USE_TLS=True
-EMAIL_HOST_USER=your-email@gmail.com
-EMAIL_HOST_PASSWORD=your-app-password
-
-# S3/Minio (if using)
+# AWS S3 Configuration (Optional)
 USE_S3=False
 AWS_ACCESS_KEY_ID=
 AWS_SECRET_ACCESS_KEY=
 AWS_STORAGE_BUCKET_NAME=
+
+# Email Configuration
+EMAIL_BACKEND=django.core.mail.backends.smtp.EmailBackend
+EMAIL_HOST=smtp.gmail.com
+EMAIL_PORT=587
+EMAIL_USE_TLS=True
+EMAIL_HOST_USER=
+EMAIL_HOST_PASSWORD=
+
+# Google OAuth (Optional)
+GOOGLE_OAUTH2_CLIENT_ID=
+GOOGLE_OAUTH2_CLIENT_SECRET=
 EOF
-
-chown $APP_USER:$APP_USER .env
-
-log_success "Django configuration created at backend/.env"
-
-###############################################################################
-# Step 9: Setup Database Migrations
-###############################################################################
-log_info "Step 9: Running database migrations..."
-
-cd $APP_HOME
-sudo -u $APP_USER ./venv/bin/python backend/manage.py migrate
-
-log_success "Database migrations completed"
-
-###############################################################################
-# Step 10: Collect Static Files
-###############################################################################
-log_info "Step 10: Collecting static files..."
-
-cd $APP_HOME
-sudo -u $APP_USER ./venv/bin/python backend/manage.py collectstatic --noinput
-
-log_success "Static files collected"
-
-###############################################################################
-# Step 11: Create Supervisor Configuration for Django + Gunicorn
-###############################################################################
-log_info "Step 11: Configuring Supervisor for application processes..."
-
-# Install Gunicorn
-sudo -u $APP_USER $APP_HOME/venv/bin/pip install gunicorn
-
-# Gunicorn configuration
-cat > /etc/supervisor/conf.d/gunicorn.conf <<EOF
-[program:gunicorn]
-directory=$APP_HOME/backend
-command=$APP_HOME/venv/bin/gunicorn \\
-    --workers 4 \\
-    --worker-class sync \\
-    --bind 127.0.0.1:$BACKEND_PORT \\
-    --timeout 60 \\
-    --access-logfile /var/log/gunicorn-access.log \\
-    --error-logfile /var/log/gunicorn-error.log \\
-    justclothing.wsgi:application
-
-user=$APP_USER
-autostart=true
-autorestart=true
-redirect_stderr=true
-stdout_logfile=/var/log/gunicorn.log
-EOF
-
-# Celery Worker configuration
-cat > /etc/supervisor/conf.d/celery.conf <<EOF
-[program:celery]
-directory=$APP_HOME/backend
-command=$APP_HOME/venv/bin/celery -A justclothing worker \\
-    --loglevel=info \\
-    --concurrency=4 \\
-    --logfile=/var/log/celery.log
-
-user=$APP_USER
-autostart=true
-autorestart=true
-redirect_stderr=true
-stdout_logfile=/var/log/celery-worker.log
-EOF
-
-# Celery Beat configuration
-cat > /etc/supervisor/conf.d/celery-beat.conf <<EOF
-[program:celery-beat]
-directory=$APP_HOME/backend
-command=$APP_HOME/venv/bin/celery -A justclothing beat \\
-    --loglevel=info \\
-    --logfile=/var/log/celery-beat.log
-
-user=$APP_USER
-autostart=true
-autorestart=true
-redirect_stderr=true
-stdout_logfile=/var/log/celery-beat.log
-EOF
-
-log_success "Supervisor configurations created"
-
-###############################################################################
-# Step 12: Configure Nginx as Reverse Proxy
-###############################################################################
-log_info "Step 12: Configuring Nginx..."
-
-# Create Nginx configuration
-cat > /etc/nginx/sites-available/justclothing <<'EOF'
-upstream gunicorn {
-    server 127.0.0.1:8000;
+    
+    # Run migrations
+    source $VENV_DIR/bin/activate
+    cd $APP_DIR/backend
+    python manage.py migrate
+    
+    # Collect static files
+    python manage.py collectstatic --noinput
+    
+    # Create superuser
+    echo -n "Create superuser? (y/n): "
+    read -r CREATE_SUPER
+    if [[ $CREATE_SUPER == "y" ]]; then
+        python manage.py createsuperuser
+    fi
+    
+    # Change ownership
+    chown -R $APP_USER:$APP_GROUP $APP_DIR/backend
+    
+    print_success "Django backend setup complete"
 }
 
+################################################################################
+# Step 9: Setup Frontend
+################################################################################
+step_setup_frontend() {
+    print_header "Step 9: Building React Frontend"
+    
+    cd $APP_DIR/frontend
+    
+    # Create .env file for frontend (if needed)
+    cat > $APP_DIR/frontend/.env.production << EOF
+VITE_API_URL=https://$DOMAIN/api
+VITE_STATIC_URL=https://$DOMAIN/static
+EOF
+    
+    # Install dependencies
+    npm install
+    
+    # Build for production
+    npm run build
+    
+    # Change ownership
+    chown -R $APP_USER:$APP_GROUP $APP_DIR/frontend
+    
+    print_success "React frontend built successfully"
+}
+
+################################################################################
+# Step 10: Setup Nginx
+################################################################################
+step_setup_nginx() {
+    print_header "Step 10: Configuring Nginx"
+    
+    # Remove default nginx config
+    rm -f /etc/nginx/sites-enabled/default
+    rm -f /etc/nginx/sites-available/default
+    
+    # Create Nginx configuration for HTTP (will be updated to HTTPS after SSL setup)
+    cat > /etc/nginx/sites-available/justclothing << 'EOF'
+upstream backend {
+    server 127.0.0.1:8000;
+    keepalive 32;
+}
+
+upstream minio {
+    server 127.0.0.1:9000;
+}
+
+# Redirect HTTP to HTTPS
 server {
     listen 80;
-    server_name DOMAIN_PLACEHOLDER www.DOMAIN_PLACEHOLDER;
-    client_max_body_size 100M;
-
+    listen [::]:80;
+    server_name _;
+    
+    location /.well-known/acme-challenge/ {
+        root /var/www/certbot;
+    }
+    
     location / {
-        proxy_pass http://gunicorn;
+        return 301 https://$host$request_uri;
+    }
+}
+
+# HTTPS Server (certificate paths will be updated after SSL setup)
+server {
+    listen 443 ssl http2;
+    listen [::]:443 ssl http2;
+    server_name DOMAIN_PLACEHOLDER www.DOMAIN_PLACEHOLDER;
+    
+    # SSL certificates (will be created by certbot)
+    ssl_certificate /etc/letsencrypt/live/DOMAIN_PLACEHOLDER/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/DOMAIN_PLACEHOLDER/privkey.pem;
+    
+    # SSL configuration
+    ssl_protocols TLSv1.2 TLSv1.3;
+    ssl_ciphers HIGH:!aNULL:!MD5;
+    ssl_prefer_server_ciphers on;
+    ssl_session_cache shared:SSL:10m;
+    ssl_session_timeout 10m;
+    
+    # Security headers
+    add_header Strict-Transport-Security "max-age=31536000; includeSubDomains" always;
+    add_header X-Content-Type-Options "nosniff" always;
+    add_header X-Frame-Options "SAMEORIGIN" always;
+    add_header X-XSS-Protection "1; mode=block" always;
+    add_header Referrer-Policy "no-referrer-when-downgrade" always;
+    
+    # Logging
+    access_log /var/log/justclothing/nginx/access.log;
+    error_log /var/log/justclothing/nginx/error.log;
+    
+    # Increase client max body size for file uploads
+    client_max_body_size 100M;
+    
+    # Frontend - Root path
+    location / {
+        root /opt/justclothing/frontend/dist;
+        try_files $uri $uri/ /index.html;
+        
+        # Cache busting for assets
+        location ~* \.(js|css|png|jpg|jpeg|gif|ico|svg|woff|woff2|ttf|eot)$ {
+            expires 365d;
+            add_header Cache-Control "public, immutable";
+        }
+    }
+    
+    # API routes
+    location /api/ {
+        proxy_pass http://backend;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection "upgrade";
         proxy_set_header Host $host;
         proxy_set_header X-Real-IP $remote_addr;
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
         proxy_set_header X-Forwarded-Proto $scheme;
         proxy_redirect off;
+        
+        # Timeouts
         proxy_connect_timeout 60s;
         proxy_send_timeout 60s;
         proxy_read_timeout 60s;
     }
-
+    
+    # Django Admin
+    location /admin/ {
+        proxy_pass http://backend;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+    
+    # API Documentation (Swagger, ReDoc)
+    location /swagger/ {
+        proxy_pass http://backend;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+    
+    location /redoc/ {
+        proxy_pass http://backend;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+    
+    # Static files
     location /static/ {
-        alias /JustClothing/backend/staticfiles/;
+        alias /opt/justclothing/backend/staticfiles/;
+        expires 30d;
+        add_header Cache-Control "public";
     }
-
+    
+    # Media files
     location /media/ {
-        alias /JustClothing/backend/media/;
+        alias /opt/justclothing/backend/media/;
+        expires 7d;
+        add_header Cache-Control "public";
+    }
+    
+    # MinIO proxy (Object Storage)
+    location /minio/ {
+        proxy_pass http://minio/;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+    
+    # Deny access to sensitive files
+    location ~ /\. {
+        deny all;
+    }
+    
+    location ~ ~$ {
+        deny all;
     }
 }
 EOF
+    
+    # Replace domain placeholder
+    sed -i "s/DOMAIN_PLACEHOLDER/$DOMAIN/g" /etc/nginx/sites-available/justclothing
+    
+    # Enable the site
+    ln -sf /etc/nginx/sites-available/justclothing /etc/nginx/sites-enabled/justclothing
+    
+    # Test nginx configuration
+    nginx -t
+    
+    # Start nginx
+    systemctl start nginx
+    systemctl enable nginx
+    
+    print_success "Nginx configured and started"
+}
 
-# Replace placeholders
-sed -i "s/DOMAIN_PLACEHOLDER/$DOMAIN/g" /etc/nginx/sites-available/justclothing
-sed -i "s/APP_USER_PLACEHOLDER/$APP_USER/g" /etc/nginx/sites-available/justclothing
+################################################################################
+# Step 11: Setup SSL with Let's Encrypt
+################################################################################
+step_setup_ssl() {
+    print_header "Step 11: Setting Up SSL Certificate with Let's Encrypt"
+    
+    # Create directory for certbot
+    mkdir -p /var/www/certbot
+    
+    # Get SSL certificate
+    print_warning "Starting SSL certificate setup..."
+    print_warning "Make sure your domain DNS is pointing to this server's IP address"
+    
+    certbot certonly --webroot \
+        -w /var/www/certbot \
+        -d $DOMAIN \
+        -d www.$DOMAIN \
+        --email $EMAIL \
+        --agree-tos \
+        --non-interactive \
+        --expand
+    
+    # Create certbot renewal hook for nginx reload
+    mkdir -p /etc/letsencrypt/renewal-hooks/post
+    cat > /etc/letsencrypt/renewal-hooks/post/nginx.sh << 'EOF'
+#!/bin/bash
+systemctl reload nginx
+EOF
+    chmod +x /etc/letsencrypt/renewal-hooks/post/nginx.sh
+    
+    # Setup automatic renewal
+    systemctl enable certbot.timer
+    systemctl start certbot.timer
+    
+    # Reload nginx with SSL
+    systemctl reload nginx
+    
+    print_success "SSL certificate installed and configured"
+}
 
-# Enable site
-ln -sf /etc/nginx/sites-available/justclothing /etc/nginx/sites-enabled/
-rm -f /etc/nginx/sites-enabled/default
+################################################################################
+# Step 12: Setup Systemd Services
+################################################################################
+step_setup_systemd_services() {
+    print_header "Step 12: Setting Up Systemd Services"
+    
+    # Gunicorn service for Django
+    cat > /etc/systemd/system/gunicorn-justclothing.service << EOF
+[Unit]
+Description=Gunicorn WSGI HTTP Server for JustClothing
+After=network.target
 
-# Test Nginx config
-nginx -t
+[Service]
+Type=notify
+User=$APP_USER
+Group=$APP_GROUP
+WorkingDirectory=$APP_DIR/backend
+EnvironmentFile=$APP_DIR/backend/.env
+ExecStart=$VENV_DIR/bin/gunicorn \\
+    --workers 4 \\
+    --worker-class sync \\
+    --bind 127.0.0.1:$BACKEND_PORT \\
+    --timeout 60 \\
+    --access-logfile $LOG_DIR/backend/access.log \\
+    --error-logfile $LOG_DIR/backend/error.log \\
+    justclothing.wsgi:application
 
-# Restart Nginx
-systemctl restart nginx
-systemctl enable nginx
+Restart=always
+RestartSec=10
 
-log_success "Nginx configured"
+[Install]
+WantedBy=multi-user.target
+EOF
+    
+    # Celery worker service
+    cat > /etc/systemd/system/celery-justclothing.service << EOF
+[Unit]
+Description=Celery Worker for JustClothing
+After=network.target
 
-###############################################################################
-# Step 13: Setup SSL Certificate (Let's Encrypt)
-###############################################################################
-log_info "Step 13: Setting up SSL certificate..."
+[Service]
+Type=forking
+User=$APP_USER
+Group=$APP_GROUP
+WorkingDirectory=$APP_DIR/backend
+EnvironmentFile=$APP_DIR/backend/.env
+ExecStart=$VENV_DIR/bin/celery -A justclothing worker \\
+    -l info \\
+    --logfile=$LOG_DIR/celery/worker.log \\
+    --pidfile=$APP_DIR/celery_worker.pid
 
-if [ "$DOMAIN" != "example.com" ]; then
-    certbot --nginx -d $DOMAIN -d www.$DOMAIN --agree-tos --non-interactive --email admin@$DOMAIN || log_warning "SSL setup failed - configure manually or use self-signed cert"
-else
-    log_warning "Using example.com domain - configure SSL manually with your actual domain"
-fi
+Restart=always
+RestartSec=10
 
-log_success "SSL configured"
+[Install]
+WantedBy=multi-user.target
+EOF
+    
+    # Celery Beat service (scheduler)
+    cat > /etc/systemd/system/celery-beat-justclothing.service << EOF
+[Unit]
+Description=Celery Beat Scheduler for JustClothing
+After=network.target
 
-###############################################################################
-# Step 14: Setup Firewall
-###############################################################################
-log_info "Step 14: Configuring UFW firewall..."
+[Service]
+Type=simple
+User=$APP_USER
+Group=$APP_GROUP
+WorkingDirectory=$APP_DIR/backend
+EnvironmentFile=$APP_DIR/backend/.env
+ExecStart=$VENV_DIR/bin/celery -A justclothing beat \\
+    -l info \\
+    --logfile=$LOG_DIR/celery/beat.log \\
+    --scheduler django_celery_beat.schedulers:DatabaseScheduler
 
-ufw default deny incoming
-ufw default allow outgoing
-ufw allow 22/tcp    # SSH
-ufw allow 80/tcp    # HTTP
-ufw allow 443/tcp   # HTTPS
-ufw enable -y
+Restart=always
+RestartSec=10
 
-log_success "Firewall configured"
+[Install]
+WantedBy=multi-user.target
+EOF
+    
+    # Reload systemd daemon
+    systemctl daemon-reload
+    
+    # Enable and start services
+    systemctl enable gunicorn-justclothing
+    systemctl enable celery-justclothing
+    systemctl enable celery-beat-justclothing
+    
+    systemctl start gunicorn-justclothing
+    systemctl start celery-justclothing
+    systemctl start celery-beat-justclothing
+    
+    print_success "Systemd services created and started"
+}
 
-###############################################################################
-# Step 15: Start Application Services
-###############################################################################
-log_info "Step 15: Starting application services..."
-
-supervisorctl reread
-supervisorctl update
-supervisorctl start all
-
-systemctl restart nginx
-systemctl restart redis-server
-systemctl restart postgresql
-
-log_success "All services started"
-
-###############################################################################
-# Step 16: Setup Log Rotation
-###############################################################################
-log_info "Step 16: Setting up log rotation..."
-
-cat > /etc/logrotate.d/justclothing <<EOF
-/var/log/gunicorn*.log {
+################################################################################
+# Step 13: Setup Logging
+################################################################################
+step_setup_logging() {
+    print_header "Step 13: Setting Up Logging"
+    
+    # Create logrotate configuration
+    cat > /etc/logrotate.d/justclothing << EOF
+$LOG_DIR/backend/*.log {
     daily
     rotate 14
     compress
     delaycompress
     notifempty
-    create 0640 $APP_USER $APP_USER
+    create 0640 $APP_USER $APP_GROUP
     sharedscripts
     postrotate
-        supervisorctl restart gunicorn > /dev/null
+        systemctl reload gunicorn-justclothing > /dev/null 2>&1 || true
     endscript
 }
 
-/var/log/celery*.log {
+$LOG_DIR/celery/*.log {
     daily
     rotate 14
     compress
     delaycompress
     notifempty
-    create 0640 $APP_USER $APP_USER
+    create 0640 $APP_USER $APP_GROUP
+}
+
+$LOG_DIR/nginx/*.log {
+    daily
+    rotate 14
+    compress
+    delaycompress
+    notifempty
+    create 0640 www-data www-data
     sharedscripts
     postrotate
-        supervisorctl restart celery celery-beat > /dev/null
+        systemctl reload nginx > /dev/null 2>&1 || true
     endscript
 }
 EOF
+    
+    # Set up journalctl persistent logging
+    mkdir -p /var/log/journal
+    systemctl restart systemd-journald
+    
+    print_success "Logging configured"
+}
 
-log_success "Log rotation configured"
+################################################################################
+# Step 14: Setup Firewall
+################################################################################
+step_setup_firewall() {
+    print_header "Step 14: Configuring UFW Firewall"
+    
+    # Enable UFW
+    ufw --force enable
+    
+    # Default policies
+    ufw default deny incoming
+    ufw default allow outgoing
+    
+    # Allow SSH
+    ufw allow 22/tcp
+    
+    # Allow HTTP and HTTPS
+    ufw allow 80/tcp
+    ufw allow 443/tcp
+    
+    # MinIO API (optional, restrict to specific IPs in production)
+    # ufw allow from 192.168.0.0/16 to any port 9000
+    
+    print_success "Firewall configured"
+}
 
-###############################################################################
-# Deployment Complete
-###############################################################################
-log_success "=========================================="
-log_success "JustClothing VPS Deployment Complete!"
-log_success "=========================================="
-echo ""
-log_info "Important Information:"
-echo "  • Domain: https://$DOMAIN"
-echo "  • Backend API: https://$DOMAIN/api/"
-echo "  • Admin: https://$DOMAIN/admin/"
-echo "  • App Location: $APP_HOME"
-echo "  • App User: $APP_USER"
-echo ""
-log_info "Service Management:"
-echo "  • View logs: supervisorctl tail -f gunicorn"
-echo "  • Restart app: supervisorctl restart gunicorn"
-echo "  • Status: supervisorctl status"
-echo ""
-log_info "Next Steps:"
-echo "  1. Update .env file with your settings: $APP_HOME/backend/.env"
-echo "  2. Create superuser: cd $APP_HOME && sudo -u $APP_USER ./venv/bin/python backend/manage.py createsuperuser"
-echo "  3. Check status: supervisorctl status"
-echo "  4. View logs: tail -f /var/log/gunicorn.log"
-echo ""
-log_warning "TODO - Configure in .env:"
-echo "  • EMAIL settings"
-echo "  • S3/Storage settings if needed"
-echo "  • Any API keys or third-party integrations"
-echo ""
+################################################################################
+# Step 15: Final Configuration
+################################################################################
+step_final_configuration() {
+    print_header "Step 15: Final Configuration and Health Check"
+    
+    # Create management script
+    cat > $APP_DIR/manage-deployment.sh << 'EOF'
+#!/bin/bash
+
+case "$1" in
+    status)
+        echo "=== Service Status ==="
+        systemctl status gunicorn-justclothing --no-pager
+        echo ""
+        systemctl status celery-justclothing --no-pager
+        echo ""
+        systemctl status celery-beat-justclothing --no-pager
+        echo ""
+        systemctl status nginx --no-pager
+        echo ""
+        systemctl status redis-server --no-pager
+        echo ""
+        systemctl status postgresql --no-pager
+        ;;
+    restart-backend)
+        systemctl restart gunicorn-justclothing
+        echo "Backend restarted"
+        ;;
+    restart-celery)
+        systemctl restart celery-justclothing
+        systemctl restart celery-beat-justclothing
+        echo "Celery services restarted"
+        ;;
+    restart-nginx)
+        systemctl reload nginx
+        echo "Nginx reloaded"
+        ;;
+    logs-backend)
+        journalctl -u gunicorn-justclothing -f
+        ;;
+    logs-celery)
+        tail -f /var/log/justclothing/celery/worker.log
+        ;;
+    logs-nginx)
+        tail -f /var/log/justclothing/nginx/error.log
+        ;;
+    update)
+        cd /opt/justclothing/backend
+        source /opt/justclothing/venv/bin/activate
+        git pull
+        pip install -r requirements.txt
+        python manage.py migrate
+        python manage.py collectstatic --noinput
+        systemctl restart gunicorn-justclothing
+        echo "Backend updated and restarted"
+        ;;
+    *)
+        echo "Usage: $0 {status|restart-backend|restart-celery|restart-nginx|logs-backend|logs-celery|logs-nginx|update}"
+        exit 1
+        ;;
+esac
+EOF
+    chmod +x $APP_DIR/manage-deployment.sh
+    
+    # Create summary file
+    cat > $APP_DIR/DEPLOYMENT_INFO.txt << EOF
+=== JustClothing VPS Deployment Summary ===
+Deployment Date: $(date)
+
+DOMAIN: $DOMAIN
+APP_DIR: $APP_DIR
+VENV: $VENV_DIR
+LOG_DIR: $LOG_DIR
+
+SERVICES:
+- Gunicorn (Django Backend): 127.0.0.1:$BACKEND_PORT
+- Celery Worker
+- Celery Beat
+- Nginx Web Server: Port 80, 443
+- PostgreSQL: localhost:$POSTGRES_PORT
+- Redis: localhost:$REDIS_PORT
+- MinIO: localhost:$MINIO_PORT
+
+COMMON COMMANDS:
+- Check service status: sudo $APP_DIR/manage-deployment.sh status
+- Restart backend: sudo $APP_DIR/manage-deployment.sh restart-backend
+- View backend logs: sudo $APP_DIR/manage-deployment.sh logs-backend
+- View Celery logs: sudo $APP_DIR/manage-deployment.sh logs-celery
+- View Nginx logs: sudo $APP_DIR/manage-deployment.sh logs-nginx
+- Update application: sudo $APP_DIR/manage-deployment.sh update
+
+MANUAL COMMANDS:
+- Activate virtualenv: source $VENV_DIR/bin/activate
+- Django admin: cd $APP_DIR/backend && python manage.py shell
+- View app logs: journalctl -u gunicorn-justclothing -f
+- Monitor services: systemctl status [service-name]
+
+SSL CERTIFICATE:
+- Path: /etc/letsencrypt/live/$DOMAIN/
+- Auto-renewal: Enabled via certbot.timer
+- Renewal log: journalctl -u certbot.service -f
+
+NEXT STEPS:
+1. Verify all services are running: sudo systemctl status gunicorn-justclothing
+2. Check the application: https://$DOMAIN
+3. Access admin panel: https://$DOMAIN/admin
+4. Configure email settings in Django admin
+5. Set up backups and monitoring
+
+DATABASE BACKUP:
+pg_dump -U justclothing_user justclothing_db > backup.sql
+
+EOF
+    
+    # Print summary
+    cat $APP_DIR/DEPLOYMENT_INFO.txt
+    
+    # Health checks
+    print_header "Health Checks"
+    
+    echo -n "Checking PostgreSQL... "
+    if systemctl is-active --quiet postgresql; then
+        print_success "PostgreSQL is running"
+    else
+        print_error "PostgreSQL is not running"
+    fi
+    
+    echo -n "Checking Redis... "
+    if systemctl is-active --quiet redis-server; then
+        print_success "Redis is running"
+    else
+        print_error "Redis is not running"
+    fi
+    
+    echo -n "Checking Nginx... "
+    if systemctl is-active --quiet nginx; then
+        print_success "Nginx is running"
+    else
+        print_error "Nginx is not running"
+    fi
+    
+    echo -n "Checking Gunicorn... "
+    if systemctl is-active --quiet gunicorn-justclothing; then
+        print_success "Gunicorn is running"
+    else
+        print_error "Gunicorn is not running"
+    fi
+    
+    echo -n "Checking Celery Worker... "
+    if systemctl is-active --quiet celery-justclothing; then
+        print_success "Celery Worker is running"
+    else
+        print_error "Celery Worker is not running"
+    fi
+    
+    echo ""
+    print_success "Deployment configuration complete"
+}
+
+# Run main deployment
+main "$@"
