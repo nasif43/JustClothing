@@ -215,14 +215,32 @@ step_setup_redis() {
 step_setup_minio() {
     print_header "Step 6: Setting Up MinIO Object Storage"
     
+    # Create minio user first (before any directory creation)
+    if ! id "minio" &>/dev/null; then
+        useradd -r -s /bin/false minio
+        print_success "Created minio system user"
+    else
+        print_warning "Minio user already exists"
+    fi
+    
     # Create MinIO directories
     mkdir -p /opt/minio/data
     mkdir -p /opt/minio/config
+    chown -R minio:minio /opt/minio
+    chmod -R 755 /opt/minio
     
     # Download MinIO binary
+    print_warning "Downloading MinIO binary (this may take a minute)..."
     cd /opt/minio
-    curl -o minio https://dl.min.io/server/minio/release/linux-amd64/minio
-    chmod +x minio
+    curl -L -o minio https://dl.min.io/server/minio/release/linux-amd64/minio 2>/dev/null
+    
+    if [ ! -f /opt/minio/minio ]; then
+        print_error "Failed to download MinIO binary"
+        return 1
+    fi
+    
+    chmod +x /opt/minio/minio
+    chown minio:minio /opt/minio/minio
     
     # Create environment file for MinIO
     cat > /etc/default/minio << 'EOF'
@@ -231,53 +249,77 @@ MINIO_ROOT_PASSWORD=minioadmin123
 MINIO_CONFIG_ENV_FILE=/opt/minio/config/minio.env
 EOF
     
-    # Create systemd service for MinIO
+    # Create simplified systemd service for MinIO
     cat > /etc/systemd/system/minio.service << 'EOF'
 [Unit]
 Description=MinIO Object Storage Server
 Documentation=https://docs.min.io/docs/minio-quickstart-guide
-Wants=network-online.target
 After=network-online.target
-AssertFileNotEmpty=/etc/default/minio
+Wants=network-online.target
 
 [Service]
-Type=notify
+Type=simple
+User=minio
+Group=minio
+ProtectParentDirectories=yes
+ProtectHome=yes
+NoNewPrivileges=on
+PrivateTmp=yes
+
 WorkingDirectory=/opt/minio
-ExecStartPre=/bin/bash -c "echo 'User minio' && test -u minio"
+EnvironmentFile=/etc/default/minio
+
+# Set environment variables
+Environment="MINIO_ROOT_USER=minioadmin"
+Environment="MINIO_ROOT_PASSWORD=minioadmin123"
+
 ExecStart=/opt/minio/minio server /opt/minio/data --console-address ":9001"
+
 Restart=always
 RestartSec=5
 StandardOutput=journal
 StandardError=journal
 SyslogIdentifier=minio
-User=minio
-Group=minio
-ProtectParentDirectories=yes
-ProtectControlGroups=yes
-ProtectKernelTunables=yes
-PrivateDevices=yes
-AllowedCPUs=*
-AllowedIOWeight=*
-ProtectSystem=full
-ProtectHome=yes
-NoNewPrivileges=on
 
 [Install]
 WantedBy=multi-user.target
 EOF
     
-    # Create minio user
-    useradd -r -s /bin/false minio 2>/dev/null || true
-    chown -R minio:minio /opt/minio
-    
-    # Start MinIO
+    # Reload systemd and start MinIO
     systemctl daemon-reload
-    systemctl start minio
-    systemctl enable minio
+    sleep 1
     
-    print_success "MinIO installed and configured"
-    print_warning "MinIO Admin Console: http://$(hostname -I | awk '{print $1}'):9001"
-    print_warning "MinIO API: http://$(hostname -I | awk '{print $1}'):9000"
+    # Start MinIO service with error checking
+    if ! systemctl start minio; then
+        print_error "Failed to start MinIO service"
+        echo "MinIO service status:"
+        systemctl status minio --no-pager
+        echo ""
+        echo "MinIO service logs:"
+        journalctl -u minio -n 20 --no-pager
+        print_warning "Troubleshooting: Check file permissions and logs above"
+        print_warning "Try: systemctl status minio / journalctl -u minio -f"
+        return 1
+    fi
+    
+    sleep 2
+    
+    # Check if service is running
+    if systemctl is-active --quiet minio; then
+        systemctl enable minio
+        print_success "MinIO installed and configured"
+        print_warning "MinIO Admin Console: http://$(hostname -I | awk '{print $1}'):9001"
+        print_warning "MinIO API: http://$(hostname -I | awk '{print $1}'):9000"
+        print_warning "MinIO Credentials: minioadmin / minioadmin123"
+    else
+        print_error "MinIO service is not running"
+        echo "Service status:"
+        systemctl status minio --no-pager
+        echo ""
+        echo "Recent logs:"
+        journalctl -u minio -n 30 --no-pager
+        return 1
+    fi
 }
 
 ################################################################################
